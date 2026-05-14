@@ -8,6 +8,7 @@ from datetime import datetime as _dt, timedelta as _td
 
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -535,7 +536,7 @@ def register_sample():
         except (ValueError, TypeError, SQLAlchemyError) as e:
             db.session.rollback()
             logger.exception('register_sample error')
-            flash('Дээж бүртгэхэд алдаа гарлаа.', 'danger')
+            flash(_l('Дээж бүртгэхэд алдаа гарлаа.'), 'danger')
             from_param = request.args.get('from', '')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
@@ -1107,7 +1108,7 @@ def edit_sample(sample_id):
             except (TypeError, SQLAlchemyError) as e:
                 db.session.rollback()
                 logger.exception('edit_sample error: sample_id=%s', sample_id)
-                flash('Дээж засахад алдаа гарлаа.', 'danger')
+                flash(_l('Дээж засахад алдаа гарлаа.'), 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -1252,7 +1253,7 @@ def worksheet_new():
         notes = request.form.get('notes', '').strip()
 
         if not method_code:
-            flash('Шинжилгээний код сонгоно уу.', 'danger')
+            flash(_l('Шинжилгээний код сонгоно уу.'), 'danger')
         else:
             try:
                 from datetime import date as _date
@@ -1274,7 +1275,7 @@ def worksheet_new():
             db.session.add(ws)
             try:
                 db.session.commit()
-                flash('QC ажлын хуудас үүслээ.', 'success')
+                flash(_l('QC ажлын хуудас үүслээ.'), 'success')
                 return redirect(url_for('water.worksheet_detail', ws_id=ws.id))
             except SQLAlchemyError as e:
                 db.session.rollback()
@@ -1328,15 +1329,15 @@ def worksheet_submit(ws_id):
     from app.models.worksheets import WaterWorksheet
     ws = WaterWorksheet.query.get_or_404(ws_id)
     if ws.analyst_id != current_user.id and current_user.role not in ('senior', 'manager', 'admin'):
-        flash('Зөвхөн боловсруулсан химич илгээх боломжтой.', 'danger')
+        flash(_l('Зөвхөн боловсруулсан химич илгээх боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     if ws.status != 'open':
-        flash('Зөвхөн "open" төлөвтэй ажлын хуудас илгээж болно.', 'warning')
+        flash(_l('Зөвхөн "open" төлөвтэй ажлын хуудас илгээж болно.'), 'warning')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws.status = 'submitted'
     try:
         db.session.commit()
-        flash('Ажлын хуудас хянуулахаар илгээгдлээ.', 'success')
+        flash(_l('Ажлын хуудас хянуулахаар илгээгдлээ.'), 'success')
     except SQLAlchemyError as e:
         db.session.rollback()
         flash(f'Алдаа: {e}', 'danger')
@@ -1351,11 +1352,11 @@ def worksheet_approve(ws_id):
     from app.models.worksheets import WaterWorksheet
     from app.utils.datetime import now_local
     if current_user.role not in ('senior', 'manager', 'admin'):
-        flash('Зөвхөн ахлах химич/менежер батлах боломжтой.', 'danger')
+        flash(_l('Зөвхөн ахлах химич/менежер батлах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheet.query.get_or_404(ws_id)
     if ws.status not in ('submitted', 'open'):
-        flash('Батлах боломжгүй төлөв.', 'warning')
+        flash(_l('Батлах боломжгүй төлөв.'), 'warning')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws.status = 'approved'
     ws.reviewer_id = current_user.id
@@ -1363,7 +1364,7 @@ def worksheet_approve(ws_id):
     ws.review_comment = request.form.get('review_comment', '').strip() or None
     try:
         db.session.commit()
-        flash('Ажлын хуудас батлагдлаа.', 'success')
+        flash(_l('Ажлын хуудас батлагдлаа.'), 'success')
     except SQLAlchemyError as e:
         db.session.rollback()
         flash(f'Алдаа: {e}', 'danger')
@@ -1378,7 +1379,7 @@ def worksheet_reject(ws_id):
     from app.models.worksheets import WaterWorksheet
     from app.utils.datetime import now_local
     if current_user.role not in ('senior', 'manager', 'admin'):
-        flash('Зөвхөн ахлах химич/менежер буцаах боломжтой.', 'danger')
+        flash(_l('Зөвхөн ахлах химич/менежер буцаах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheet.query.get_or_404(ws_id)
     ws.status = 'rejected'
@@ -1387,7 +1388,7 @@ def worksheet_reject(ws_id):
     ws.review_comment = request.form.get('review_comment', '').strip() or None
     try:
         db.session.commit()
-        flash('Ажлын хуудас буцаагдлаа.', 'warning')
+        flash(_l('Ажлын хуудас буцаагдлаа.'), 'warning')
     except SQLAlchemyError as e:
         db.session.rollback()
         flash(f'Алдаа: {e}', 'danger')

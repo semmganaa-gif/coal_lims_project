@@ -6,6 +6,7 @@ from datetime import date
 
 from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import CorrectiveAction
@@ -45,7 +46,7 @@ def register_routes(bp):
         if request.method == "POST":
             desc = request.form.get('issue_description', '').strip()
             if not desc:
-                flash("Үл тохирлын тайлбар шаардлагатай.", "danger")
+                flash(_l("Үл тохирлын тайлбар шаардлагатай."), "danger")
                 return render_template(
                     'quality/capa_form.html',
                     today=date.today().isoformat(),

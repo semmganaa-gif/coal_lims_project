@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import AnalysisResult, Sample
@@ -119,10 +120,10 @@ def repeat_analyses(
         RepeatResult объект
     """
     if user_role not in ("senior", "admin"):
-        return RepeatResult(success=False, message="Зөвхөн ахлах/админ")
+        return RepeatResult(success=False, message=_l("Зөвхөн ахлах/админ"))
 
     if not codes:
-        return RepeatResult(success=False, message="Код сонгоогүй")
+        return RepeatResult(success=False, message=_l("Код сонгоогүй"))
 
     try:
         count = 0
@@ -160,5 +161,5 @@ def repeat_analyses(
         db.session.rollback()
         logger.error(f"MG repeat error: {e}", exc_info=True)
         return RepeatResult(
-            success=False, message="Давтан шинжилгээ буцаахад алдаа гарлаа"
+            success=False, message=_l("Давтан шинжилгээ буцаахад алдаа гарлаа")
         )

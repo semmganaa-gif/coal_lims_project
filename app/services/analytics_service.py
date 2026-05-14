@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import and_, func, desc
+from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db
 from app.models.core import Sample
@@ -29,15 +30,15 @@ from app.utils.datetime import now_local
 
 # ─── ANALYSIS SPEC (нүүрсний шинжилгээний хэвийн хүрээ) ─────────
 ANALYSIS_SPECS = {
-    "Mad":   {"name": "Чийг (Mad)",        "unit": "%", "warn_low": 1.0, "warn_high": 12.0, "crit_low": 0.5, "crit_high": 15.0},
-    "Aad":   {"name": "Үнслэг (Aad)",      "unit": "%", "warn_low": 5.0, "warn_high": 35.0, "crit_low": 3.0, "crit_high": 45.0},
-    "Vdaf":  {"name": "Дэгдэмхий (Vdaf)",  "unit": "%", "warn_low": 20.0, "warn_high": 45.0, "crit_low": 15.0, "crit_high": 50.0},
-    "FCd":   {"name": "Тогтмол нүүрс",     "unit": "%", "warn_low": 30.0, "warn_high": 70.0, "crit_low": 25.0, "crit_high": 80.0},
-    "St,d":  {"name": "Хүхэр (St,d)",      "unit": "%", "warn_low": 0.1, "warn_high": 3.0,  "crit_low": 0.0, "crit_high": 5.0},
-    "Qgr,ad": {"name": "Илчлэг (Qgr,ad)", "unit": "kcal/kg", "warn_low": 3000, "warn_high": 7500, "crit_low": 2000, "crit_high": 8000},
-    "CSN":   {"name": "Найрлага тоо",      "unit": "", "warn_low": 0, "warn_high": 9, "crit_low": 0, "crit_high": 9},
-    "GI":    {"name": "Шаталт индекс",     "unit": "", "warn_low": 0, "warn_high": 100, "crit_low": 0, "crit_high": 250},
-    "MT":    {"name": "Нийт чийг (Mt)",     "unit": "%", "warn_low": 2.0, "warn_high": 15.0, "crit_low": 1.0, "crit_high": 20.0},
+    "Mad":   {"name": _l("Чийг (Mad)"),        "unit": "%", "warn_low": 1.0, "warn_high": 12.0, "crit_low": 0.5, "crit_high": 15.0},
+    "Aad":   {"name": _l("Үнслэг (Aad)"),      "unit": "%", "warn_low": 5.0, "warn_high": 35.0, "crit_low": 3.0, "crit_high": 45.0},
+    "Vdaf":  {"name": _l("Дэгдэмхий (Vdaf)"),  "unit": "%", "warn_low": 20.0, "warn_high": 45.0, "crit_low": 15.0, "crit_high": 50.0},
+    "FCd":   {"name": _l("Тогтмол нүүрс"),     "unit": "%", "warn_low": 30.0, "warn_high": 70.0, "crit_low": 25.0, "crit_high": 80.0},
+    "St,d":  {"name": _l("Хүхэр (St,d)"),      "unit": "%", "warn_low": 0.1, "warn_high": 3.0,  "crit_low": 0.0, "crit_high": 5.0},
+    "Qgr,ad": {"name": _l("Илчлэг (Qgr,ad)"), "unit": "kcal/kg", "warn_low": 3000, "warn_high": 7500, "crit_low": 2000, "crit_high": 8000},
+    "CSN":   {"name": _l("Найрлага тоо"),      "unit": "", "warn_low": 0, "warn_high": 9, "crit_low": 0, "crit_high": 9},
+    "GI":    {"name": _l("Шаталт индекс"),     "unit": "", "warn_low": 0, "warn_high": 100, "crit_low": 0, "crit_high": 250},
+    "MT":    {"name": _l("Нийт чийг (Mt)"),     "unit": "%", "warn_low": 2.0, "warn_high": 15.0, "crit_low": 1.0, "crit_high": 20.0},
 }
 
 
@@ -203,7 +204,7 @@ def detect_anomalies(samples: list, lookback_days: int = 90) -> list[Anomaly]:
                         severity="critical",
                         message=f"{spec['name']}: {val}{spec['unit']} — "
                                 f"зөвшөөрөгдөх хүрээнээс ({spec['crit_low']}-{spec['crit_high']}) гадна",
-                        recommendation="Дахин шинжилгээ хийх, дээж чанар шалгах",
+                        recommendation=_l("Дахин шинжилгээ хийх, дээж чанар шалгах"),
                     ))
                 continue
 
@@ -229,7 +230,7 @@ def detect_anomalies(samples: list, lookback_days: int = 90) -> list[Anomaly]:
                 name = spec.get("name", code)
                 unit = spec.get("unit", "")
 
-                direction = "өндөр" if z > 0 else "бага"
+                direction = _l("өндөр") if z > 0 else _l("бага")
                 recommendation = _get_recommendation(code, z, val, stats)
 
                 anomalies.append(Anomaly(
@@ -285,7 +286,7 @@ def analyze_trends(analysis_code: str, days: int = 30,
             direction="stable",
             slope=0, r_squared=0, change_pct=0,
             confidence="low",
-            message="Хангалттай өгөгдөл байхгүй (< 5 бичлэг)",
+            message=_l("Хангалттай өгөгдөл байхгүй (< 5 бичлэг)"),
             recent_mean=0, historical_mean=0,
         )
 
@@ -351,7 +352,7 @@ def calculate_quality_score(samples: list, anomalies: list = None) -> QualitySco
     if not samples:
         return QualityScore(
             score=0, grade="N/A", color="#94a3b8",
-            breakdown={}, message="Дээж байхгүй",
+            breakdown={}, message=_l("Дээж байхгүй"),
         )
 
     # 1. COMPLETENESS (30 оноо)
@@ -436,7 +437,7 @@ def generate_insights(samples: list, anomalies: list = None,
     insights = []
 
     if not samples:
-        return ["Тайлант хугацаанд дээж бүртгэгдээгүй."]
+        return [_l("Тайлант хугацаанд дээж бүртгэгдээгүй.")]
 
     # ── Sample overview ──
     insights.append(
@@ -458,7 +459,7 @@ def generate_insights(samples: list, anomalies: list = None,
         anomalies = detect_anomalies(samples)
 
     if not anomalies:
-        insights.append("Бүх шинжилгээний үр дүн хэвийн хүрээнд байна.")
+        insights.append(_l("Бүх шинжилгээний үр дүн хэвийн хүрээнд байна."))
     else:
         critical = [a for a in anomalies if a.severity == "critical"]
         warnings = [a for a in anomalies if a.severity == "warning"]
@@ -468,7 +469,7 @@ def generate_insights(samples: list, anomalies: list = None,
             insights.append(
                 f"⚠ {len(critical)} ноцтой аномали: "
                 + ", ".join(ANALYSIS_SPECS.get(c, {}).get("name", c) for c in codes)
-                + ". Нэн даруй шалгах шаардлагатай."
+                + _l(". Нэн даруй шалгах шаардлагатай.")
             )
 
         if warnings:
@@ -619,23 +620,29 @@ def _get_recommendation(code: str, z: float, value: float, stats: dict) -> str:
 
     if abs_z > 3:
         if code in ("Mad", "MT"):
-            return ("Дээжийн хатаалт/чийгийг шалгах. "
-                    "Агаарын чийглэг, жингийн нарийвчлал баталгаажуулах.")
+            return (
+                str(_l("Дээжийн хатаалт/чийгийг шалгах. "))
+                + str(_l("Агаарын чийглэг, жингийн нарийвчлал баталгаажуулах."))
+            )
         if code in ("Aad",):
-            return ("Зуух температур, шатаалтын хугацаа шалгах. "
-                    "Стандарт дээж ажиллуулах.")
+            return (
+                str(_l("Зуух температур, шатаалтын хугацаа шалгах. "))
+                + str(_l("Стандарт дээж ажиллуулах."))
+            )
         if code in ("Vdaf",):
-            return ("Зуухны температур (900±10°C) баталгаажуулах. "
-                    "N₂ хийн урсгал шалгах.")
+            return (
+                str(_l("Зуухны температур (900±10°C) баталгаажуулах. "))
+                + str(_l("N₂ хийн урсгал шалгах."))
+            )
         if code in ("St,d",):
-            return "Хүхрийн анализатор калибрлэх. Стандарт дээж шалгах."
+            return _l("Хүхрийн анализатор калибрлэх. Стандарт дээж шалгах.")
         if code in ("Qgr,ad",):
-            return "Калориметрийн калибрлэлт шалгах. Бензой хүчил стандарт ажиллуулах."
-        return "Дахин шинжилгээ хийх. Багаж калибрлэлт шалгах."
+            return _l("Калориметрийн калибрлэлт шалгах. Бензой хүчил стандарт ажиллуулах.")
+        return _l("Дахин шинжилгээ хийх. Багаж калибрлэлт шалгах.")
 
     if code in ("Mad", "MT"):
-        return "Дээжийн хадгалалтын нөхцөл шалгах."
-    return "Дараагийн хэмжилтийг анхааралтай хянах."
+        return _l("Дээжийн хадгалалтын нөхцөл шалгах.")
+    return _l("Дараагийн хэмжилтийг анхааралтай хянах.")
 
 
 def _trend_message(name: str, direction: str, change_pct: float,
@@ -644,8 +651,8 @@ def _trend_message(name: str, direction: str, change_pct: float,
     if direction == "stable":
         return f"{name}: Тогтвортой ({change_pct:+.1f}%)."
 
-    dir_mn = "өсөж" if direction == "increasing" else "буурч"
-    conf_mn = {"high": "тодорхой", "medium": "магадлалтай", "low": "бага"}
+    dir_mn = _l("өсөж") if direction == "increasing" else _l("буурч")
+    conf_mn = {"high": _l("тодорхой"), "medium": _l("магадлалтай"), "low": _l("бага")}
 
     return (f"{name}: {dir_mn} байна ({change_pct:+.1f}%), "
             f"итгэмжлэл: {conf_mn.get(confidence, confidence)}.")
@@ -669,13 +676,13 @@ def _score_to_grade(score: int) -> tuple[str, str]:
 def _quality_message(score: int, grade: str, critical: int, warning: int) -> str:
     """Чанарын оноонд тохирох мэдээлэл."""
     if score >= 90:
-        msg = "Маш сайн. Лабораторийн чанар өндөр түвшинд."
+        msg = _l("Маш сайн. Лабораторийн чанар өндөр түвшинд.")
     elif score >= 75:
-        msg = "Сайн. Зарим сайжруулах боломжтой хэсэг бий."
+        msg = _l("Сайн. Зарим сайжруулах боломжтой хэсэг бий.")
     elif score >= 60:
-        msg = "Дунд зэрэг. Анхаарал хандуулах шаардлагатай."
+        msg = _l("Дунд зэрэг. Анхаарал хандуулах шаардлагатай.")
     else:
-        msg = "Анхааруулга! Чанарын хяналтыг нэн даруй сайжруулах."
+        msg = _l("Анхааруулга! Чанарын хяналтыг нэн даруй сайжруулах.")
 
     if critical > 0:
         msg += f" ({critical} ноцтой аномали.)"

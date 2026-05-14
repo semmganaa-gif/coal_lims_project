@@ -10,24 +10,24 @@ SystemSetting (category='workflow') дээр JSON хадгална.
 Workflow config JSON формат:
 {
     "name": "analysis_result",
-    "description": "Шинжилгээний үр дүнгийн workflow",
+    "description": _l("Шинжилгээний үр дүнгийн workflow"),
     "states": {
-        "pending_review": {"label": "Хянагдаж байна", "color": "#f59e0b", "order": 1},
-        "approved":       {"label": "Батлагдсан",     "color": "#22c55e", "order": 2},
-        "rejected":       {"label": "Татгалзсан",     "color": "#ef4444", "order": 3},
-        "reanalysis":     {"label": "Дахин шинжлэх",  "color": "#8b5cf6", "order": 4}
+        "pending_review": {"label": _l("Хянагдаж байна"), "color": "#f59e0b", "order": 1},
+        "approved":       {"label": _l("Батлагдсан"),     "color": "#22c55e", "order": 2},
+        "rejected":       {"label": _l("Татгалзсан"),     "color": "#ef4444", "order": 3},
+        "reanalysis":     {"label": _l("Дахин шинжлэх"),  "color": "#8b5cf6", "order": 4}
     },
     "initial_state": "pending_review",
     "final_states": ["approved"],
     "transitions": [
         {
             "from": "pending_review", "to": "approved",
-            "label": "Батлах", "roles": ["senior", "admin", "manager"],
+            "label": _l("Батлах"), "roles": ["senior", "admin", "manager"],
             "conditions": []
         },
         {
             "from": "pending_review", "to": "rejected",
-            "label": "Татгалзах", "roles": ["senior", "admin", "manager"],
+            "label": _l("Татгалзах"), "roles": ["senior", "admin", "manager"],
             "conditions": ["require_comment"]
         },
         ...
@@ -44,6 +44,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
+from flask_babel import lazy_gettext as _l
+
 from app.bootstrap.extensions import db
 from app.models.settings import SystemSetting
 
@@ -56,32 +58,32 @@ logger = logging.getLogger(__name__)
 DEFAULT_WORKFLOWS = {
     "analysis_result": {
         "name": "analysis_result",
-        "description": "Шинжилгээний үр дүнгийн workflow",
+        "description": _l("Шинжилгээний үр дүнгийн workflow"),
         "entity": "AnalysisResult",
         "states": {
             "pending_review": {
-                "label": "Хянагдаж байна",
+                "label": _l("Хянагдаж байна"),
                 "label_en": "Pending Review",
                 "color": "#f59e0b",
                 "icon": "bi-clock",
                 "order": 1,
             },
             "approved": {
-                "label": "Батлагдсан",
+                "label": _l("Батлагдсан"),
                 "label_en": "Approved",
                 "color": "#22c55e",
                 "icon": "bi-check-circle",
                 "order": 2,
             },
             "rejected": {
-                "label": "Татгалзсан",
+                "label": _l("Татгалзсан"),
                 "label_en": "Rejected",
                 "color": "#ef4444",
                 "icon": "bi-x-circle",
                 "order": 3,
             },
             "reanalysis": {
-                "label": "Дахин шинжлэх",
+                "label": _l("Дахин шинжлэх"),
                 "label_en": "Reanalysis",
                 "color": "#8b5cf6",
                 "icon": "bi-arrow-repeat",
@@ -94,7 +96,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "pending_review",
                 "to": "approved",
-                "label": "Батлах",
+                "label": _l("Батлах"),
                 "label_en": "Approve",
                 "roles": ["senior", "admin", "manager"],
                 "conditions": [],
@@ -102,7 +104,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "pending_review",
                 "to": "rejected",
-                "label": "Татгалзах",
+                "label": _l("Татгалзах"),
                 "label_en": "Reject",
                 "roles": ["senior", "admin", "manager"],
                 "conditions": ["require_comment"],
@@ -110,7 +112,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "rejected",
                 "to": "pending_review",
-                "label": "Дахин илгээх",
+                "label": _l("Дахин илгээх"),
                 "label_en": "Resubmit",
                 "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
@@ -118,7 +120,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "rejected",
                 "to": "approved",
-                "label": "Батлах (override)",
+                "label": _l("Батлах (override)"),
                 "label_en": "Approve (override)",
                 "roles": ["admin", "manager"],
                 "conditions": ["require_comment"],
@@ -126,7 +128,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "pending_review",
                 "to": "reanalysis",
-                "label": "Дахин шинжлэх",
+                "label": _l("Дахин шинжлэх"),
                 "label_en": "Request Reanalysis",
                 "roles": ["senior", "admin", "manager"],
                 "conditions": ["require_comment"],
@@ -134,7 +136,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "reanalysis",
                 "to": "pending_review",
-                "label": "Илгээх",
+                "label": _l("Илгээх"),
                 "label_en": "Submit",
                 "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
@@ -142,7 +144,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "approved",
                 "to": "pending_review",
-                "label": "Буцаах",
+                "label": _l("Буцаах"),
                 "label_en": "Return to Review",
                 "roles": ["senior", "admin", "manager"],
                 "conditions": [],
@@ -156,39 +158,39 @@ DEFAULT_WORKFLOWS = {
     },
     "sample": {
         "name": "sample",
-        "description": "Дээжийн workflow",
+        "description": _l("Дээжийн workflow"),
         "entity": "Sample",
         "states": {
             "new": {
-                "label": "Шинэ",
+                "label": _l("Шинэ"),
                 "label_en": "New",
                 "color": "#3b82f6",
                 "icon": "bi-plus-circle",
                 "order": 1,
             },
             "in_progress": {
-                "label": "Хийгдэж байна",
+                "label": _l("Хийгдэж байна"),
                 "label_en": "In Progress",
                 "color": "#f59e0b",
                 "icon": "bi-gear",
                 "order": 2,
             },
             "analysis": {
-                "label": "Шинжилгээнд",
+                "label": _l("Шинжилгээнд"),
                 "label_en": "In Analysis",
                 "color": "#8b5cf6",
                 "icon": "bi-flask",
                 "order": 3,
             },
             "completed": {
-                "label": "Дууссан",
+                "label": _l("Дууссан"),
                 "label_en": "Completed",
                 "color": "#22c55e",
                 "icon": "bi-check-circle",
                 "order": 4,
             },
             "archived": {
-                "label": "Архивлагдсан",
+                "label": _l("Архивлагдсан"),
                 "label_en": "Archived",
                 "color": "#94a3b8",
                 "icon": "bi-archive",
@@ -201,7 +203,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "new",
                 "to": "in_progress",
-                "label": "Эхлэх",
+                "label": _l("Эхлэх"),
                 "label_en": "Start",
                 "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
@@ -209,7 +211,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "in_progress",
                 "to": "analysis",
-                "label": "Шинжилгээнд оруулах",
+                "label": _l("Шинжилгээнд оруулах"),
                 "label_en": "Begin Analysis",
                 "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
@@ -217,7 +219,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "analysis",
                 "to": "completed",
-                "label": "Дуусгах",
+                "label": _l("Дуусгах"),
                 "label_en": "Complete",
                 "roles": ["senior", "admin", "manager"],
                 "conditions": ["all_results_approved"],
@@ -225,7 +227,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "completed",
                 "to": "archived",
-                "label": "Архивлах",
+                "label": _l("Архивлах"),
                 "label_en": "Archive",
                 "roles": ["admin", "manager"],
                 "conditions": [],
@@ -233,7 +235,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "archived",
                 "to": "completed",
-                "label": "Сэргээх",
+                "label": _l("Сэргээх"),
                 "label_en": "Restore",
                 "roles": ["admin"],
                 "conditions": [],
@@ -241,7 +243,7 @@ DEFAULT_WORKFLOWS = {
             {
                 "from": "new",
                 "to": "analysis",
-                "label": "Шууд шинжлэх",
+                "label": _l("Шууд шинжлэх"),
                 "label_en": "Direct Analysis",
                 "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
@@ -406,20 +408,20 @@ class WorkflowEngine:
         if condition == "require_comment":
             comment = context.get("comment", "").strip()
             if not comment:
-                return False, "Тайлбар бичих шаардлагатай"
+                return False, _l("Тайлбар бичих шаардлагатай")
             return True, ""
 
         elif condition == "all_results_approved":
             # Check that all analysis results for the sample are approved
             all_approved = context.get("all_results_approved", False)
             if not all_approved:
-                return False, "Бүх шинжилгээний үр дүн батлагдсан байх шаардлагатай"
+                return False, _l("Бүх шинжилгээний үр дүн батлагдсан байх шаардлагатай")
             return True, ""
 
         elif condition == "require_reanalysis_reason":
             reason = context.get("reanalysis_reason", "").strip()
             if not reason:
-                return False, "Дахин шинжилгээний шалтгаан бичих шаардлагатай"
+                return False, _l("Дахин шинжилгээний шалтгаан бичих шаардлагатай")
             return True, ""
 
         elif condition.startswith("min_results:"):

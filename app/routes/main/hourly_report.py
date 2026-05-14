@@ -10,6 +10,7 @@ from datetime import timedelta
 
 from flask import flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from flask_mail import Message
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font
@@ -52,7 +53,7 @@ def get_report_email_recipients():
 def send_hourly_report():
     """Цагийн тайлан илгээх - зөвхөн senior, admin"""
     if current_user.role not in ['senior', 'admin']:
-        flash('Энэ үйлдлийг гүйцэтгэх эрхгүй байна.', 'error')
+        flash(_l('Энэ үйлдлийг гүйцэтгэх эрхгүй байна.'), 'error')
         return redirect(url_for('main.index'))
 
     try:
@@ -136,7 +137,7 @@ def send_hourly_report():
             if os.path.exists(template_path + ".xlsx"):
                 template_path += ".xlsx"
             else:
-                flash("Загвар файл олдсонгүй!", "danger")
+                flash(_l("Загвар файл олдсонгүй!"), "danger")
                 return redirect(url_for('main.index'))
 
         with open(template_path, "rb") as f:
@@ -390,7 +391,7 @@ def send_hourly_report():
         cc_list = email_recipients['cc']
 
         if not to_list:
-            flash("Имэйл хүлээн авагч тохируулагдаагүй байна. Тохиргооноос тохируулна уу.", "warning")
+            flash(_l("Имэйл хүлээн авагч тохируулагдаагүй байна. Тохиргооноос тохируулна уу."), "warning")
             return redirect(url_for('main.index'))
 
         msg = Message(
@@ -409,7 +410,7 @@ def send_hourly_report():
 
     except (OSError, RuntimeError, ValueError) as e:
         current_app.logger.exception("Error in send_hourly_report")
-        flash("Имэйл илгээхэд алдаа гарлаа.", "danger")
+        flash(_l("Имэйл илгээхэд алдаа гарлаа."), "danger")
 
     return redirect(url_for('main.index'))
 

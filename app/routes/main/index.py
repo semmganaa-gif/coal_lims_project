@@ -6,6 +6,7 @@
 
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app.models import Sample
 from app.forms import AddSampleForm
@@ -114,7 +115,7 @@ def register_routes(bp):
         # Submit
         if form.validate_on_submit():
             if current_user.role not in ["prep", "admin"]:
-                flash("Дээж бүртгэх эрхгүй байна.", "danger")
+                flash(_l("Дээж бүртгэх эрхгүй байна."), "danger")
                 return redirect(url_for("main.index"))
 
             raw_codes = request.form.getlist("sample_codes")
@@ -210,7 +211,7 @@ def register_routes(bp):
                     flash(result.message, "danger")
 
             else:
-                flash("Маягт дутуу эсвэл алдаатай байна.", "danger")
+                flash(_l("Маягт дутуу эсвэл алдаатай байна."), "danger")
 
             if result and result.success:
                 return redirect(url_for("main.index", active_tab="add-pane"))

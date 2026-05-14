@@ -2,6 +2,7 @@
 """Environmental Monitoring - ISO 17025 Clause 6.3.3"""
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from app import db
 from app.models import EnvironmentalLog
 from app.repositories import EnvironmentalLogRepository
@@ -29,7 +30,7 @@ def register_routes(bp):
             humidity_min = float(request.form.get('humidity_min', 20))
             humidity_max = float(request.form.get('humidity_max', 70))
         except (ValueError, TypeError, KeyError):
-            flash("Тоон утга буруу байна.", "danger")
+            flash(_l("Тоон утга буруу байна."), "danger")
             return redirect(url_for('quality.environmental_list'))
 
         within_limits = (temp_min <= temp <= temp_max) and (humidity_min <= humidity <= humidity_max)
@@ -49,7 +50,7 @@ def register_routes(bp):
         EnvironmentalLogRepository.save(log, commit=False)
         if safe_commit(None, "Орчны хэмжилт хадгалахад алдаа гарлаа"):
             if within_limits:
-                flash("Орчны хэмжилт бүртгэгдлээ", "success")
+                flash(_l("Орчны хэмжилт бүртгэгдлээ"), "success")
             else:
-                flash("Орчны хэмжилт бүртгэгдлээ — хязгаараас гадуур байна", "warning")
+                flash(_l("Орчны хэмжилт бүртгэгдлээ — хязгаараас гадуур байна"), "warning")
         return redirect(url_for('quality.environmental_list'))

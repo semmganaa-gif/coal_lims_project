@@ -18,6 +18,7 @@ import logging
 from typing import Optional
 
 import sqlalchemy as sa
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -214,7 +215,7 @@ def validate_and_create_user(
 
     # Admin constraint
     if role == 'admin':
-        return False, 'Шинэ админ хэрэглэгч үүсгэх боломжгүй.', None
+        return False, _l('Шинэ админ хэрэглэгч үүсгэх боломжгүй.'), None
 
     # Create user
     user = User(username=username, role=role)
@@ -227,7 +228,7 @@ def validate_and_create_user(
     try:
         user.set_password(password)
     except ValueError:
-        return False, 'Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).', None
+        return False, _l('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).'), None
 
     db.session.add(user)
     try:
@@ -295,7 +296,7 @@ def update_user(
     if user_to_edit.role != 'admin':
         user_to_edit.role = role
     elif role != 'admin':
-        admin_role_warning = 'Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.'
+        admin_role_warning = _l('Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.')
 
     # Update fields
     user_to_edit.allowed_labs = allowed_labs or ['coal']
@@ -309,7 +310,7 @@ def update_user(
         try:
             user_to_edit.set_password(password)
         except ValueError:
-            return False, 'Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).'
+            return False, _l('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).')
 
     try:
         db.session.commit()
@@ -349,14 +350,14 @@ def delete_user(user_id: int, current_user_id: int) -> tuple[bool, str]:
         (success, message)
     """
     if current_user_id == user_id:
-        return False, "Админ хэрэглэгч өөрийгөө устгах боломжгүй."
+        return False, _l("Админ хэрэглэгч өөрийгөө устгах боломжгүй.")
 
     user_to_delete = db.session.get(User, user_id)
     if user_to_delete is None:
         return False, 'not_found'
 
     if user_to_delete.role == 'admin':
-        return False, "Админ хэрэглэгчийг устгах боломжгүй."
+        return False, _l("Админ хэрэглэгчийг устгах боломжгүй.")
 
     username = user_to_delete.username
     user_role = user_to_delete.role
@@ -474,13 +475,13 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
 def create_standard(name: str, targets: dict) -> tuple[bool, str]:
     """Шинэ хяналтын стандарт үүсгэх."""
     if not name or not targets:
-        return False, "Нэр болон утгууд шаардлагатай"
+        return False, _l("Нэр болон утгууд шаардлагатай")
 
     new_std = ControlStandard(name=name, targets=targets, is_active=False)
     db.session.add(new_std)
     try:
         db.session.commit()
-        return True, "Амжилттай үүсгэгдлээ"
+        return True, _l("Амжилттай үүсгэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -493,13 +494,13 @@ def update_standard(std_id: int, name: str, targets: dict) -> tuple[bool, str]:
         return False, 'not_found'
 
     if not name or not targets:
-        return False, "Бүрэн бус өгөгдөл"
+        return False, _l("Бүрэн бус өгөгдөл")
 
     std.name = name
     std.targets = targets
     try:
         db.session.commit()
-        return True, "Амжилттай шинэчлэгдлээ"
+        return True, _l("Амжилттай шинэчлэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -512,12 +513,12 @@ def delete_standard(std_id: int) -> tuple[bool, str]:
         return False, 'not_found'
 
     if std.is_active:
-        return False, "Идэвхтэй стандартыг устгах боломжгүй!"
+        return False, _l("Идэвхтэй стандартыг устгах боломжгүй!")
 
     db.session.delete(std)
     try:
         db.session.commit()
-        return True, "Устгагдлаа"
+        return True, _l("Устгагдлаа")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -533,7 +534,7 @@ def activate_standard(std_id: int) -> tuple[bool, str]:
     std.is_active = True
     try:
         db.session.commit()
-        return True, "Идэвхжүүлэгдлээ"
+        return True, _l("Идэвхжүүлэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -546,13 +547,13 @@ def activate_standard(std_id: int) -> tuple[bool, str]:
 def create_gbw(name: str, targets: dict) -> tuple[bool, str]:
     """Шинэ GBW стандарт үүсгэх."""
     if not name or not targets:
-        return False, "GBW дугаар болон утгууд шаардлагатай"
+        return False, _l("GBW дугаар болон утгууд шаардлагатай")
 
     new_gbw = GbwStandard(name=name, targets=targets, is_active=False)
     db.session.add(new_gbw)
     try:
         db.session.commit()
-        return True, "GBW амжилттай бүртгэгдлээ"
+        return True, _l("GBW амжилттай бүртгэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -565,13 +566,13 @@ def update_gbw(gbw_id: int, name: str, targets: dict) -> tuple[bool, str]:
         return False, 'not_found'
 
     if not name or not targets:
-        return False, "Бүрэн бус өгөгдөл"
+        return False, _l("Бүрэн бус өгөгдөл")
 
     gbw.name = name
     gbw.targets = targets
     try:
         db.session.commit()
-        return True, "GBW мэдээлэл шинэчлэгдлээ"
+        return True, _l("GBW мэдээлэл шинэчлэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -584,12 +585,12 @@ def delete_gbw(gbw_id: int) -> tuple[bool, str]:
         return False, 'not_found'
 
     if gbw.is_active:
-        return False, "Ашиглагдаж буй GBW-ийг устгах боломжгүй!"
+        return False, _l("Ашиглагдаж буй GBW-ийг устгах боломжгүй!")
 
     db.session.delete(gbw)
     try:
         db.session.commit()
-        return True, "GBW устгагдлаа"
+        return True, _l("GBW устгагдлаа")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -605,7 +606,7 @@ def activate_gbw(gbw_id: int) -> tuple[bool, str]:
     gbw.is_active = True
     try:
         db.session.commit()
-        return True, "GBW идэвхжүүлэгдлээ"
+        return True, _l("GBW идэвхжүүлэгдлээ")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"
@@ -620,7 +621,7 @@ def deactivate_gbw(gbw_id: int) -> tuple[bool, str]:
     gbw.is_active = False
     try:
         db.session.commit()
-        return True, "Амжилттай идэвхгүй болгогдлоо"
+        return True, _l("Амжилттай идэвхгүй болгогдлоо")
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Алдаа: {str(e)[:100]}"

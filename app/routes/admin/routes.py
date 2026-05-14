@@ -11,6 +11,7 @@ import logging
 
 from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.constants import CHPP_CONFIG_GROUPS
@@ -300,12 +301,12 @@ def delete_pattern_profile(profile_id):
         db.session.delete(profile)
         try:
             db.session.commit()
-            flash('Дүрэм устгагдлаа.', 'success')
+            flash(_l('Дүрэм устгагдлаа.'), 'success')
         except Exception as e:
             db.session.rollback()
             flash(f'Устгах алдаа: {str(e)[:100]}', 'danger')
     else:
-        flash('Анхдагч тохиргоог устгах боломжгүй.', 'warning')
+        flash(_l('Анхдагч тохиргоог устгах боломжгүй.'), 'warning')
     return redirect(url_for('admin.analysis_config'))
 
 # ==============================================================================

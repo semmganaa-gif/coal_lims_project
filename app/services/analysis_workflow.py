@@ -13,6 +13,7 @@ from datetime import datetime
 
 from markupsafe import escape
 from sqlalchemy import or_, func, case
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -253,7 +254,7 @@ def build_dashboard_stats():
     )
 
     unit_list = [
-        {"name": row.client_name or "Тодорхойгүй", "count": row.count}
+        {"name": row.client_name or _l("Тодорхойгүй"), "count": row.count}
         for row in samples_by_unit
     ]
 
@@ -271,7 +272,7 @@ def build_dashboard_stats():
     )
 
     type_list = [
-        {"name": row.sample_type or "Тодорхойгүй", "count": row.count}
+        {"name": row.sample_type or _l("Тодорхойгүй"), "count": row.count}
         for row in samples_by_type
     ]
 
@@ -346,7 +347,7 @@ def _apply_status_fields(res, new_status, rejection_category=None, rejection_com
         if hasattr(res, "rejection_category"):
             res.rejection_category = rejection_category
         if hasattr(res, "rejection_comment"):
-            res.rejection_comment = rejection_comment or "Ахлах буцаасан"
+            res.rejection_comment = rejection_comment or _l("Ахлах буцаасан")
         if hasattr(res, "error_reason"):
             res.error_reason = rejection_category
     else:
@@ -375,12 +376,12 @@ def update_result_status(result_id, new_status, rejection_comment=None,
             On error:   (None, error_message, http_status)
     """
     if new_status not in {"approved", "rejected", "pending_review"}:
-        return None, "Төлөв буруу байна", 400
+        return None, _l("Төлөв буруу байна"), 400
 
     # Row lock to prevent lost update
     res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
     if not res:
-        return None, "Үр дүн олдсонгүй", 404
+        return None, _l("Үр дүн олдсонгүй"), 404
 
     # Өмнөх төлөв хадгалах (before/after audit)
     old_status = res.status
@@ -407,7 +408,7 @@ def update_result_status(result_id, new_status, rejection_comment=None,
 
     action_text = new_status.upper()
     reason_text = safe_comment or (
-        "Зөвшөөрөгдсөн" if new_status == "approved" else "Хянагдаж буй"
+        _l("Зөвшөөрөгдсөн") if new_status == "approved" else _l("Хянагдаж буй")
     )
 
     sample = db.session.get(Sample, res.sample_id) if res.sample_id else None
@@ -431,7 +432,7 @@ def update_result_status(result_id, new_status, rejection_comment=None,
         db.session.commit()
     except StaleDataError:
         db.session.rollback()
-        return None, "Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү.", 409
+        return None, _l("Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."), 409
 
     # Invalidate cached stats after status change
     cache.delete('kpi_summary_ahlah')
@@ -487,16 +488,16 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
         tuple: (result_dict, error_msg, http_status_code)
     """
     if not result_ids:
-        return None, "Үр дүн сонгогдоогүй байна", 400
+        return None, _l("Үр дүн сонгогдоогүй байна"), 400
 
     if len(result_ids) > 200:
-        return None, "Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй", 400
+        return None, _l("Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй"), 400
 
     if new_status not in {"approved", "rejected"}:
-        return None, "Төлөв буруу байна", 400
+        return None, _l("Төлөв буруу байна"), 400
 
     if new_status == "rejected" and not rejection_category:
-        return None, "Буцаах шалтгаанаа сонгоно уу", 400
+        return None, _l("Буцаах шалтгаанаа сонгоно уу"), 400
 
     # XSS protection
     safe_comment = str(escape(rejection_comment)) if rejection_comment else None
@@ -504,7 +505,7 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
     try:
         int_ids = [int(rid) for rid in result_ids]
     except (ValueError, TypeError):
-        return None, "ID буруу байна", 400
+        return None, _l("ID буруу байна"), 400
 
     results_map = {
         r.id: r for r in
@@ -550,8 +551,8 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
                 rejection_category=rejection_category if new_status == "rejected" else None,
                 error_reason=rejection_category if new_status == "rejected" else None,
                 reason=safe_comment or (
-                    "Бөөнөөр зөвшөөрөгдсөн" if new_status == "approved"
-                    else "Бөөнөөр буцаагдсан"
+                    _l("Бөөнөөр зөвшөөрөгдсөн") if new_status == "approved"
+                    else _l("Бөөнөөр буцаагдсан")
                 ),
                 sample_code_snapshot=sample.sample_code if sample else None,
                 timestamp=now_ts,
@@ -568,10 +569,10 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
             db.session.commit()
         except StaleDataError:
             db.session.rollback()
-            return None, "Зарим үр дүнг өөр хэрэглэгч өөрчилсөн байна. Refresh хийнэ үү.", 409
+            return None, _l("Зарим үр дүнг өөр хэрэглэгч өөрчилсөн байна. Refresh хийнэ үү."), 409
         except SQLAlchemyError:
             db.session.rollback()
-            return None, "Мэдээллийн сангийн алдаа", 500
+            return None, _l("Мэдээллийн сангийн алдаа"), 500
 
         log_audit(
             action=f'bulk_result_{new_status}',
@@ -636,18 +637,18 @@ def select_repeat_result(result_id, use_original=False):
     """
     res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
     if not res:
-        return None, "Үр дүн олдсонгүй", 404
+        return None, _l("Үр дүн олдсонгүй"), 404
 
     raw = res.get_raw_data()
     repeat_info = raw.get("_repeat")
     if not repeat_info:
-        return None, "Давтан шинжилгээний мэдээлэл олдсонгүй", 400
+        return None, _l("Давтан шинжилгээний мэдээлэл олдсонгүй"), 400
 
     original_val = repeat_info.get("original_final_result")
     repeat_val = repeat_info.get("repeat_final_result")
 
     if original_val is None or repeat_val is None:
-        return None, "Анхны/давтан утга олдсонгүй", 400
+        return None, _l("Анхны/давтан утга олдсонгүй"), 400
 
     old_final = res.final_result
 
@@ -680,7 +681,7 @@ def select_repeat_result(result_id, use_original=False):
         db.session.commit()
     except StaleDataError:
         db.session.rollback()
-        return None, "Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү.", 409
+        return None, _l("Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."), 409
 
     log_audit(
         action=f"select_{choice.lower()}_result",
@@ -696,7 +697,7 @@ def select_repeat_result(result_id, use_original=False):
     )
 
     return {
-        "message": f"{'Анхны' if use_original else 'Давтан'} үр дүн сонгогдлоо",
+        "message": f"{_l('Анхны') if use_original else _l('Давтан')} үр дүн сонгогдлоо",
         "final_result": res.final_result,
         "use_original": use_original,
     }, None, 200
@@ -726,11 +727,11 @@ def update_result_status_api(result_id, new_status, action_type=None,
     """
     res = db.session.get(AnalysisResult, result_id)
     if not res:
-        return None, "Үр дүн олдсонгүй", 404
+        return None, _l("Үр дүн олдсонгүй"), 404
 
     allowed = {"approved", "rejected", "pending_review"}
     if new_status not in allowed:
-        return None, "Буруу статус", 400
+        return None, _l("Буруу статус"), 400
 
     safe_comment = str(escape(rejection_comment)) if rejection_comment else None
 
@@ -739,7 +740,7 @@ def update_result_status_api(result_id, new_status, action_type=None,
 
     if hasattr(res, "rejection_comment"):
         if new_status == "rejected":
-            res.rejection_comment = safe_comment if safe_comment else "Ахлахаас буцаагдсан"
+            res.rejection_comment = safe_comment if safe_comment else _l("Ахлахаас буцаагдсан")
         elif new_status == "approved":
             res.rejection_comment = None
 
@@ -750,13 +751,13 @@ def update_result_status_api(result_id, new_status, action_type=None,
 
     if new_status == "approved":
         action_text = "APPROVED"
-        default_reason = "Ахлахаас зөвшөөрөгдсөн"
+        default_reason = _l("Ахлахаас зөвшөөрөгдсөн")
     elif new_status == "rejected":
         action_text = "REJECTED"
-        default_reason = "Ахлахаас буцаагдсан"
+        default_reason = _l("Ахлахаас буцаагдсан")
     else:
         action_text = "PENDING_REVIEW"
-        default_reason = "Ахлахын хяналтад буцаагдсан"
+        default_reason = _l("Ахлахын хяналтад буцаагдсан")
 
     reason_text = safe_comment or default_reason
     if action_type:
@@ -783,11 +784,11 @@ def update_result_status_api(result_id, new_status, action_type=None,
         db.session.commit()
     except StaleDataError:
         db.session.rollback()
-        return None, "Өөр хэрэглэгч энэ үр дүнг засварласан байна. Дахин оролдоно уу.", 409
+        return None, _l("Өөр хэрэглэгч энэ үр дүнг засварласан байна. Дахин оролдоно уу."), 409
     except SQLAlchemyError as exc:
         db.session.rollback()
         logger.error("update_result_status commit error: %s", exc, exc_info=True)
-        return None, "Мэдээллийн сан хадгалах алдаа", 500
+        return None, _l("Мэдээллийн сан хадгалах алдаа"), 500
 
     # Execute workflow hooks (check_sample_complete, mark_sla_completed, etc.)
     try:
@@ -806,7 +807,7 @@ def update_result_status_api(result_id, new_status, action_type=None,
     except Exception:
         logger.exception("Workflow hook execution failed (API path)")
 
-    return {"message": "Амжилттай", "status": new_status}, None, 200
+    return {"message": _l("Амжилттай"), "status": new_status}, None, 200
 
 
 # =========================================================================
@@ -982,7 +983,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
     # --- 2. Normalization & Calculation ---
     raw_in = item.get("raw_data") or {}
     if not isinstance(raw_in, dict):
-        raise ValueError("raw_data нь dict байх ёстой")
+        raise ValueError(_l("raw_data нь dict байх ёстой"))
 
     _mg_flat = (
         analysis_code in ('MG', 'MG_SIZE') or
@@ -1059,7 +1060,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
 
     if raw_norm.get("_mad_required") and new_status == "approved":
         new_status = "pending_review"
-        status_reason = "Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)"
+        status_reason = _l("Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)")
 
     # --- 5. DB Operations ---
     existing = (
@@ -1074,7 +1075,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
     action = ""
     user_comment = item.get("rejection_comment")
     safe_comment = str(escape(user_comment)) if user_comment else None
-    reason = status_reason if status_reason else (safe_comment or "Химичээр хадгалагдсан")
+    reason = status_reason if status_reason else (safe_comment or _l("Химичээр хадгалагдсан"))
 
     auto_error_reason = None
     if new_status == "rejected":

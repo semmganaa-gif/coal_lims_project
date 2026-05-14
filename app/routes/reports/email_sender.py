@@ -12,6 +12,7 @@ from email.mime.text import MIMEText
 
 from flask import current_app, render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import LabReport
@@ -105,13 +106,13 @@ def send_report_email(report, recipients, subject=None, body=None):
 def send_email(id):
     """Тайлан имэйлээр илгээх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     report = LabReportRepository.get_by_id_or_404(id)
 
     if report.status not in ['approved', 'sent']:
-        flash("Зөвхөн батлагдсан тайланг илгээх боломжтой.", "warning")
+        flash(_l("Зөвхөн батлагдсан тайланг илгээх боломжтой."), "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     if request.method == "POST":
@@ -119,7 +120,7 @@ def send_email(id):
         recipients = [e.strip() for e in recipients_str.split(',') if e.strip()]
 
         if not recipients:
-            flash("Хүлээн авагчийн имэйл хаяг оруулна уу.", "warning")
+            flash(_l("Хүлээн авагчийн имэйл хаяг оруулна уу."), "warning")
             return redirect(url_for("pdf_reports.send_email", id=id))
 
         subject = request.form.get("subject")

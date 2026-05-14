@@ -12,6 +12,7 @@ from flask import (
     flash, send_from_directory, abort, jsonify, current_app
 )
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.constants import BOTTLE_TOLERANCE
@@ -97,7 +98,7 @@ def bottles_index():
 @login_required
 def bottles_constants_new():
     if not _is_senior_or_admin():
-        flash("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой.", "danger")
+        flash(_l("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     if request.method == "POST":
@@ -108,7 +109,7 @@ def bottles_constants_new():
             t1 = float(request.form.get("trial_1") or "nan")
             t2 = float(request.form.get("trial_2") or "nan")
         except (ValueError, TypeError):
-            flash("Туршилт 1, 2 тоон утга шаардлагатай.", "danger")
+            flash(_l("Туршилт 1, 2 тоон утга шаардлагатай."), "danger")
             return redirect(url_for("settings.bottles_constants_new"))
 
         t3_raw = request.form.get("trial_3")
@@ -123,7 +124,7 @@ def bottles_constants_new():
         remarks = (request.form.get("remarks") or "").strip()
 
         if not serial_no:
-            flash("Бортогоны дугаар (serial_no) шаардлагатай.", "danger")
+            flash(_l("Бортогоны дугаар (serial_no) шаардлагатай."), "danger")
             return redirect(url_for("settings.bottles_constants_new"))
 
         # Bottle хайх/үүсгэх
@@ -188,7 +189,7 @@ def bottles_constants_new():
 def bottles_constants_bulk():
     """Олон бортогод нэг дор тогтмол оруулах хуудас"""
     if not _is_senior_or_admin():
-        flash("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой.", "danger")
+        flash(_l("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     # Идэвхтэй бортогуудыг natural sorting-ээр харуулах
@@ -289,7 +290,7 @@ def bottles_constants_bulk_save():
 @login_required
 def bottle_edit(bottle_id: int):
     if not _is_senior_or_admin():
-        flash("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой.", "danger")
+        flash(_l("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     bottle = BottleRepository.get_by_id_or_404(bottle_id)
@@ -299,12 +300,12 @@ def bottle_edit(bottle_id: int):
         is_active = True if request.form.get("is_active") == "1" else False
 
         if not serial_no:
-            flash("Бортогоны дугаар хоосон байж болохгүй.", "danger")
+            flash(_l("Бортогоны дугаар хоосон байж болохгүй."), "danger")
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
         # serial_no давхцахгүй байх шалгалт (өөрөөс нь бусадтай)
         if BottleRepository.serial_exists(serial_no, exclude_id=bottle.id):
-            flash("Ижил дугаартай бортого аль хэдийн бүртгэгдсэн байна.", "danger")
+            flash(_l("Ижил дугаартай бортого аль хэдийн бүртгэгдсэн байна."), "danger")
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
         bottle.serial_no = serial_no
@@ -413,7 +414,7 @@ def api_bottle_active(serial_no):
 @login_required
 def repeatability_limits():
     if not _is_senior_or_admin():
-        flash("Зөвхөн ахлах түвшний хэрэглэгч засах эрхтэй.", "danger")
+        flash(_l("Зөвхөн ахлах түвшний хэрэглэгч засах эрхтэй."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     current_rules = load_limit_rules()
@@ -453,7 +454,7 @@ def repeatability_limits():
 def notification_settings():
     """Email мэдэгдлийн тохиргоо"""
     if not _is_admin():
-        flash("Зөвхөн админ засах эрхтэй.", "danger")
+        flash(_l("Зөвхөн админ засах эрхтэй."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     notification_types = [
@@ -495,7 +496,7 @@ def notification_settings():
 def email_recipients():
     """Тайлан илгээх имэйл хаягийн тохиргоо (TO, CC)"""
     if not _is_admin():
-        flash("Зөвхөн админ засах эрхтэй.", "danger")
+        flash(_l("Зөвхөн админ засах эрхтэй."), "danger")
         return redirect(url_for("settings.bottles_index"))
 
     # Одоогийн тохиргоог авах

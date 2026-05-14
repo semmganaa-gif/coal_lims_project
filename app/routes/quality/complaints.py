@@ -8,6 +8,7 @@ from datetime import date
 
 from flask import render_template, flash, redirect, url_for, request, jsonify, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy import func, extract
 
 from app import db
@@ -143,7 +144,7 @@ def register_routes(bp):
             complaint_content = request.form.get('complaint_content', '').strip()
 
             if not complainant_name or not complaint_content:
-                flash("Нэр болон агуулга шаардлагатай.", "danger")
+                flash(_l("Нэр болон агуулга шаардлагатай."), "danger")
                 return render_template(
                     'quality/complaints_form.html',
                     today=date.today().isoformat(),

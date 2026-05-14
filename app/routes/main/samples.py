@@ -10,6 +10,7 @@ from datetime import date, timedelta
 
 from flask import render_template, flash, redirect, url_for, request, abort, current_app
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -40,7 +41,7 @@ def register_routes(bp):
             current_user.role == "prep" and sample.status == "new"
         )
         if not can_edit:
-            flash("Энэ дээжийг засах эрхгүй, эсвэл аль хэдийн боловсруулалтанд орсон байна.", "warning")
+            flash(_l("Энэ дээжийг засах эрхгүй, эсвэл аль хэдийн боловсруулалтанд орсон байна."), "warning")
             return redirect(url_for("main.index"))
 
         all_analysis_types = AnalysisTypeRepository.get_all_ordered()
@@ -59,13 +60,13 @@ def register_routes(bp):
             analyses_changed = set(selected_analyses) != set(current_analyses)
 
             if not new_code:
-                flash("Дээжний код хоосон байж болохгүй.", "danger")
+                flash(_l("Дээжний код хоосон байж болохгүй."), "danger")
             # Case-insensitive duplicate check
             elif code_changed and Sample.query.filter(
                 db.func.upper(Sample.sample_code) == new_code.upper(),
                 Sample.id != sample_id
             ).first():
-                flash(f'АЛДАА: "{new_code}" кодтой дээж аль хэдийн бүртгэгдсэн байна.', "danger")
+                flash(f'АЛДАА: "{new_code}_l(" кодтой дээж аль хэдийн бүртгэгдсэн байна.', ")danger")
             else:
                 try:
                     if code_changed:
@@ -75,14 +76,14 @@ def register_routes(bp):
 
                     if code_changed or analyses_changed:
                         db.session.commit()
-                        flash("Дээжний мэдээлэл амжилттай шинэчлэгдлээ.", "success")
+                        flash(_l("Дээжний мэдээлэл амжилттай шинэчлэгдлээ."), "success")
                     else:
-                        flash("Өөрчлөлт хийгдээгүй.", "info")
+                        flash(_l("Өөрчлөлт хийгдээгүй."), "info")
                     return redirect(url_for("main.index"))
                 except SQLAlchemyError as e:
                     db.session.rollback()
                     current_app.logger.error(f"Sample save error: {e}", exc_info=True)
-                    flash("Хадгалахад алдаа гарлаа.", "danger")
+                    flash(_l("Хадгалахад алдаа гарлаа."), "danger")
 
         return render_template(
             "edit_sample.html",
@@ -102,11 +103,11 @@ def register_routes(bp):
         sample_ids_to_delete = request.form.getlist("sample_ids")
 
         if not sample_ids_to_delete:
-            flash("Устгах дээжүүдээ сонгоно уу!", "warning")
+            flash(_l("Устгах дээжүүдээ сонгоно уу!"), "warning")
             return redirect(url_for("main.index"))
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Дээж устгах эрхгүй байна.", "danger")
+            flash(_l("Дээж устгах эрхгүй байна."), "danger")
             return redirect(url_for("main.index"))
 
         deleted_count = 0
@@ -143,7 +144,7 @@ def register_routes(bp):
             except SQLAlchemyError as e:
                 db.session.rollback()
                 current_app.logger.error(f"Bulk delete commit error: {e}")
-                flash("Устгах үед алдаа гарлаа. Дахин оролдоно уу.", "danger")
+                flash(_l("Устгах үед алдаа гарлаа. Дахин оролдоно уу."), "danger")
         if failed_samples:
             flash(f'Алдаа: Дараах дээжүүд устгагдсангүй: {", ".join(failed_samples)}', "danger")
 
@@ -169,18 +170,18 @@ def register_routes(bp):
         from app.models import Sample
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Энэ үйлдлийг гүйцэтгэх эрхгүй байна.", "danger")
+            flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
             return redirect(url_for("main.sample_disposal"))
 
         sample_ids = request.form.getlist("sample_ids")
         disposal_method = request.form.get("disposal_method", "").strip()
 
         if not sample_ids:
-            flash("Устгах дээж сонгогдоогүй байна.", "warning")
+            flash(_l("Устгах дээж сонгогдоогүй байна."), "warning")
             return redirect(url_for("main.sample_disposal"))
 
         if not disposal_method:
-            flash("Устгалын аргыг оруулна уу.", "warning")
+            flash(_l("Устгалын аргыг оруулна уу."), "warning")
             return redirect(url_for("main.sample_disposal"))
 
         disposed_count = 0
@@ -224,14 +225,14 @@ def register_routes(bp):
         from app.models import Sample
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Энэ үйлдлийг гүйцэтгэх эрхгүй байна.", "danger")
+            flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
             return redirect(url_for("main.sample_disposal"))
 
         sample_ids = request.form.getlist("sample_ids")
         retention_days = request.form.get("retention_days", "90")
 
         if not sample_ids:
-            flash("Дээж сонгогдоогүй байна.", "warning")
+            flash(_l("Дээж сонгогдоогүй байна."), "warning")
             return redirect(url_for("main.sample_disposal"))
 
         try:
@@ -284,7 +285,7 @@ def register_routes(bp):
         from_date_type = request.form.get("from_date", "received")
 
         if not retention_days:
-            flash("Хугацаа сонгоно уу.", "warning")
+            flash(_l("Хугацаа сонгоно уу."), "warning")
             return redirect(url_for("main.sample_disposal"))
 
         # Find coal samples without retention date
@@ -295,7 +296,7 @@ def register_routes(bp):
         ).all()
 
         if not samples:
-            flash("Хадгалах хугацаагүй дээж олдсонгүй.", "info")
+            flash(_l("Хадгалах хугацаагүй дээж олдсонгүй."), "info")
             return redirect(url_for("main.sample_disposal"))
 
         today = date.today()

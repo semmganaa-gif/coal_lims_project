@@ -9,6 +9,7 @@ from flask import (
     flash, abort, current_app
 )
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -79,7 +80,7 @@ def equipment_journal_special(journal_type):
     }
     template = templates.get(journal_type)
     if not template:
-        flash("Журнал олдсонгүй.", "warning")
+        flash(_l("Журнал олдсонгүй."), "warning")
         return redirect(url_for("equipment.equipment_journal"))
 
     if journal_type == 'balances_register':
@@ -121,7 +122,7 @@ def equipment_journal_special(journal_type):
 def add_register_item(register_type):
     """Бүртгэлд шинэ мөр нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
     data = request.form.to_dict()
@@ -136,7 +137,7 @@ def add_register_item(register_type):
     try:
         quantity = int(data.pop('quantity', '1') or '1')
     except (ValueError, TypeError):
-        flash("Буруу тоо ширхэг утга.", "error")
+        flash(_l("Буруу тоо ширхэг утга."), "error")
         return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
     new_item = Equipment(
@@ -156,7 +157,7 @@ def add_register_item(register_type):
     db.session.add(new_item)
     try:
         db.session.commit()
-        flash("Амжилттай нэмэгдлээ.", "success")
+        flash(_l("Амжилттай нэмэгдлээ."), "success")
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error adding register item: {e}")
@@ -169,7 +170,7 @@ def add_register_item(register_type):
 def edit_register_item(id):
     """Бүртгэлийн мөр засах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     item = EquipmentRepository.get_by_id(id)
@@ -194,7 +195,7 @@ def edit_register_item(id):
     try:
         item.quantity = int(data.pop('quantity', str(item.quantity or 1)) or '1')
     except (ValueError, TypeError):
-        flash("Буруу тоо ширхэг утга.", "error")
+        flash(_l("Буруу тоо ширхэг утга."), "error")
         return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
     item.location = data.pop('location', item.location)
@@ -204,7 +205,7 @@ def edit_register_item(id):
 
     try:
         db.session.commit()
-        flash("Амжилттай шинэчлэгдлээ.", "success")
+        flash(_l("Амжилттай шинэчлэгдлээ."), "success")
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error editing register item: {e}")
@@ -217,14 +218,14 @@ def edit_register_item(id):
 def delete_register_items():
     """Бүртгэлийн мөрүүд устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     ids = request.form.getlist('item_ids')
     register_type = request.form.get('register_type', 'measurement')
 
     if not ids:
-        flash("Мөр сонгогдоогүй байна.", "warning")
+        flash(_l("Мөр сонгогдоогүй байна."), "warning")
         return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
     deleted = 0

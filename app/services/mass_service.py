@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from flask_login import current_user
 from sqlalchemy import or_, and_
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -65,15 +66,15 @@ def _safe_commit() -> ServiceResult | None:
         return None
     except StaleDataError:
         db.session.rollback()
-        return ServiceResult(False, "Өгөгдөл өөрчлөгдсөн байна. Refresh хийнэ үү.", status_code=409)
+        return ServiceResult(False, _l("Өгөгдөл өөрчлөгдсөн байна. Refresh хийнэ үү."), status_code=409)
     except IntegrityError as e:
         db.session.rollback()
         logger.error("Integrity error: %s", e)
-        return ServiceResult(False, "Өгөгдлийн зөрчил гарлаа", status_code=409)
+        return ServiceResult(False, _l("Өгөгдлийн зөрчил гарлаа"), status_code=409)
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error("Database error: %s", e)
-        return ServiceResult(False, "Өгөгдлийн санд алдаа гарлаа", status_code=500)
+        return ServiceResult(False, _l("Өгөгдлийн санд алдаа гарлаа"), status_code=500)
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +90,7 @@ def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
         action: "archive" | "unarchive"
     """
     if not sample_ids:
-        return ServiceResult(False, "Дээж сонгогдоогүй байна", status_code=400)
+        return ServiceResult(False, _l("Дээж сонгогдоогүй байна"), status_code=400)
 
     new_status = "archived" if action == "archive" else "new"
 
@@ -113,7 +114,7 @@ def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error("Update sample status error: %s", e)
-        return ServiceResult(False, "Хадгалахад алдаа гарлаа", status_code=500)
+        return ServiceResult(False, _l("Хадгалахад алдаа гарлаа"), status_code=500)
 
 
 def get_eligible_samples(include_ready: bool = False, q_text: str = "") -> list[dict]:

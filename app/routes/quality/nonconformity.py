@@ -6,6 +6,7 @@ from datetime import date
 
 from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import NonConformityRecord
@@ -47,7 +48,7 @@ def register_routes(bp):
             nc_description = request.form.get('nc_description', '').strip()
 
             if not detector_name or not nc_description:
-                flash("Илрүүлсэн хүн болон дэлгэрэнгүй мэдээлэл шаардлагатай.", "danger")
+                flash(_l("Илрүүлсэн хүн болон дэлгэрэнгүй мэдээлэл шаардлагатай."), "danger")
                 return render_template(
                     'quality/nonconformity_form.html',
                     today=date.today().isoformat(),

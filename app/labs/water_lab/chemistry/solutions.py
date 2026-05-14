@@ -7,6 +7,7 @@ from datetime import datetime, date
 
 from flask import render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -187,7 +188,7 @@ def add_solution():
         except (ValueError, TypeError, SQLAlchemyError) as e:
             db.session.rollback()
             logger.exception('add_solution error')
-            flash('Уусмал нэмэхэд алдаа гарлаа.', 'danger')
+            flash(_l('Уусмал нэмэхэд алдаа гарлаа.'), 'danger')
 
     # GET - Химийн бодисын жагсаалт
     chemicals = ChemicalRepository.get_for_water_lab()
@@ -254,7 +255,7 @@ def edit_solution(id):
         except (ValueError, TypeError, SQLAlchemyError) as e:
             db.session.rollback()
             logger.exception('edit_solution error: id=%s', id)
-            flash('Уусмал засахад алдаа гарлаа.', 'danger')
+            flash(_l('Уусмал засахад алдаа гарлаа.'), 'danger')
 
     # GET
     chemicals = ChemicalRepository.get_for_water_lab()
@@ -607,7 +608,7 @@ def prepare_from_recipe(id):
     except (ValueError, TypeError, SQLAlchemyError) as e:
         db.session.rollback()
         logger.exception('prepare_from_recipe error: id=%s', id)
-        flash('Уусмал найруулахад алдаа гарлаа.', 'danger')
+        flash(_l('Уусмал найруулахад алдаа гарлаа.'), 'danger')
         return redirect(url_for('water.recipe_detail', id=id))
 
 
@@ -655,7 +656,7 @@ def add_recipe():
         except (ValueError, TypeError, SQLAlchemyError) as e:
             db.session.rollback()
             logger.exception('add_recipe error')
-            flash('Жор нэмэхэд алдаа гарлаа.', 'danger')
+            flash(_l('Жор нэмэхэд алдаа гарлаа.'), 'danger')
 
     # GET
     chemicals = ChemicalRepository.get_for_water_lab()
@@ -711,7 +712,7 @@ def edit_recipe(id):
         except (ValueError, TypeError, SQLAlchemyError) as e:
             db.session.rollback()
             logger.exception('edit_recipe error: id=%s', id)
-            flash('Жор засахад алдаа гарлаа.', 'danger')
+            flash(_l('Жор засахад алдаа гарлаа.'), 'danger')
 
     # GET
     chemicals = ChemicalRepository.get_for_water_lab()

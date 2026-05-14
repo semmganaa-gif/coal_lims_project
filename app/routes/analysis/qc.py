@@ -12,6 +12,7 @@ from collections import defaultdict
 
 from flask import request, render_template, flash, redirect, url_for
 from flask_login import login_required
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import Sample, AnalysisResult
@@ -210,7 +211,7 @@ def register_routes(bp):
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
         if not ids:
-            flash("QC Dashboard-д дээж олдсонгүй.", "warning")
+            flash(_l("QC Dashboard-д дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ COM дээж сонгосон бол автоматаар hourly дээжүүдийг олох
@@ -239,13 +240,13 @@ def register_routes(bp):
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
         if not ids:
-            flash("Spec шалгалтад дээж олдсонгүй.", "warning")
+            flash(_l("Spec шалгалтад дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # Дээжүүдийг татах (✅ pagination limit нэмсэн)
         samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).limit(5000).all()
         if not samples:
-            flash("Дээж олдсонгүй.", "warning")
+            flash(_l("Дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ Vdaf тооцоолоход Vad хэрэгтэй
@@ -342,13 +343,13 @@ def register_routes(bp):
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
 
         if not ids:
-            flash("Корреляци шалгалтад дээж олдсонгүй.", "warning")
+            flash(_l("Корреляци шалгалтад дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ Pagination limit нэмсэн
         samples = Sample.query.filter(Sample.id.in_(ids)).limit(5000).all()
         if not samples:
-            flash("Дээж олдсонгүй.", "warning")
+            flash(_l("Дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ N+1 QUERY ЗАСВАР: Бүх үр дүнг нэг query-ээр татах

@@ -17,6 +17,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import Sample, AnalysisResult
@@ -94,7 +95,7 @@ def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResul
         return ArchiveResult(
             success=False,
             updated_count=0,
-            message="Дээж сонгоогүй байна.",
+            message=_l("Дээж сонгоогүй байна."),
             error="NO_SAMPLES"
         )
 
@@ -103,7 +104,7 @@ def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResul
         # Repository ашиглах
         updated_count = SampleRepository.update_status(sample_ids, new_status)
 
-        action_text = "архивд шилжүүллээ" if archive else "архивнаас сэргээллээ"
+        action_text = _l("архивд шилжүүллээ") if archive else _l("архивнаас сэргээллээ")
         message = f"{updated_count} дээжийг амжилттай {action_text}."
 
         logger.info(f"Samples {'archived' if archive else 'unarchived'}: {sample_ids}")
@@ -547,7 +548,7 @@ def register_batch_samples(
         db.session.rollback()
         logger.error(f"Error during batch registration: {e}")
         return RegistrationResult(
-            success=False, count=0, message="Дээж бүртгэхэд алдаа гарлаа.",
+            success=False, count=0, message=_l("Дээж бүртгэхэд алдаа гарлаа."),
             failed_codes=failed, error=str(e),
         )
 
@@ -555,10 +556,10 @@ def register_batch_samples(
         from app.utils.database import safe_commit
         if not safe_commit(
             f"{count} ш дээж амжилттай бүртгэгдлээ.",
-            "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна.",
+            _l("БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."),
         ):
             return RegistrationResult(
-                success=False, count=0, message="Дээжний код давхардсан байна.",
+                success=False, count=0, message=_l("Дээжний код давхардсан байна."),
                 failed_codes=failed, error="DUPLICATE_CODE",
             )
 
@@ -606,7 +607,7 @@ def register_wtl_auto_samples(
     if not lab_number:
         return RegistrationResult(
             success=False, count=0,
-            message="WTL-д лабораторийн дугаар шаардлагатай.",
+            message=_l("WTL-д лабораторийн дугаар шаардлагатай."),
             error="MISSING_LAB_NUMBER",
         )
 
@@ -641,10 +642,10 @@ def register_wtl_auto_samples(
         from app.utils.database import safe_commit
         if not safe_commit(
             f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ.",
-            "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна.",
+            _l("БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."),
         ):
             return RegistrationResult(
-                success=False, count=0, message="Дээжний код давхардсан байна.",
+                success=False, count=0, message=_l("Дээжний код давхардсан байна."),
                 error="DUPLICATE_CODE",
             )
         for name in all_wtl_names:
@@ -764,7 +765,7 @@ def register_wtl_mg_test(
         if not wtl_module or not wtl_supplier or not wtl_vehicle:
             return RegistrationResult(
                 success=False, count=0,
-                message="MG-д Module, Supplier, Vehicle талбарууд шаардлагатай.",
+                message=_l("MG-д Module, Supplier, Vehicle талбарууд шаардлагатай."),
                 error="MISSING_FIELDS",
             )
         formatted_date = sample_date.strftime("%Y%m%d")
@@ -776,7 +777,7 @@ def register_wtl_mg_test(
         if not sample_code:
             return RegistrationResult(
                 success=False, count=0,
-                message="Энэ WTL төрөлд дээжний нэр шаардлагатай.",
+                message=_l("Энэ WTL төрөлд дээжний нэр шаардлагатай."),
                 error="MISSING_SAMPLE_CODE",
             )
         final_code = sample_code
@@ -800,7 +801,7 @@ def register_wtl_mg_test(
 
     from app.utils.database import safe_commit
     if not safe_commit(
-        "Шинэ дээж амжилттай бүртгэгдлээ.",
+        _l("Шинэ дээж амжилттай бүртгэгдлээ."),
         f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_code}" дээж аль хэдийн бүртгэгдсэн байна.',
     ):
         return RegistrationResult(
@@ -815,7 +816,7 @@ def register_wtl_mg_test(
             "sample_type": sample_type, "lab_type": "water_chemistry",
         },
     )
-    return RegistrationResult(success=True, count=1, message="Шинэ дээж амжилттай бүртгэгдлээ.")
+    return RegistrationResult(success=True, count=1, message=_l("Шинэ дээж амжилттай бүртгэгдлээ."))
 
 
 # ==========================================================================

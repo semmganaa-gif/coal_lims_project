@@ -6,6 +6,7 @@ from datetime import date
 
 from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import ImprovementRecord
@@ -45,7 +46,7 @@ def register_routes(bp):
         if request.method == "POST":
             activity = request.form.get('activity_description', '').strip()
             if not activity:
-                flash("Сайжруулалтын үйл ажиллагааг тайлбарлана уу.", "danger")
+                flash(_l("Сайжруулалтын үйл ажиллагааг тайлбарлана уу."), "danger")
                 return render_template(
                     'quality/improvement_form.html',
                     today=date.today().isoformat(),

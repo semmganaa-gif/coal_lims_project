@@ -3,6 +3,7 @@
 
 from flask import render_template, request, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app.repositories import EquipmentRepository
 from app.routes.spare_parts import spare_parts_bp, UNITS, STATUS_TYPES
@@ -29,7 +30,7 @@ from app.utils.database import safe_commit
 def category_list():
     """Категорийн жагсаалт."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     categories = get_all_categories_ordered()
@@ -45,7 +46,7 @@ def category_list():
 def add_category():
     """Шинэ категори нэмэх."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     if request.method == 'POST':
@@ -77,7 +78,7 @@ def add_category():
 def edit_category(id):
     """Категори засварлах."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     if request.method == 'POST':
@@ -116,7 +117,7 @@ def edit_category(id):
 def delete_category(id):
     """Категори устгах."""
     if current_user.role != 'admin':
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     name, error = svc_delete_category(id)
@@ -184,7 +185,7 @@ def spare_part_detail(id):
 def add_spare_part():
     """Шинэ сэлбэг нэмэх."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     if request.method == 'POST':
@@ -239,7 +240,7 @@ def add_spare_part():
 def edit_spare_part(id):
     """Сэлбэг засварлах."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     from app import db
@@ -312,7 +313,7 @@ def edit_spare_part(id):
 def receive_spare_part(id):
     """Сэлбэг нөөц нэмэх (шинээр ирсэн)."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     try:
@@ -360,7 +361,7 @@ def consume_spare_part(id):
         if error == 'not_found':
             abort(404)
         elif error:
-            flash(error, 'warning' if 'Тоо хэмжээ' in error else 'danger')
+            flash(error, 'warning' if _l('Тоо хэмжээ') in error else 'danger')
         else:
             safe_commit(
                 f"{result['consumed']} {result['unit']} зарцуулагдлаа. Үлдэгдэл: {result['remaining']}",
@@ -381,7 +382,7 @@ def consume_spare_part(id):
 def dispose_spare_part(id):
     """Сэлбэг устгах (disposal)."""
     if current_user.role not in ['senior', 'manager', 'admin']:
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     reason = request.form.get('reason', 'Устгав')
@@ -401,7 +402,7 @@ def dispose_spare_part(id):
 def delete_spare_part(id):
     """Сэлбэг бүрмөсөн устгах (зөвхөн admin)."""
     if current_user.role != 'admin':
-        flash('Хандах эрхгүй.', 'danger')
+        flash(_l('Хандах эрхгүй.'), 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     name, error = delete_spare_part_permanently(id)

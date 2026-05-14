@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy import extract, func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -114,7 +115,7 @@ def edit_sample(sample_id):
             except (TypeError, SQLAlchemyError):
                 db.session.rollback()
                 logger.exception('edit_sample error: sample_id=%s', sample_id)
-                flash('Дээж засахад алдаа гарлаа.', 'danger')
+                flash(_l('Дээж засахад алдаа гарлаа.'), 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -221,7 +222,7 @@ def register_sample():
         except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('register_sample error')
-            flash('Дээж бүртгэхэд алдаа гарлаа.', 'danger')
+            flash(_l('Дээж бүртгэхэд алдаа гарлаа.'), 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
     return render_template(

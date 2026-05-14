@@ -11,6 +11,7 @@ from flask import (
     flash, jsonify, send_file, current_app, abort
 )
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from werkzeug.utils import secure_filename
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -71,7 +72,7 @@ def report_list():
 def signature_list():
     """Гарын үсэг, тамгын жагсаалт."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
     signatures = ReportSignature.query.filter_by(is_active=True).all()
@@ -91,7 +92,7 @@ def signature_list():
 def add_signature():
     """Гарын үсэг/тамга нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
     if request.method == "POST":
@@ -118,7 +119,7 @@ def add_signature():
                     file_size = file.tell()
                     file.seek(0)
                     if file_size > MAX_SIGNATURE_FILE_SIZE:
-                        flash("Файлын хэмжээ хэт их (max 5MB).", "danger")
+                        flash(_l("Файлын хэмжээ хэт их (max 5MB)."), "danger")
                         return redirect(url_for("pdf_reports.signature_list"))
 
                     # Magic bytes шалгах
@@ -126,7 +127,7 @@ def add_signature():
                     file.seek(0)
                     valid_magic = any(header_bytes.startswith(magic) for magic in IMAGE_MAGIC_BYTES)
                     if not valid_magic:
-                        flash("Файлын агуулга зургийн формат биш байна.", "danger")
+                        flash(_l("Файлын агуулга зургийн формат биш байна."), "danger")
                         return redirect(url_for("pdf_reports.signature_list"))
 
                     # Хадгалах folder
@@ -174,7 +175,7 @@ def add_signature():
 def delete_signature(id):
     """Гарын үсэг/тамга устгах."""
     if current_user.role not in ["manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
     sig = ReportSignatureRepository.get_by_id(id)
@@ -225,7 +226,7 @@ def report_detail(id):
 def approve_report(id):
     """Тайлан баталгаажуулах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     report = LabReportRepository.get_by_id_or_404(id)
@@ -266,17 +267,17 @@ def download_report(id):
     report = LabReportRepository.get_by_id_or_404(id)
 
     if not report.pdf_path:
-        flash("PDF файл олдсонгүй.", "warning")
+        flash(_l("PDF файл олдсонгүй."), "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     pdf_full_path = os.path.realpath(os.path.join(current_app.root_path, 'static', report.pdf_path))
     safe_dir = os.path.realpath(os.path.join(current_app.root_path, 'static'))
     if not pdf_full_path.startswith(safe_dir):
-        flash("Зөвшөөрөгдөөгүй файлын зам.", "danger")
+        flash(_l("Зөвшөөрөгдөөгүй файлын зам."), "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     if not os.path.exists(pdf_full_path):
-        flash("PDF файл олдсонгүй.", "warning")
+        flash(_l("PDF файл олдсонгүй."), "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     return send_file(
@@ -294,7 +295,7 @@ def download_report(id):
 def delete_report(id):
     """Тайлан устгах."""
     if current_user.role not in ["manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
     report = LabReportRepository.get_by_id_or_404(id)

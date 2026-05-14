@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -77,7 +78,7 @@ def build_calibration_description(calibration):
             eth_volume = ethanol.get("volume")
             eth_expected = ethanol.get("expected")
             eth_measured = ethanol.get("measured")
-            desc_parts.append("Этанол туухай шалгалт:")
+            desc_parts.append(_l("Этанол туухай шалгалт:"))
             if eth_temp is not None:
                 desc_parts.append(f"  Температур: {eth_temp}\u00b0C")
             if eth_density is not None:
@@ -100,7 +101,7 @@ def build_calibration_description(calibration):
         standards = calibration.get("standards", [])
         verifications = calibration.get("verifications", [])
 
-        calib_label = "XRF калибровка" if calib_type == "xrf_calib" else "Хүхэр багаж калибровка"
+        calib_label = _l("XRF калибровка") if calib_type == "xrf_calib" else _l("Хүхэр багаж калибровка")
         desc_parts.append(f"{calib_label} ({curve_type.capitalize()}):")
         if rms_error is not None:
             desc_parts.append(f"  RMS Error: {rms_error:.4f}")
@@ -127,7 +128,7 @@ def build_calibration_description(calibration):
             desc_parts.append("  " + " | ".join(parts))
 
         if verifications:
-            desc_parts.append("Шалгалт:")
+            desc_parts.append(_l("Шалгалт:"))
             for i, v in enumerate(verifications, 1):
                 name = v.get("name", f"Шалг {i}")
                 cert = v.get("certified")
@@ -141,7 +142,7 @@ def build_calibration_description(calibration):
 
     elif calib_type == "calorimeter":
         # Илчлэг багаж - 5 хэмжилт
-        std_name = calibration.get("standard_name", "Бензой хүчил")
+        std_name = calibration.get("standard_name", _l("Бензой хүчил"))
         cert_val = calibration.get("certified_value", 26454)
         prev_cap = calibration.get("prev_heat_capacity")
         bomb_cap = calibration.get("bomb_heat_capacity")
@@ -164,7 +165,7 @@ def build_calibration_description(calibration):
                 desc_parts.append(f"  C: {bomb_cap} J/\u00b0C")
             if rsd > 0.1 or avg_diff > 60:
                 result = "Fail"
-                desc_parts.append(f"  Шалтгаан: {'RSD > 0.1%' if rsd > 0.1 else 'Зөрүү > 60 J/g'}")
+                desc_parts.append(f"  Шалтгаан: {'RSD > 0.1%' if rsd > 0.1 else _l('Зөрүү > 60 J/g')}")
 
     elif calib_type == "analysis":
         std_name = calibration.get("standard_name", "")
@@ -187,7 +188,7 @@ def build_calibration_description(calibration):
         adjustments = calibration.get("adjustments", [])
         final_pass = calibration.get("final_pass", False)
 
-        desc_parts.append("Хоосон тигелийн туршилт (CSN):")
+        desc_parts.append(_l("Хоосон тигелийн туршилт (CSN):"))
         if start_temp:
             desc_parts.append(f"  Эхлэх темп: {start_temp}\u00b0C")
         if max_current:
@@ -223,7 +224,7 @@ def build_calibration_description(calibration):
             target_5 = calibration.get("target_5min", 250)
             drum_pass = calibration.get("pass", False)
 
-            desc_parts.append("Барабан калибровка (Gi):")
+            desc_parts.append(_l("Барабан калибровка (Gi):"))
             if initial_rpm is not None:
                 desc_parts.append(f"  Эхний эргэлт: {initial_rpm}")
             if meas_1min is not None:
@@ -238,7 +239,7 @@ def build_calibration_description(calibration):
             before_rpm = calibration.get("before")
             after_rpm = calibration.get("after")
             duration = calibration.get("duration", "")
-            desc_parts.append("Тээрэм калибровка:")
+            desc_parts.append(_l("Тээрэм калибровка:"))
             if duration:
                 desc_parts.append(f"  Хугацаа: {duration} мин")
             if before_rpm is not None and after_rpm is not None:
@@ -288,9 +289,9 @@ def process_bulk_usage_items(items, user_id, username):
             if desc_parts:
                 freq = calibration.get("frequency", "daily")
                 freq_map = {
-                    "daily": "Өдөр тутам",
-                    "monthly": "Сар болгон",
-                    "adjustment": "Тохируулга",
+                    "daily": _l("Өдөр тутам"),
+                    "monthly": _l("Сар болгон"),
+                    "adjustment": _l("Тохируулга"),
                 }
                 freq_label = freq_map.get(freq, freq)
                 desc_parts.insert(0, f"[{freq_label}]")
@@ -356,7 +357,7 @@ def process_bulk_usage_items(items, user_id, username):
                         equipment_id=eq_id,
                         quantity_used=qty_used,
                         unit=sp_item.unit,
-                        purpose=f"Засвар: {note}" if note else "Засвар",
+                        purpose=f"Засвар: {note}" if note else _l("Засвар"),
                         used_by_id=user_id,
                         quantity_before=old_qty,
                         quantity_after=sp_item.quantity,
@@ -389,7 +390,7 @@ def process_bulk_usage_items(items, user_id, username):
                 equipment_id=eq_id,
                 action_date=repair_date or today_date,
                 action_type="Repair",
-                description="\n".join(repair_desc_parts) if repair_desc_parts else "Засвар хийгдсэн",
+                description="\n".join(repair_desc_parts) if repair_desc_parts else _l("Засвар хийгдсэн"),
                 performed_by=username,
                 performed_by_id=user_id,
                 result="Pass",
@@ -422,7 +423,7 @@ def process_bulk_usage_items(items, user_id, username):
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error("Bulk usage log commit error: %s", e)
-        return False, 0, "Хадгалахад алдаа гарлаа"
+        return False, 0, _l("Хадгалахад алдаа гарлаа")
 
     # Audit log
     if count > 0:
@@ -543,7 +544,7 @@ def get_journal_detailed(start_dt, end_dt, category, equipment_id=None):
         combined.append({
             "date": log.start_time.strftime("%Y-%m-%d %H:%M"), "timestamp": log.start_time.timestamp(),
             "equipment_id": eq.id, "lab_code": eq.lab_code, "equipment": eq.name,
-            "category": "Usage", "type": "Ашиглалт",
+            "category": "Usage", "type": _l("Ашиглалт"),
             "duration": f"{log.duration_minutes} мин" if log.duration_minutes else "",
             "user": log.used_by or "-", "user_id": log.used_by_id,
             "description": log.purpose or "", "result": "",

@@ -6,6 +6,7 @@
 
 from flask import render_template, flash, redirect, url_for, request, session
 from flask_login import login_user, logout_user, current_user, login_required
+from flask_babel import lazy_gettext as _l
 from app import db, limiter
 from app.forms import LoginForm
 import sqlalchemy as sa
@@ -33,7 +34,7 @@ def register_routes(bp):
         if form.validate_on_submit():
             user = db.session.scalar(sa.select(User).where(User.username == form.username.data))
             if user is None or not user.check_password(form.password.data):
-                flash("Нэвтрэх нэр эсвэл нууц үг буруу байна", "danger")
+                flash(_l("Нэвтрэх нэр эсвэл нууц үг буруу байна"), "danger")
                 log_audit(action='login_failed', details={'username': form.username.data})
                 return redirect(url_for("main.login"))
             login_user(user, remember=form.remember_me.data)

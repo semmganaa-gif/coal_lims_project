@@ -7,6 +7,7 @@ from flask import (
     flash, abort, current_app
 )
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -101,7 +102,7 @@ def chemical_detail(id):
 def add_chemical():
     """Шинэ химийн бодис нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.chemical_list"))
 
     if request.method == "POST":
@@ -174,7 +175,7 @@ def add_chemical():
 def edit_chemical(id):
     """Химийн бодис засварлах."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = ChemicalRepository.get_by_id(id)
@@ -249,7 +250,7 @@ def edit_chemical(id):
 def receive_chemical(id):
     """Химийн бодисын нөөц нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = ChemicalRepository.get_by_id(id)
@@ -344,7 +345,7 @@ def consume_chemical(id):
 def dispose_chemical(id):
     """Химийн бодис устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = ChemicalRepository.get_by_id(id)

@@ -8,6 +8,7 @@ import uuid
 from datetime import date
 
 from sqlalchemy import func, case
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -138,7 +139,7 @@ def create_category(code, name, name_en=None, description=None,
         (SparePartCategory, None) on success, (None, error_message) on failure.
     """
     if not code or not name:
-        return None, 'Код болон нэр шаардлагатай.'
+        return None, _l('Код болон нэр шаардлагатай.')
 
     existing = SparePartCategory.query.filter_by(code=code).first()
     if existing:
@@ -465,14 +466,14 @@ def update_spare_part(spare_part_id, data, user_id):
                 quantity_change=spare_part.quantity - old_quantity,
                 quantity_before=old_quantity,
                 quantity_after=spare_part.quantity,
-                details="Гараар тохируулав",
+                details=_l("Гараар тохируулав"),
             )
 
         # General update log
         log_spare_part_action(
             spare_part, 'updated',
             user_id=user_id,
-            details="Мэдээлэл шинэчлэв",
+            details=_l("Мэдээлэл шинэчлэв"),
         )
 
         return spare_part, None
@@ -498,7 +499,7 @@ def receive_stock(spare_part_id, quantity, user_id, notes=None):
         return None, 'not_found'
 
     if quantity <= 0:
-        return None, 'Тоо хэмжээ 0-ээс их байх ёстой.'
+        return None, _l('Тоо хэмжээ 0-ээс их байх ёстой.')
 
     old_quantity = spare_part.quantity
     spare_part.quantity += quantity
@@ -511,7 +512,7 @@ def receive_stock(spare_part_id, quantity, user_id, notes=None):
         quantity_change=quantity,
         quantity_before=old_quantity,
         quantity_after=spare_part.quantity,
-        details=notes or 'Шинээр ирсэн',
+        details=notes or _l('Шинээр ирсэн'),
     )
 
     return {
@@ -535,7 +536,7 @@ def consume_stock(spare_part_id, quantity, user_id,
         return None, 'not_found'
 
     if quantity <= 0:
-        return None, 'Тоо хэмжээ 0-ээс их байх ёстой.'
+        return None, _l('Тоо хэмжээ 0-ээс их байх ёстой.')
 
     if quantity > spare_part.quantity:
         return None, f'Нөөц хүрэлцэхгүй байна! Боломжит: {spare_part.quantity} {spare_part.unit}'
@@ -580,7 +581,7 @@ def consume_stock(spare_part_id, quantity, user_id,
 
 
 def consume_stock_bulk(items, user_id, equipment_id=None,
-                       maintenance_log_id=None, purpose='Засвар'):
+                       maintenance_log_id=None, purpose=_l('Засвар')):
     """Consume multiple spare parts in one transaction.
 
     Args:
@@ -646,7 +647,7 @@ def consume_stock_bulk(items, user_id, equipment_id=None,
     return results, errors
 
 
-def dispose_spare_part(spare_part_id, user_id, reason='Устгав'):
+def dispose_spare_part(spare_part_id, user_id, reason=_l('Устгав')):
     """Mark spare part as disposed.
 
     Returns:

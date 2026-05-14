@@ -7,6 +7,7 @@ from datetime import datetime
 
 from flask import render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -107,7 +108,7 @@ def waste_list():
 def add_waste():
     """Шинэ хог хаягдал нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     if request.method == "POST":
@@ -155,7 +156,7 @@ def add_waste():
 def edit_waste(id):
     """Хог хаягдал засах."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     waste = db.session.get(ChemicalWaste, id)
@@ -203,7 +204,7 @@ def edit_waste(id):
 def delete_waste(id):
     """Хог хаягдал устгах (идэвхгүй болгох)."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Хандах эрхгүй.", "danger")
+        flash(_l("Хандах эрхгүй."), "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     waste = db.session.get(ChemicalWaste, id)

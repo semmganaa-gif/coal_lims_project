@@ -10,6 +10,7 @@ import logging
 
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app import db
 from app.models import ProficiencyTest
@@ -52,7 +53,7 @@ def register_routes(bp):
                 uncertainty = float(request.form.get('uncertainty', 0))
             except (ValueError, TypeError) as e:
                 logger.warning(f"PT form validation error: {e}, user: {current_user.username}")
-                flash("Тоон утга буруу байна. Зөв утга оруулна уу.", "danger")
+                flash(_l("Тоон утга буруу байна. Зөв утга оруулна уу."), "danger")
                 return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
 
             z_score = (our_result - assigned_value) / uncertainty if uncertainty > 0 else 0

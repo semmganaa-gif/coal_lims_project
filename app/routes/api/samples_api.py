@@ -20,7 +20,7 @@ from flask import (
     flash,
     abort,
 )
-from flask_babel import gettext as _
+from flask_babel import gettext as _, lazy_gettext as _l
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
@@ -133,7 +133,7 @@ def register_routes(bp):
         report_data = get_sample_report_data(sample_id)
 
         if report_data.error == "SAMPLE_NOT_FOUND":
-            flash("Дээж олдсонгүй.", "danger")
+            flash(_l("Дээж олдсонгүй."), "danger")
             return redirect(url_for("api.sample_summary"))
 
         if report_data.error:

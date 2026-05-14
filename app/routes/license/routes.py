@@ -4,6 +4,7 @@ License Routes - Лицензийн хуудсууд
 """
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 
 from app.utils.license_protection import license_manager
 from app.utils.hardware_fingerprint import get_hardware_info, generate_short_hardware_id
@@ -16,7 +17,7 @@ license_bp = Blueprint('license', __name__, url_prefix='/license')
 def activate():
     """Лиценз идэвхжүүлэх хуудас"""
     if current_user.role != 'admin':
-        flash('Зөвхөн админ лиценз идэвхжүүлэх боломжтой.', 'danger')
+        flash(_l('Зөвхөн админ лиценз идэвхжүүлэх боломжтой.'), 'danger')
         return redirect(url_for('main.index'))
     hardware_info = get_hardware_info()
 
@@ -24,14 +25,14 @@ def activate():
         license_key = request.form.get('license_key', '').strip()
 
         if not license_key:
-            flash('Лицензийн түлхүүр оруулна уу.', 'error')
+            flash(_l('Лицензийн түлхүүр оруулна уу.'), 'error')
             return render_template('license/activate.html', hardware_info=hardware_info)
 
         # Лиценз идэвхжүүлэх
         result = license_manager.activate_license(license_key)
 
         if result['success']:
-            flash('Лиценз амжилттай идэвхжүүлэгдлээ!', 'success')
+            flash(_l('Лиценз амжилттай идэвхжүүлэгдлээ!'), 'success')
             return redirect(url_for('main.index'))
         else:
             flash(f'Лиценз идэвхжүүлэхэд алдаа: {result["error"]}', 'error')

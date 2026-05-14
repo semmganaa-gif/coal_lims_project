@@ -10,6 +10,7 @@ from flask import (
     flash, abort, send_from_directory, current_app
 )
 from flask_login import login_required, current_user
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.utils import secure_filename
 
@@ -147,7 +148,7 @@ def _commit_with_audit(action: str, eq: Equipment, **extra_details) -> bool:
     except IntegrityError as e:
         db.session.rollback()
         current_app.logger.error(f"IntegrityError in {action}: {e}")
-        flash("Өгөгдөл зөрчилдлөө (давхардсан утга).", "danger")
+        flash(_l("Өгөгдөл зөрчилдлөө (давхардсан утга)."), "danger")
         return False
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -236,7 +237,7 @@ def equipment_journal_page(id):
 def add_equipment():
     """Шинэ төхөөрөмж нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэлцэхгүй байна.", "danger")
+        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     new_eq = Equipment(status="normal")
@@ -245,7 +246,7 @@ def add_equipment():
 
     db.session.add(new_eq)
     if _commit_with_audit("create_equipment", new_eq, register_type=new_eq.register_type):
-        flash("Амжилттай бүртгэгдлээ.", "success")
+        flash(_l("Амжилттай бүртгэгдлээ."), "success")
 
     return redirect(url_for("equipment.equipment_list", view=new_eq.category or "all"))
 
@@ -255,7 +256,7 @@ def add_equipment():
 def edit_equipment(id):
     """Төхөөрөмжийн мэдээлэл засах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэлцэхгүй байна.", "danger")
+        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
         return redirect(url_for("equipment.equipment_detail", id=id))
 
     eq = EquipmentRepository.get_by_id(id)
@@ -265,7 +266,7 @@ def edit_equipment(id):
     _populate_equipment(eq, request.form)
 
     if _commit_with_audit("update_equipment", eq, status=eq.status):
-        flash("Амжилттай шинэчлэгдлээ.", "success")
+        flash(_l("Амжилттай шинэчлэгдлээ."), "success")
 
     return redirect(url_for("equipment.equipment_detail", id=id))
 
@@ -277,7 +278,7 @@ def edit_equipment(id):
 def delete_equipment(id):
     """Төхөөрөмж устгах (түүхтэй бол retired болгоно)."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэлцэхгүй байна.", "danger")
+        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     eq = EquipmentRepository.get_by_id(id)
@@ -292,7 +293,7 @@ def delete_equipment(id):
 
     if has_history:
         eq.status = "retired"
-        flash(f"'{eq_name}' багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.", "warning")
+        flash(f"'{eq_name}_l(' багаж түүхтэй тул ')Ашиглалтаас гарсан' төлөвт шилжүүллээ.", "warning")
     else:
         db.session.delete(eq)
         flash(f"'{eq_name}' устгагдлаа.", "success")
@@ -309,12 +310,12 @@ def delete_equipment(id):
 def bulk_delete():
     """Олон төхөөрөмж нэг дор устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэлцэхгүй байна.", "danger")
+        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     ids = request.form.getlist("equipment_ids")
     if not ids:
-        flash("Багаж сонгогдоогүй байна.", "warning")
+        flash(_l("Багаж сонгогдоогүй байна."), "warning")
         return redirect(url_for("equipment.equipment_list"))
 
     deleted_names, retired_names = [], []
@@ -403,7 +404,7 @@ def add_maintenance_log(id):
         )
         db.session.add(usage)
         if _commit_with_audit("add_usage_log", eq, duration_minutes=minutes):
-            flash("Ашиглалтын бүртгэл хадгалагдлаа.", "success")
+            flash(_l("Ашиглалтын бүртгэл хадгалагдлаа."), "success")
         return redirect(next_url)
 
     # --- Засвар/Калибровка/Шалгалт (MaintenanceLog) ---
@@ -431,7 +432,7 @@ def add_maintenance_log(id):
         "add_maintenance_log", eq,
         action_type=action_type, log_id=log.id, has_file=file_filename is not None,
     ):
-        flash("Бүртгэл хадгалагдлаа.", "success")
+        flash(_l("Бүртгэл хадгалагдлаа."), "success")
     return redirect(next_url)
 
 
@@ -460,7 +461,7 @@ def _handle_file_upload(error_redirect_url: str) -> str | None | bool:
 
     filename = secure_filename(file.filename)
     if "." not in filename:
-        flash("Файлын өргөтгөл тодорхойгүй байна.", "danger")
+        flash(_l("Файлын өргөтгөл тодорхойгүй байна."), "danger")
         return False
 
     ext = filename.rsplit(".", 1)[1].lower()
@@ -477,7 +478,7 @@ def _handle_file_upload(error_redirect_url: str) -> str | None | bool:
     real_upload = os.path.realpath(upload_folder)
     if not full_save_path.startswith(real_upload):
         current_app.logger.warning(f"Path traversal attempt in file save: {unique_filename}")
-        flash("Буруу файлын нэр.", "danger")
+        flash(_l("Буруу файлын нэр."), "danger")
         return False
 
     file.save(full_save_path)
@@ -492,7 +493,7 @@ def download_certificate(log_id):
     if not log:
         abort(404)
     if not log.file_path:
-        flash("Файл олдсонгүй.", "warning")
+        flash(_l("Файл олдсонгүй."), "warning")
         return redirect(request.referrer or url_for("equipment.equipment_list"))
 
     upload_folder = os.path.abspath(current_app.config.get("UPLOAD_FOLDER", ""))
@@ -500,14 +501,14 @@ def download_certificate(log_id):
 
     full_path = os.path.join(upload_folder, safe_filename)
     if not os.path.exists(full_path):
-        flash("Файл олдсонгүй.", "warning")
+        flash(_l("Файл олдсонгүй."), "warning")
         return redirect(request.referrer or url_for("equipment.equipment_list"))
 
     real_path = os.path.realpath(full_path)
     real_upload = os.path.realpath(upload_folder)
     if not real_path.startswith(real_upload):
         current_app.logger.warning(f"Path traversal attempt: {log.file_path}")
-        flash("Файлд хандах эрхгүй.", "danger")
+        flash(_l("Файлд хандах эрхгүй."), "danger")
         return redirect(request.referrer or url_for("equipment.equipment_list"))
 
     return send_from_directory(upload_folder, safe_filename, as_attachment=True)

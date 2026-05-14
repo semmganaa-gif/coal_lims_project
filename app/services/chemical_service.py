@@ -19,6 +19,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy import func, case
+from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -583,14 +584,14 @@ def update_chemical(chemical: Chemical, data: dict, user_id: int) -> None:
             quantity_change=new_quantity - old_quantity,
             quantity_before=old_quantity,
             quantity_after=new_quantity,
-            details="Тоо хэмжээ засварлав"
+            details=_l("Тоо хэмжээ засварлав")
         )
 
     chemical.update_status()
 
     create_chemical_log(
         chemical.id, user_id, 'updated',
-        details="Мэдээлэл шинэчлэв"
+        details=_l("Мэдээлэл шинэчлэв")
     )
 
 
@@ -606,7 +607,7 @@ def receive_stock(chemical: Chemical, quantity_add: float, user_id: int,
         Caller must commit the session.
     """
     if quantity_add <= 0:
-        return False, "Тоо хэмжээ эерэг тоо байх ёстой."
+        return False, _l("Тоо хэмжээ эерэг тоо байх ёстой.")
 
     old_quantity = chemical.quantity
     chemical.quantity += quantity_add
@@ -643,7 +644,7 @@ def consume_chemical_stock(chemical: Chemical, quantity_used: float,
         Caller must commit the session.
     """
     if quantity_used <= 0:
-        return ConsumeResult(success=False, error="Тоо хэмжээ эерэг тоо байх ёстой.")
+        return ConsumeResult(success=False, error=_l("Тоо хэмжээ эерэг тоо байх ёстой."))
 
     if quantity_used > chemical.quantity:
         return ConsumeResult(
@@ -703,7 +704,7 @@ def consume_bulk(items: list[dict], user_id: int, purpose: str = "",
         return BulkConsumeResult(success=False, error="No items provided")
 
     if len(items) > 100:
-        return BulkConsumeResult(success=False, error="Нэг удаад 100-аас ихийг зарцуулах боломжгүй")
+        return BulkConsumeResult(success=False, error=_l("Нэг удаад 100-аас ихийг зарцуулах боломжгүй"))
 
     count = 0
     errors = []
@@ -745,7 +746,7 @@ def consume_bulk(items: list[dict], user_id: int, purpose: str = "",
 
 
 def dispose_chemical(chemical: Chemical, user_id: int,
-                     reason: str = "Устгав") -> None:
+                     reason: str = _l("Устгав")) -> None:
     """Химийн бодис устгах (dispose).
 
     Note:
@@ -792,7 +793,7 @@ class LotInvalidationResult:
 
 def invalidate_results_by_lot(
     lot_id: int,
-    reason: str = 'Урвалжийн lot дохиолол — дахин шинжилгээ шаардлагатай',
+    reason: str = _l('Урвалжийн lot дохиолол — дахин шинжилгээ шаардлагатай'),
     performed_by_id: Optional[int] = None,
 ) -> LotInvalidationResult:
     """
