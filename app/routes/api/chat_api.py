@@ -8,6 +8,7 @@ import asyncio
 import os
 import uuid
 from flask import jsonify, request, current_app
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
@@ -230,14 +231,14 @@ def register_routes(bp):
     async def upload_chat_file():
         """Файл upload хийх"""
         if 'file' not in request.files:
-            return jsonify({'error': 'Файл олдсонгүй'}), 400
+            return jsonify({'error': _('Файл олдсонгүй')}), 400
 
         file = request.files['file']
         if file.filename == '':
-            return jsonify({'error': 'Файл сонгоогүй байна'}), 400
+            return jsonify({'error': _('Файл сонгоогүй байна')}), 400
 
         if not allowed_file(file.filename):
-            return jsonify({'error': 'Энэ файлын төрөл зөвшөөрөгдөөгүй'}), 400
+            return jsonify({'error': _('Энэ файлын төрөл зөвшөөрөгдөөгүй')}), 400
 
         # Check file size
         file.seek(0, 2)
@@ -245,18 +246,18 @@ def register_routes(bp):
         file.seek(0)
 
         if file_size > MAX_FILE_SIZE:
-            return jsonify({'error': 'Файл хэт том байна (хамгийн ихдээ 10MB)'}), 400
+            return jsonify({'error': _('Файл хэт том байна (хамгийн ихдээ 10MB)')}), 400
 
         # ✅ ЗАСВАРЛАСАН: Аюулгүй файл нэр үүсгэх
         original_filename = secure_filename(file.filename)
         if not original_filename or '.' not in original_filename:
-            return jsonify({'error': 'Буруу файлын нэр'}), 400
+            return jsonify({'error': _('Буруу файлын нэр')}), 400
 
         extension = original_filename.rsplit('.', 1)[1].lower()
 
         # ✅ Magic bytes validation (зураг, PDF)
         if not validate_file_content(file, extension):
-            return jsonify({'error': 'Файлын агуулга өргөтгөлтэй таарахгүй байна'}), 400
+            return jsonify({'error': _('Файлын агуулга өргөтгөлтэй таарахгүй байна')}), 400
 
         # ✅ UUID ашиглах (timestamp биш - урьдчилан таах боломжгүй)
         unique_filename = f"{uuid.uuid4().hex}.{extension}"

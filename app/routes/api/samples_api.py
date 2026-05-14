@@ -20,6 +20,7 @@ from flask import (
     flash,
     abort,
 )
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
@@ -429,7 +430,7 @@ def register_routes(bp):
                     status_code = 400
                 return jsonify({"success": result.success, "message": result.message}), status_code
 
-            return jsonify({"success": False, "message": "Буруу хүсэлт"}), 400
+            return jsonify({"success": False, "message": _("Буруу хүсэлт")}), 400
 
         # GET: MG summary data
         mg_data = get_mg_summary()

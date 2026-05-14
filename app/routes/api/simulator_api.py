@@ -10,6 +10,7 @@ import logging
 import requests
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
+from flask_babel import gettext as _
 
 from app import db
 from app.models import Sample, AnalysisResult
@@ -111,16 +112,16 @@ def register_routes(bp):
         """Баталсан CHPP дээжний үр дүнг Simulator руу илгээх."""
         sample = db.session.get(Sample, sample_id)
         if not sample:
-            return jsonify({"error": "Дээж олдсонгүй"}), 404
+            return jsonify({"error": _("Дээж олдсонгүй")}), 404
 
         if sample.client_name != "CHPP":
-            return jsonify({"error": "Зөвхөн CHPP дээжийг илгээх боломжтой"}), 400
+            return jsonify({"error": _("Зөвхөн CHPP дээжийг илгээх боломжтой")}), 400
 
         result_map = _get_approved_results(sample_id)
         analyses = {k: v for k, v in result_map.items() if k in _ALL_ANALYSIS_CODES}
 
         if not analyses:
-            return jsonify({"error": "Баталгаажсан шинжилгээний үр дүн олдсонгүй"}), 400
+            return jsonify({"error": _("Баталгаажсан шинжилгээний үр дүн олдсонгүй")}), 400
 
         payload = {
             "source": "lims",
@@ -166,7 +167,7 @@ def register_routes(bp):
         ).all()
 
         if not samples:
-            return jsonify({"error": f"WTL дээж олдсонгүй: {lab_number}"}), 404
+            return jsonify({"error": _("WTL дээж олдсонгүй: %(lab)s") % {"lab": lab_number}}), 404
 
         fractions = []
         dry_screen = []
@@ -232,7 +233,7 @@ def register_routes(bp):
         all_composites = composites + flotation
         total_items = len(fractions) + len(dry_screen) + len(wet_screen) + len(all_composites)
         if total_items == 0:
-            return jsonify({"error": "Илгээх өгөгдөл олдсонгүй"}), 400
+            return jsonify({"error": _("Илгээх өгөгдөл олдсонгүй")}), 400
 
         # Sample date
         sample_date = None

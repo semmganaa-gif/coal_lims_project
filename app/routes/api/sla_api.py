@@ -15,6 +15,7 @@ from dataclasses import asdict
 
 from flask import jsonify, request
 from flask_login import login_required, current_user
+from flask_babel import gettext as _
 
 from app import db, limiter
 from app.models import Sample
@@ -91,7 +92,7 @@ def register_routes(bp):
     def sla_bulk_assign():
         """Active дээжүүдэд SLA автоматаар тохируулах."""
         if getattr(current_user, "role", None) not in ("manager", "admin"):
-            return jsonify({"success": False, "message": "Эрх хүрэлцэхгүй"}), 403
+            return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         lab_type = request.args.get("lab_type", "coal")
         count = bulk_assign_sla(lab_type)
@@ -107,11 +108,11 @@ def register_routes(bp):
     def sla_set(sample_id):
         """Нэг дээжийн SLA тохируулах."""
         if getattr(current_user, "role", None) not in ("senior", "manager", "admin"):
-            return jsonify({"success": False, "message": "Эрх хүрэлцэхгүй"}), 403
+            return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         sample = db.session.get(Sample, sample_id)
         if not sample:
-            return jsonify({"success": False, "message": "Дээж олдсонгүй"}), 404
+            return jsonify({"success": False, "message": _("Дээж олдсонгүй")}), 404
 
         data = request.get_json(silent=True) or {}
         sla_hours = data.get("sla_hours")
@@ -170,7 +171,7 @@ def register_routes(bp):
     def sla_config_save():
         """SLA тохиргоо хадгалах (upsert)."""
         if getattr(current_user, "role", None) not in ("manager", "admin"):
-            return jsonify({"success": False, "message": "Эрх хүрэлцэхгүй"}), 403
+            return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         data = request.get_json(silent=True) or {}
         client_name = (data.get("client_name") or "").strip()
@@ -179,17 +180,17 @@ def register_routes(bp):
         description = (data.get("description") or "").strip()
 
         if not client_name or hours is None:
-            return jsonify({"success": False, "message": "client_name, hours заавал"}), 400
+            return jsonify({"success": False, "message": _("client_name, hours заавал")}), 400
 
         try:
             hours = int(hours)
             if hours < 1 or hours > 8760:
                 raise ValueError
         except (ValueError, TypeError):
-            return jsonify({"success": False, "message": "hours: 1-8760 цаг"}), 400
+            return jsonify({"success": False, "message": _("hours: 1-8760 цаг")}), 400
 
         set_sla_config(client_name, sample_type, hours, description, current_user.id)
-        return jsonify({"success": True, "message": "SLA тохиргоо хадгалагдлаа"})
+        return jsonify({"success": True, "message": _("SLA тохиргоо хадгалагдлаа")})
 
     @bp.route("/sla/config/<int:config_id>", methods=["DELETE"])
     @login_required
@@ -197,8 +198,8 @@ def register_routes(bp):
     def sla_config_delete(config_id):
         """SLA тохиргоо устгах."""
         if getattr(current_user, "role", None) not in ("manager", "admin"):
-            return jsonify({"success": False, "message": "Эрх хүрэлцэхгүй"}), 403
+            return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         if delete_sla_config(config_id):
-            return jsonify({"success": True, "message": "Устгагдлаа"})
-        return jsonify({"success": False, "message": "Олдсонгүй"}), 404
+            return jsonify({"success": True, "message": _("Устгагдлаа")})
+        return jsonify({"success": False, "message": _("Олдсонгүй")}), 404

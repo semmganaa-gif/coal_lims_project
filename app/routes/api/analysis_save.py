@@ -7,6 +7,7 @@ Analysis save & status update endpoints:
 """
 
 from flask import request, jsonify, current_app, url_for, redirect
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
@@ -37,18 +38,18 @@ def register_save_routes(bp):
     def save_results():
         # Role check
         if getattr(current_user, "role", None) not in ("chemist", "senior", "admin"):
-            return jsonify({"success": False, "message": "Шинжилгээний үр дүн хадгалах эрхгүй"}), 403
+            return jsonify({"success": False, "message": _("Шинжилгээний үр дүн хадгалах эрхгүй")}), 403
 
         data = request.get_json(silent=True)
 
         if data is None:
-            return jsonify({"message": "JSON өгөгдөл хүлээн аваагүй."}), 400
+            return jsonify({"message": _("JSON өгөгдөл хүлээн аваагүй.")}), 400
 
         if isinstance(data, dict):
             data = [data]
 
         if not isinstance(data, list) or len(data) == 0:
-            return jsonify({"message": "JSON массив байх ёстой"}), 400
+            return jsonify({"message": _("JSON массив байх ёстой")}), 400
 
         if len(data) > MAX_BATCH_SIZE:
             return jsonify({
@@ -112,11 +113,11 @@ def register_save_routes(bp):
         except StaleDataError:
             db.session.rollback()
             current_app.logger.warning("StaleDataError: concurrent edit detected")
-            return jsonify({"message": "Өөр хэрэглэгч энэ үр дүнг засварласан байна. Хуудсаа дахин ачаалж оролдоно уу."}), 409
+            return jsonify({"message": _("Өөр хэрэглэгч энэ үр дүнг засварласан байна. Хуудсаа дахин ачаалж оролдоно уу.")}), 409
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error("DB save error: %s", e, exc_info=True)
-            return jsonify({"message": "Мэдээллийн сан хадгалах алдаа"}), 500
+            return jsonify({"message": _("Мэдээллийн сан хадгалах алдаа")}), 500
 
         # Response
         response_data = {
@@ -134,7 +135,7 @@ def register_save_routes(bp):
     @login_required
     def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Хандах эрхгүй"}), 403
+            return jsonify({"message": _("Хандах эрхгүй")}), 403
 
         if request.is_json:
             data = request.get_json(silent=True) or {}

@@ -15,6 +15,7 @@ import json
 
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
+from flask_babel import gettext as _
 from sqlalchemy import or_, not_
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -163,21 +164,21 @@ def register_routes(bp):
     async def unassign_sample():
         """Дээжийг тухайн шинжилгээнээс хасах."""
         if current_user.role not in ("senior", "admin"):
-            return jsonify({"success": False, "message": "Ахлах эсвэл админ эрх шаардлагатай"}), 403
+            return jsonify({"success": False, "message": _("Ахлах эсвэл админ эрх шаардлагатай")}), 403
 
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "message": "JSON өгөгдөл хүлээн аваагүй"}), 400
+            return jsonify({"success": False, "message": _("JSON өгөгдөл хүлээн аваагүй")}), 400
 
         sample_id = data.get("sample_id")
         analysis_code = data.get("analysis_code")
 
         if not sample_id or not analysis_code:
-            return jsonify({"success": False, "message": "sample_id болон analysis_code шаардлагатай"}), 400
+            return jsonify({"success": False, "message": _("sample_id болон analysis_code шаардлагатай")}), 400
 
         sample = db.session.get(Sample, sample_id)
         if not sample:
-            return jsonify({"success": False, "message": "Дээж олдсонгүй"}), 404
+            return jsonify({"success": False, "message": _("Дээж олдсонгүй")}), 404
 
         try:
             analyses = json.loads(sample.analyses_to_perform or "[]")
@@ -191,7 +192,7 @@ def register_routes(bp):
         analyses = [a for a in analyses if a.lower() not in codes_to_remove]
 
         if len(analyses) == original_count:
-            return jsonify({"success": False, "message": f"{analysis_code} шинжилгээ оноогдоогүй байна"}), 400
+            return jsonify({"success": False, "message": _("%(code)s шинжилгээ оноогдоогүй байна") % {"code": analysis_code}}), 400
 
         sample.analyses_to_perform = json.dumps(analyses)
 
@@ -210,7 +211,7 @@ def register_routes(bp):
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Unassign analysis commit error: {e}")
-            return jsonify({"success": False, "message": "Хадгалахад алдаа гарлаа"}), 500
+            return jsonify({"success": False, "message": _("Хадгалахад алдаа гарлаа")}), 500
 
         return jsonify({
             "success": True,
@@ -226,19 +227,19 @@ def register_routes(bp):
     async def request_analysis():
         """Нэгтгэлээс хоосон нүдэн дээр дарж шинжилгээ захиалах."""
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Зөвхөн ахлах болон админ захиалга өгөх боломжтой"}), 403
+            return jsonify({"message": _("Зөвхөн ахлах болон админ захиалга өгөх боломжтой")}), 403
 
         data = request.get_json(silent=True) or {}
         sample_id = data.get("sample_id")
         analysis_code = data.get("analysis_code")
 
         if not sample_id or not analysis_code:
-            return jsonify({"message": "sample_id болон analysis_code шаардлагатай"}), 400
+            return jsonify({"message": _("sample_id болон analysis_code шаардлагатай")}), 400
 
         try:
             sample = db.session.get(Sample, sample_id)
             if not sample:
-                return jsonify({"message": f"#{sample_id} дээж олдсонгүй"}), 404
+                return jsonify({"message": _("#%(id)s дээж олдсонгүй") % {"id": sample_id}}), 404
 
             current_analyses = sample.analyses_to_perform or []
             if isinstance(current_analyses, str):
@@ -253,7 +254,7 @@ def register_routes(bp):
 
             existing_codes = [norm_code(c) for c in current_analyses]
             if base_code in existing_codes:
-                return jsonify({"message": f"'{base_code}' шинжилгээ аль хэдийн захиалагдсан"}), 400
+                return jsonify({"message": _("'%(code)s' шинжилгээ аль хэдийн захиалагдсан") % {"code": base_code}}), 400
 
             current_analyses.append(base_code)
             sample.analyses_to_perform = json.dumps(current_analyses)
@@ -278,7 +279,7 @@ def register_routes(bp):
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Request analysis error: {e}", exc_info=True)
-            return jsonify({"message": "Мэдээллийн сангийн алдаа гарлаа"}), 500
+            return jsonify({"message": _("Мэдээллийн сангийн алдаа гарлаа")}), 500
 
     # -----------------------------------------------------------
     # 4) Notification Check
@@ -330,4 +331,4 @@ def register_routes(bp):
 
         except (SQLAlchemyError, AttributeError) as e:
             current_app.logger.error(f"Notification Check Error: {e}", exc_info=True)
-            return jsonify({"ready_count": 0, "error": "Шалгахад алдаа гарлаа"}), 500
+            return jsonify({"ready_count": 0, "error": _("Шалгахад алдаа гарлаа")}), 500
