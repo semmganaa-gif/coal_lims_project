@@ -20,6 +20,7 @@ from app.models import User, AnalysisProfile
 from app.repositories import (
     AnalysisTypeRepository, GbwStandardRepository,
     ControlStandardRepository, UserRepository,
+    AnalysisProfileRepository,
 )
 from app.utils.decorators import admin_required, senior_or_admin_required
 from app.services.admin_service import (
@@ -186,16 +187,8 @@ def analysis_config():
     MG_EXCLUDE = ['MG', 'MG_SIZE']
     analysis_types = AnalysisTypeRepository.get_all_excluding(MG_EXCLUDE)
 
-    simple_profiles = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-        AnalysisProfile.client_name != 'CHPP'
-    ).order_by(AnalysisProfile.client_name, AnalysisProfile.sample_type).all()
-
-    chpp_profiles = AnalysisProfile.query.filter(
-        AnalysisProfile.client_name == 'CHPP',
-        AnalysisProfile.pattern.isnot(None),
-        AnalysisProfile.pattern != ''
-    ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
+    simple_profiles = AnalysisProfileRepository.get_simple_profiles(ordered=True)
+    chpp_profiles = AnalysisProfileRepository.get_chpp_profiles(ordered=True)
 
     simple_form = SimpleProfileForm()
 
@@ -237,10 +230,7 @@ def analysis_config_simple():
     analysis_types = AnalysisTypeRepository.get_all_ordered()
 
     # Simple profiles grouped by client
-    simple_profiles = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-        AnalysisProfile.client_name != 'CHPP'
-    ).order_by(AnalysisProfile.client_name, AnalysisProfile.sample_type).all()
+    simple_profiles = AnalysisProfileRepository.get_simple_profiles(ordered=True)
 
     # Group by client name
     grouped_profiles = {}
@@ -250,11 +240,7 @@ def analysis_config_simple():
         grouped_profiles[profile.client_name].append(profile)
 
     # CHPP profiles
-    chpp_profiles = AnalysisProfile.query.filter(
-        AnalysisProfile.client_name == 'CHPP',
-        AnalysisProfile.pattern.isnot(None),
-        AnalysisProfile.pattern != ''
-    ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
+    chpp_profiles = AnalysisProfileRepository.get_chpp_profiles(ordered=True)
 
     from app.services.sla_service import get_sla_config_all, DEFAULT_SLA_HOURS, DEFAULT_SLA_FALLBACK
 

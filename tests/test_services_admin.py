@@ -140,10 +140,12 @@ class TestAutoPopulateProfiles:
     @patch('app.services.admin_service.SAMPLE_TYPE_CHOICES_MAP', {
         'ClientA': ['type1'],
     })
+    @patch('app.services.admin_service.AnalysisProfileRepository')
     @patch('app.services.admin_service.AnalysisProfile')
-    def test_creates_simple_and_chpp_profiles(self, mock_profile_cls, mock_db):
+    def test_creates_simple_and_chpp_profiles(self, mock_profile_cls, mock_repo, mock_db):
         """Creates both simple and CHPP profiles when none exist."""
-        mock_profile_cls.query.filter.return_value.first.return_value = None
+        mock_repo.find_simple.return_value = None
+        mock_repo.find_pattern.return_value = None
         mock_profile_cls.side_effect = lambda **kw: MagicMock(**kw)
 
         from app.services.admin_service import auto_populate_profiles
@@ -157,10 +159,11 @@ class TestAutoPopulateProfiles:
     @patch('app.services.admin_service.SAMPLE_TYPE_CHOICES_MAP', {
         'ClientA': ['type1'],
     })
-    @patch('app.services.admin_service.AnalysisProfile')
-    def test_skips_existing_profiles(self, mock_profile_cls, mock_db):
+    @patch('app.services.admin_service.AnalysisProfileRepository')
+    def test_skips_existing_profiles(self, mock_repo, mock_db):
         """Returns False when all profiles exist already."""
-        mock_profile_cls.query.filter.return_value.first.return_value = MagicMock()
+        mock_repo.find_simple.return_value = MagicMock()
+        mock_repo.find_pattern.return_value = MagicMock()
 
         from app.services.admin_service import auto_populate_profiles
         result = auto_populate_profiles()
@@ -172,10 +175,12 @@ class TestAutoPopulateProfiles:
         'CHPP': ['type1'],
         'ClientB': ['type2'],
     })
+    @patch('app.services.admin_service.AnalysisProfileRepository')
     @patch('app.services.admin_service.AnalysisProfile')
-    def test_skips_chpp_in_simple_loop(self, mock_profile_cls, mock_db):
+    def test_skips_chpp_in_simple_loop(self, mock_profile_cls, mock_repo, mock_db):
         """CHPP is skipped in the simple profiles loop."""
-        mock_profile_cls.query.filter.return_value.first.return_value = None
+        mock_repo.find_simple.return_value = None
+        mock_repo.find_pattern.return_value = None
         mock_profile_cls.side_effect = lambda **kw: MagicMock(**kw)
 
         from app.services.admin_service import auto_populate_profiles
@@ -189,10 +194,12 @@ class TestAutoPopulateProfiles:
     @patch('app.services.admin_service.SAMPLE_TYPE_CHOICES_MAP', {
         'X': ['t1'],
     })
+    @patch('app.services.admin_service.AnalysisProfileRepository')
     @patch('app.services.admin_service.AnalysisProfile')
-    def test_commit_error_rollback(self, mock_profile_cls, mock_db):
+    def test_commit_error_rollback(self, mock_profile_cls, mock_repo, mock_db):
         """SQLAlchemyError triggers rollback."""
-        mock_profile_cls.query.filter.return_value.first.return_value = None
+        mock_repo.find_simple.return_value = None
+        mock_repo.find_pattern.return_value = None
         mock_profile_cls.side_effect = lambda **kw: MagicMock(**kw)
         mock_db.session.commit.side_effect = SQLAlchemyError('fail')
 
@@ -627,18 +634,16 @@ class TestDeleteUser:
 class TestSaveAnalysisConfig:
 
     @patch('app.services.admin_service.SystemSettingRepository')
-    @patch('app.services.admin_service.AnalysisProfile')
-    def test_success(self, mock_profile_cls, mock_repo, mock_db):
+    @patch('app.services.admin_service.AnalysisProfileRepository')
+    def test_success(self, mock_profile_repo, mock_repo, mock_db):
         """Saves simple and CHPP profiles and Gi config."""
         simple_p = MagicMock()
         simple_p.id = 1
         chpp_p = MagicMock()
         chpp_p.id = 2
 
-        # Two separate filter calls: simple then CHPP
-        mock_profile_cls.query.filter.return_value.all.side_effect = [
-            [simple_p], [chpp_p]
-        ]
+        mock_profile_repo.get_simple_profiles.return_value = [simple_p]
+        mock_profile_repo.get_chpp_profiles.return_value = [chpp_p]
 
         form_data = MagicMock()
         form_data.getlist.side_effect = lambda key: {
@@ -656,10 +661,11 @@ class TestSaveAnalysisConfig:
         mock_db.session.commit.assert_called_once()
 
     @patch('app.services.admin_service.SystemSettingRepository')
-    @patch('app.services.admin_service.AnalysisProfile')
-    def test_commit_error(self, mock_profile_cls, mock_repo, mock_db):
+    @patch('app.services.admin_service.AnalysisProfileRepository')
+    def test_commit_error(self, mock_profile_repo, mock_repo, mock_db):
         """SQLAlchemyError triggers rollback."""
-        mock_profile_cls.query.filter.return_value.all.return_value = []
+        mock_profile_repo.get_simple_profiles.return_value = []
+        mock_profile_repo.get_chpp_profiles.return_value = []
         mock_db.session.commit.side_effect = SQLAlchemyError('fail')
 
         form_data = MagicMock()
@@ -672,10 +678,11 @@ class TestSaveAnalysisConfig:
         mock_db.session.rollback.assert_called_once()
 
     @patch('app.services.admin_service.SystemSettingRepository')
-    @patch('app.services.admin_service.AnalysisProfile')
-    def test_no_gi_config(self, mock_profile_cls, mock_repo, mock_db):
+    @patch('app.services.admin_service.AnalysisProfileRepository')
+    def test_no_gi_config(self, mock_profile_repo, mock_repo, mock_db):
         """Works when no Gi shifts provided."""
-        mock_profile_cls.query.filter.return_value.all.return_value = []
+        mock_profile_repo.get_simple_profiles.return_value = []
+        mock_profile_repo.get_chpp_profiles.return_value = []
         form_data = MagicMock()
         form_data.getlist.return_value = []
 

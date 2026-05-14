@@ -33,6 +33,7 @@ from app.models import (
 from app.repositories import (
     AnalysisTypeRepository, GbwStandardRepository,
     ControlStandardRepository, SystemSettingRepository,
+    AnalysisProfileRepository,
 )
 from app.schemas import UserSchema
 from app.utils.audit import log_audit
@@ -109,12 +110,7 @@ def _auto_populate_profiles_atomic() -> bool:
         if client == 'CHPP':
             continue
         for s_type in types:
-            exists = AnalysisProfile.query.filter(
-                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-                AnalysisProfile.client_name == client,
-                AnalysisProfile.sample_type == s_type
-            ).first()
-            if not exists:
+            if not AnalysisProfileRepository.find_simple(client, s_type):
                 db.session.add(AnalysisProfile(
                     client_name=client,
                     sample_type=s_type,
@@ -127,12 +123,9 @@ def _auto_populate_profiles_atomic() -> bool:
     for hourly_type, config in CHPP_CONFIG_GROUPS.items():
         for sample in config['samples']:
             sample_name = sample['name']
-            exists = AnalysisProfile.query.filter(
-                AnalysisProfile.pattern == sample_name,
-                AnalysisProfile.client_name == 'CHPP',
-                AnalysisProfile.sample_type == hourly_type
-            ).first()
-            if not exists:
+            if not AnalysisProfileRepository.find_pattern(
+                'CHPP', hourly_type, sample_name
+            ):
                 db.session.add(AnalysisProfile(
                     client_name='CHPP',
                     sample_type=hourly_type,
@@ -438,18 +431,8 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
     Returns:
         (success, message)
     """
-    # Simple profiles
-    simple_profiles = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-        AnalysisProfile.client_name != 'CHPP'
-    ).all()
-
-    # CHPP profiles
-    chpp_profiles = AnalysisProfile.query.filter(
-        AnalysisProfile.client_name == 'CHPP',
-        AnalysisProfile.pattern.isnot(None),
-        AnalysisProfile.pattern != ''
-    ).all()
+    simple_profiles = AnalysisProfileRepository.get_simple_profiles()
+    chpp_profiles = AnalysisProfileRepository.get_chpp_profiles()
 
     updated_count = 0
 
