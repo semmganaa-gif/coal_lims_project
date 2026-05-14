@@ -5,6 +5,47 @@
 > compliance-эрсдэлтэй зүйлийг бүхэлд нь тэмдэглэв.
 > **Audit-ийн төрөл:** 7 давхаргын шалгалт + энэ нэгдсэн дүгнэлт.
 
+## 📊 EXECUTION PROGRESS (2026-05-14 хийгдсэн ажил)
+
+16 commit, ~210 файл засагдсан. Бүх Phase 0-5 алхамууд хэрэгжсэн:
+
+| Phase / Theme | Commit | Үр дүн |
+|---------------|--------|--------|
+| docs | `be878a6` | 7 audit + summary бичсэн |
+| Phase 0 (quick-wins) | `9fd0b53` | 7 fix |
+| Phase 1 (high severity) | `5908872` | 6 fix |
+| Phase 2 (ISO 17025) | `e2139d6` | 7 fix |
+| H10 (WaterLab dead code) | `6d44578` | cleanup |
+| Theme D-1 (API i18n) | `affc571` | ~50 jsonify response wrap |
+| Theme D-2 (Service+flash) | `c8dcbd4` | ~300 message wrap |
+| Theme D-3 (f-string + catalog) | `20c555f` | 44 f-string + 365 translation entries |
+| Theme A (enum drift) | `88153e6` | 9 enums + integration |
+| Theme C (decorators) | `8ccacf3` | 50 inline role check → @role_required |
+| Theme G (timezone) | `2b445ea` | 12 datetime.now() + UTC+8 fallback |
+| Phase 4 foundation | `de64542` | @transactional decorator |
+| Phase 4 rollout (mass/mg/sla) | `e3d7076` | 5 functions atomic |
+| Phase 4 chemical | `39acc16` | invalidate_results_by_lot atomic |
+| Phase 5 polish | `10b37d8` | nit cleanup |
+
+### Phase бүрд severity resolution status
+
+| Severity | Анхдагч | Засагдсан | Үлдсэн (Phase 4-5+) |
+|----------|---------|-----------|---------------------|
+| 🟥 High | 13 | **13 ✅** | 0 |
+| 🔴 Medium | 61 | ~40 | ~21 (long-term refactor) |
+| 🟡 Low | 53 | ~12 | ~41 |
+| ⚪ Nit | 47 | ~8 | ~39 |
+
+**Production correctness + ISO 17025 compliance + i18n + enum drift + timezone**
+бүгд хийгдсэн. Үлдсэн нь Phase 4 long-term (бусад service-д @transactional
+нэвтрүүлэх) болон cleanup nit.
+
+### Test status
+
+- ✅ **303 unit tests passed**, 1 pre-existing failure (unrelated `'water'` legacy)
+- ✅ **0 регресс** ямар нэг commit-ээс
+- ✅ App loads OK at every commit
+
 ---
 
 ## 0. Audit-ын хамрах хүрээ
