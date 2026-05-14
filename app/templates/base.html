@@ -2,944 +2,943 @@
 <!doctype html>
 <html lang="{{ get_locale()|string }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#3a8bc7">
-  <title>{% block title %}{{ title|default('LIMS') }}{% endblock %} - CORELINK</title>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+ <meta name="csrf-token" content="{{ csrf_token() }}">
+ <meta name="theme-color" content="#3a8bc7">
+ <title>{% block title %}{{ title|default('LIMS') }}{% endblock %} - CORELINK</title>
 
-  <!-- Үндсэн CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+ <!-- Үндсэн CSS — Bootstrap + Icons + Tailwind нь Vite bundle-д орсон -->
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+ {{ vite_css_tag('src/styles.css') }}
 
-  <!-- AG Grid (нөхцөлт) -->
-  {% if use_aggrid|default(false) %}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ag-grid-custom.css') }}?v=3">
-  {% endif %}
+ <!-- AG Grid CSS (нөхцөлт, Sprint 2-д CDN хэвээр) -->
+ {% if use_aggrid|default(false) %}
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/ag-grid-custom.css') }}?v=3">
+ {% endif %}
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=9">
-  <!-- Mobile CSS - Утас/таблетад зориулсан -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=10">
-  <!-- DataTables -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=9">
+ <!-- Mobile CSS - Утас/таблетад зориулсан -->
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=10">
+ <!-- DataTables CSS (Sprint 2-д CDN хэвээр — DataTables нь зөвхөн audit page-уудад) -->
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
+ <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-  <script nonce="{{ csp_nonce }}">
-    window.LIMS_LIMIT_RULES = {{ LIMS_LIMIT_RULES|tojson|safe if LIMS_LIMIT_RULES is defined else '{}'}};
-    window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
-  </script>
-  <!-- Logger (head-д ачаалах — inline script-ээс өмнө бэлэн байхын тулд) -->
-  <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
+ <script nonce="{{ csp_nonce }}">
+ window.LIMS_LIMIT_RULES = {{ LIMS_LIMIT_RULES|tojson|safe if LIMS_LIMIT_RULES is defined else '{}'}};
+ window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
+ </script>
+ <!-- Logger (head-д ачаалах — inline script-ээс өмнө бэлэн байхын тулд) -->
+ <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
+ <!-- Dynamic styles — data-* attributes → element.style (CSP-safe) -->
+ <script src="{{ url_for('static', filename='js/dynamic_styles.js') }}" defer></script>
 
-  <style nonce="{{ csp_nonce }}">
-    :root {
-      --nav-h: 64px;
-      --primary: #0d6efd;
-      --success: #198754;
-      --glass-bg: rgba(255,255,255,0.95);
-    }
+ <style nonce="{{ csp_nonce }}">
+ :root {
+ --nav-h: 64px;
+ --primary: #0d6efd;
+ --success: #198754;
+ --glass-bg: rgba(255,255,255,0.95);
+ }
 
-    body {
-      font-family: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    }
+ body {
+ font-family: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+ min-height: 100vh;
+ display: flex;
+ flex-direction: column;
+ background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+ }
 
-    /* Навигаци */
-    .navbar-main {
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      z-index: 1030;
-    }
-    .navbar-brand {
-      font-weight: 800;
-    }
-    .navbar-brand img {
-      height: 36px;
-      width: auto;
-    }
-    .nav-link {
-      font-weight: 600;
-      font-size: 0.9rem;
-      padding: 0.5rem 0.75rem !important;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-    .nav-link:hover {
-      background: rgba(13,110,253,0.08);
-    }
-    .nav-link i {
-      font-size: 1rem;
-    }
-    .dropdown-menu {
-      border: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-      border-radius: 12px;
-      padding: 0.5rem;
-    }
-    .dropdown-item {
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-    .dropdown-item:hover {
-      background: rgba(13,110,253,0.08);
-    }
+ /* Навигаци */
+ .navbar-main {
+ background: var(--glass-bg);
+ backdrop-filter: blur(10px);
+ border-bottom: 1px solid rgba(0,0,0,0.08);
+ box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+ z-index: 1030;
+ }
+ .navbar-brand {
+ font-weight: 800;
+ }
+ .navbar-brand img {
+ height: 36px;
+ width: auto;
+ }
+ .nav-link {
+ font-weight: 600;
+ font-size: 0.9rem;
+ padding: 0.5rem 0.75rem !important;
+ border-radius: 8px;
+ transition: all 0.2s ease;
+ }
+ .nav-link:hover {
+ background: rgba(13,110,253,0.08);
+ }
+ .nav-link i {
+ font-size: 1rem;
+ }
+ .dropdown-menu {
+ border: none;
+ box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+ border-radius: 12px;
+ padding: 0.5rem;
+ }
+ .dropdown-item {
+ border-radius: 8px;
+ padding: 0.5rem 1rem;
+ font-size: 0.875rem;
+ }
+ .dropdown-item:hover {
+ background: rgba(13,110,253,0.08);
+ }
 
-    /* Үндсэн агуулга */
-    main.lims-main {
-      flex: 1 0 auto;
-      padding-bottom: 1rem;
-    }
+ /* Үндсэн агуулга */
+ main.lims-main {
+ flex: 1 0 auto;
+ padding-bottom: 1rem;
+ }
 
-    /* Доод хэсэг */
-    footer.lims-footer {
-      flex-shrink: 0;
-      border-top: 1px solid rgba(0,0,0,0.08);
-      padding: 0.75rem 1rem;
-      font-size: 0.8rem;
-      text-align: center;
-      background: #fff;
-      color: #64748b;
-    }
+ /* Доод хэсэг */
+ footer.lims-footer {
+ flex-shrink: 0;
+ border-top: 1px solid rgba(0,0,0,0.08);
+ padding: 0.75rem 1rem;
+ font-size: 0.8rem;
+ text-align: center;
+ background: #fff;
+ color: #64748b;
+ }
 
-    /* Toast container */
-    .toast-container {
-      z-index: 1100;
-    }
+ /* Toast container */
+ .toast-container {
+ z-index: 1100;
+ }
 
-    /* Mobile стилүүд mobile.css файлд байна */
-  </style>
+ /* Mobile стилүүд mobile.css файлд байна */
+ </style>
 
-  {% block head %}{% endblock %}
-  {% block head_extra %}{% endblock %}
+ {% block head %}{% endblock %}
+ {% block head_extra %}{% endblock %}
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-main sticky-top" id="mainNav">
-    <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.lab_selector') }}">
-        <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}" alt="ER Lab">
-        <div class="d-none d-sm-block" style="line-height: 1.1;">
-          <span class="text-primary" style="font-size: 1.1rem;">LIMS</span>
-          <div style="font-size: 0.65rem; color: #64748b;">Energy Resources</div>
-        </div>
-      </a>
+ <!-- Navigation -->
+ <nav class="navbar navbar-expand-lg navbar-main sticky-top" id="mainNav">
+ <div class="container-fluid">
+ <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.lab_selector') }}">
+ <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}" alt="ER Lab">
+ <div class="d-none d-sm-block text-2xs text-slate-500">
+ <span class="text-primary text-[1.1rem]">LIMS</span>
+ <div class="text-2xs text-slate-500">Energy Resources</div>
+ </div>
+ </a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+ <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+ <span class="navbar-toggler-icon"></span>
+ </button>
 
-      <div class="collapse navbar-collapse" id="mainNavbar">
-        {% set lab_param = request.args.get('lab') or request.args.get('from_lab') %}
-        {% set is_water_lab_main = false %}
-        {% set is_water_lab = request.path.startswith('/labs/water-chemistry') or lab_param == 'water' or lab_param == 'water_chemistry' %}
-        {% set is_micro_lab = request.path.startswith('/labs/microbiology') or lab_param == 'micro' or lab_param == 'microbiology' %}
-        {% set is_petro_lab = request.path.startswith('/labs/petrography') or lab_param == 'petrography' %}
-        {% set is_any_water_lab = is_water_lab or is_micro_lab %}
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
-          {% if current_user.is_authenticated %}
+ <div class="collapse navbar-collapse" id="mainNavbar">
+ {% set lab_param = request.args.get('lab') or request.args.get('from_lab') %}
+ {% set is_water_lab_main = false %}
+ {% set is_water_lab = request.path.startswith('/labs/water-chemistry') or lab_param == 'water' or lab_param == 'water_chemistry' %}
+ {% set is_micro_lab = request.path.startswith('/labs/microbiology') or lab_param == 'micro' or lab_param == 'microbiology' %}
+ {% set is_petro_lab = request.path.startswith('/labs/petrography') or lab_param == 'petrography' %}
+ {% set is_any_water_lab = is_water_lab or is_micro_lab %}
+ <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
+ {% if current_user.is_authenticated %}
 
-            {% if is_petro_lab %}
-            {# =============== ПЕТРОГРАФ ЛАБ NAVBAR =============== #}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('petrography.petro_hub') }}">
-                <i class="bi bi-gem me-1" style="color:#8b5cf6"></i>{{ _('Home') }}
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-microscope me-1" style="color:#8b5cf6"></i>{{ _('Analysis') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MAC') }}">
-                  <i class="bi bi-eye me-2" style="color:#8b5cf6"></i>{{ _('Maceral (MAC)') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='VR') }}">
-                  <i class="bi bi-brightness-high me-2" style="color:#8b5cf6"></i>{{ _('Vitrinite Reflectance (VR)') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MM') }}">
-                  <i class="bi bi-diamond me-2" style="color:#8b5cf6"></i>{{ _('Mineral Matter (MM)') }}</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='TS_PETRO') }}">
-                  <i class="bi bi-layers me-2" style="color:#8b5cf6"></i>{{ _('Thin Section (TS)') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MOD') }}">
-                  <i class="bi bi-pie-chart me-2" style="color:#8b5cf6"></i>{{ _('Modal (MOD)') }}</a></li>
-              </ul>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('equipment.equipment_list') }}">
-                <i class="bi bi-tools me-1" style="color:#8b5cf6"></i>{{ _('Equipment') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('spare_parts.spare_part_list') }}">
-                <i class="bi bi-gear-wide-connected me-1" style="color:#f59e0b"></i>{{ _('Spare Parts') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='petrography') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#8b5cf6"></i>{{ _('Reagents') }}
-              </a>
-            </li>
+ {% if is_petro_lab %}
+ {# =============== ПЕТРОГРАФ ЛАБ NAVBAR =============== #}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('petrography.petro_hub') }}">
+ <i class="bi bi-gem me-1 text-accent"></i>{{ _('Home') }}
+ </a>
+ </li>
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-microscope me-1 text-accent"></i>{{ _('Analysis') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MAC') }}">
+ <i class="bi bi-eye me-2 text-accent"></i>{{ _('Maceral (MAC)') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='VR') }}">
+ <i class="bi bi-brightness-high me-2 text-accent"></i>{{ _('Vitrinite Reflectance (VR)') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MM') }}">
+ <i class="bi bi-diamond me-2 text-accent"></i>{{ _('Mineral Matter (MM)') }}</a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='TS_PETRO') }}">
+ <i class="bi bi-layers me-2 text-accent"></i>{{ _('Thin Section (TS)') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MOD') }}">
+ <i class="bi bi-pie-chart me-2 text-accent"></i>{{ _('Modal (MOD)') }}</a></li>
+ </ul>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('equipment.equipment_list') }}">
+ <i class="bi bi-tools me-1 text-accent"></i>{{ _('Equipment') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('spare_parts.spare_part_list') }}">
+ <i class="bi bi-gear-wide-connected me-1 text-warn"></i>{{ _('Spare Parts') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='petrography') }}">
+ <i class="bi bi-droplet-fill me-1 text-accent"></i>{{ _('Reagents') }}
+ </a>
+ </li>
 
-            {% elif is_micro_lab %}
-            {# =============== МИКРОБИОЛОГИЙН ЛАБ NAVBAR =============== #}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
-                <i class="bi bi-house-door me-1" style="color:#20c997"></i>{{ _('Home') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('microbiology.register_sample') }}">
-                <i class="bi bi-plus-circle me-1" style="color:#20c997"></i>{{ _('Sample Registration') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('microbiology.analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1" style="color:#20c997"></i>{{ _('Analysis') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_summary', lab='micro') }}">
-                <i class="bi bi-table me-1" style="color:#20c997"></i>{{ _('Summary') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}">
-                <i class="bi bi-tools me-1" style="color:#20c997"></i>{{ _('Equipment') }}
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-graph-up me-1" style="color:#20c997"></i>{{ _('Reports') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2" style="color:#20c997"></i>{{ _('Dashboard') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>{{ _('Analysis Summary') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_monthly_plan') }}">
-                  <i class="bi bi-calendar-check me-2" style="color:#14b8a6"></i>{{ _('Monthly Plan') }}</a></li>
-              </ul>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='microbiology') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>{{ _('Reagents') }}
-              </a>
-            </li>
+ {% elif is_micro_lab %}
+ {# =============== МИКРОБИОЛОГИЙН ЛАБ NAVBAR =============== #}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
+ <i class="bi bi-house-door me-1 text-pass"></i>{{ _('Home') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('microbiology.register_sample') }}">
+ <i class="bi bi-plus-circle me-1 text-pass"></i>{{ _('Sample Registration') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('microbiology.analysis_hub') }}">
+ <i class="bi bi-clipboard-data me-1 text-pass"></i>{{ _('Analysis') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('water.water_summary', lab='micro') }}">
+ <i class="bi bi-table me-1 text-pass"></i>{{ _('Summary') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}">
+ <i class="bi bi-tools me-1 text-pass"></i>{{ _('Equipment') }}
+ </a>
+ </li>
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-graph-up me-1 text-pass"></i>{{ _('Reports') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_dashboard') }}">
+ <i class="bi bi-speedometer2 me-2 text-pass"></i>{{ _('Dashboard') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_consumption') }}">
+ <i class="bi bi-journal-bookmark me-2 text-teal"></i>{{ _('Analysis Summary') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_monthly_plan') }}">
+ <i class="bi bi-calendar-check me-2 text-[#14b8a6]"></i>{{ _('Monthly Plan') }}</a></li>
+ </ul>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='microbiology') }}">
+ <i class="bi bi-droplet-fill me-1 text-pass"></i>{{ _('Reagents') }}
+ </a>
+ </li>
 
-            {% elif is_water_lab %}
-            {# =============== УСНЫ ХИМИ ЛАБ NAVBAR =============== #}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_hub') }}">
-                <i class="bi bi-house-door me-1 text-info"></i>{{ _('Home') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.register_sample') }}">
-                <i class="bi bi-plus-circle me-1 text-info"></i>{{ _('Sample Registration') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1 text-info"></i>{{ _('Analysis') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_summary') }}">
-                <i class="bi bi-table me-1 text-info"></i>{{ _('Summary') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}">
-                <i class="bi bi-tools me-1 text-info"></i>{{ _('Equipment') }}
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-graph-up me-1 text-info"></i>{{ _('Reports') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('water.water_dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2" style="color:#3b82f6"></i>{{ _('Dashboard') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('water.water_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>{{ _('Analysis Summary') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('water.water_monthly_plan') }}">
-                  <i class="bi bi-calendar-check me-2" style="color:#15803d"></i>{{ _('Monthly Plan') }}</a></li>
-              </ul>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='water') }}">
-                  <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='water') }}">
-                  <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('water.solution_journal') }}">
-                  <i class="bi bi-journal-text me-2" style="color:#0d9488"></i>{{ _('Solution Preparation') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('water.solution_recipes') }}">
-                  <i class="bi bi-journal-code me-2" style="color:#6366f1"></i>{{ _('Solution Recipes') }}</a></li>
-              </ul>
-            </li>
+ {% elif is_water_lab %}
+ {# =============== УСНЫ ХИМИ ЛАБ NAVBAR =============== #}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('water.water_hub') }}">
+ <i class="bi bi-house-door me-1 text-info"></i>{{ _('Home') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('water.register_sample') }}">
+ <i class="bi bi-plus-circle me-1 text-info"></i>{{ _('Sample Registration') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('water.water_analysis_hub') }}">
+ <i class="bi bi-clipboard-data me-1 text-info"></i>{{ _('Analysis') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('water.water_summary') }}">
+ <i class="bi bi-table me-1 text-info"></i>{{ _('Summary') }}
+ </a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}">
+ <i class="bi bi-tools me-1 text-info"></i>{{ _('Equipment') }}
+ </a>
+ </li>
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-graph-up me-1 text-info"></i>{{ _('Reports') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('water.water_dashboard') }}">
+ <i class="bi bi-speedometer2 me-2 text-info-2"></i>{{ _('Dashboard') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('water.water_consumption') }}">
+ <i class="bi bi-journal-bookmark me-2 text-[#0284c7]"></i>{{ _('Analysis Summary') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('water.water_monthly_plan') }}">
+ <i class="bi bi-calendar-check me-2 text-pass-bold"></i>{{ _('Monthly Plan') }}</a></li>
+ </ul>
+ </li>
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='water') }}">
+ <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='water') }}">
+ <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('water.solution_journal') }}">
+ <i class="bi bi-journal-text me-2 text-teal"></i>{{ _('Solution Preparation') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('water.solution_recipes') }}">
+ <i class="bi bi-journal-code me-2 text-accent-2"></i>{{ _('Solution Recipes') }}</a></li>
+ </ul>
+ </li>
 
 
-            {% else %}
-            {# =============== НҮҮРСНИЙ ЛАБ NAVBAR =============== #}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.coal_hub') }}">
-                <i class="bi bi-house-door me-1 text-primary"></i>{{ _('Home') }}
-              </a>
-            </li>
-            <li class="nav-item mobile-nav-item">
-              <a class="nav-link" href="{{ url_for('main.index') }}">
-                <i class="bi bi-box-seam me-1 text-primary"></i>{{ _('Sample Registration') }}
-              </a>
-            </li>
-            <li class="nav-item mobile-nav-item">
-              <a class="nav-link" href="{{ url_for('analysis.analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1 text-success"></i>{{ _('Analysis') }}
-              </a>
-            </li>
+ {% else %}
+ {# =============== НҮҮРСНИЙ ЛАБ NAVBAR =============== #}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('main.coal_hub') }}">
+ <i class="bi bi-house-door me-1 text-primary"></i>{{ _('Home') }}
+ </a>
+ </li>
+ <li class="nav-item mobile-nav-item">
+ <a class="nav-link" href="{{ url_for('main.index') }}">
+ <i class="bi bi-box-seam me-1 text-primary"></i>{{ _('Sample Registration') }}
+ </a>
+ </li>
+ <li class="nav-item mobile-nav-item">
+ <a class="nav-link" href="{{ url_for('analysis.analysis_hub') }}">
+ <i class="bi bi-clipboard-data me-1 text-success"></i>{{ _('Analysis') }}
+ </a>
+ </li>
 
-            <!-- Equipment -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-tools me-1"></i>{{ _('Equipment') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_list') }}">
-                  <i class="bi bi-list-ul me-2"></i>{{ _('Records & History') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_journal') }}">
-                  <i class="bi bi-journal-text me-2"></i>{{ _('Journal') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('spare_parts.spare_part_list') }}">
-                  <i class="bi bi-gear-wide-connected me-2 text-warning"></i>{{ _('Spare Parts') }}
-                </a></li>
-              </ul>
-            </li>
+ <!-- Equipment -->
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-tools me-1"></i>{{ _('Equipment') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_list') }}">
+ <i class="bi bi-list-ul me-2"></i>{{ _('Records & History') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_journal') }}">
+ <i class="bi bi-journal-text me-2"></i>{{ _('Journal') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('spare_parts.spare_part_list') }}">
+ <i class="bi bi-gear-wide-connected me-2 text-warning"></i>{{ _('Spare Parts') }}
+ </a></li>
+ </ul>
+ </li>
 
-            <!-- Chemicals -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='coal') }}">
-                  <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='coal') }}">
-                  <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
-              </ul>
-            </li>
+ <!-- Chemicals -->
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='coal') }}">
+ <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
+ <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='coal') }}">
+ <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
+ </ul>
+ </li>
 
-            <!-- Records -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-clipboard-check me-1"></i>{{ _('Records') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('quality.proficiency_list') }}">
-                  <i class="bi bi-award me-2"></i>{{ _('PT Testing') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.environmental_list') }}">
-                  <i class="bi bi-thermometer-half me-2"></i>{{ _('Environmental') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.complaints_list') }}">
-                  <i class="bi bi-chat-left-dots me-2"></i>{{ _('Complaints') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.improvement_list') }}">
-                  <i class="bi bi-arrow-up-circle me-2"></i>{{ _('Improvements') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.nonconformity_list') }}">
-                  <i class="bi bi-exclamation-octagon me-2"></i>{{ _('Nonconformities') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.capa_list') }}">
-                  <i class="bi bi-tools me-2"></i>{{ _('Corrective Actions') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.complaints_dashboard') }}">
-                  <i class="bi bi-pie-chart me-2"></i>{{ _('Dashboard') }}
-                </a></li>
-              </ul>
-            </li>
+ <!-- Records -->
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-clipboard-check me-1"></i>{{ _('Records') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('quality.proficiency_list') }}">
+ <i class="bi bi-award me-2"></i>{{ _('PT Testing') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.environmental_list') }}">
+ <i class="bi bi-thermometer-half me-2"></i>{{ _('Environmental') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.complaints_list') }}">
+ <i class="bi bi-chat-left-dots me-2"></i>{{ _('Complaints') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.improvement_list') }}">
+ <i class="bi bi-arrow-up-circle me-2"></i>{{ _('Improvements') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.nonconformity_list') }}">
+ <i class="bi bi-exclamation-octagon me-2"></i>{{ _('Nonconformities') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.capa_list') }}">
+ <i class="bi bi-tools me-2"></i>{{ _('Corrective Actions') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.complaints_dashboard') }}">
+ <i class="bi bi-pie-chart me-2"></i>{{ _('Dashboard') }}
+ </a></li>
+ </ul>
+ </li>
 
-            <!-- Standards -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-award me-1"></i>{{ _('Standards') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('admin.manage_standards') }}">
-                  <i class="bi bi-clipboard-data me-2"></i>{{ _('CM (Internal)') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('admin.manage_gbw') }}">
-                  <i class="bi bi-patch-check-fill me-2"></i>{{ _('GBW (CRM)') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('quality.control_charts_list') }}">
-                  <i class="bi bi-graph-up me-2"></i>{{ _('Control Charts') }}
-                </a></li>
-              </ul>
-            </li>
+ <!-- Standards -->
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-award me-1"></i>{{ _('Standards') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('admin.manage_standards') }}">
+ <i class="bi bi-clipboard-data me-2"></i>{{ _('CM (Internal)') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('admin.manage_gbw') }}">
+ <i class="bi bi-patch-check-fill me-2"></i>{{ _('GBW (CRM)') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('quality.control_charts_list') }}">
+ <i class="bi bi-graph-up me-2"></i>{{ _('Control Charts') }}
+ </a></li>
+ </ul>
+ </li>
 
-            <!-- Senior Review (Senior, Admin) -->
-            {% if current_user.role in ['senior', 'admin'] %}
-            <li class="nav-item mobile-nav-item">
-              <a class="nav-link" href="{{ url_for('analysis.ahlah_dashboard') }}">
-                <i class="bi bi-shield-check me-1 text-warning"></i>{{ _('Senior Review') }}
-              </a>
-            </li>
-            {% endif %}
+ <!-- Senior Review (Senior, Admin) -->
+ {% if current_user.role in ['senior', 'admin'] %}
+ <li class="nav-item mobile-nav-item">
+ <a class="nav-link" href="{{ url_for('analysis.ahlah_dashboard') }}">
+ <i class="bi bi-shield-check me-1 text-warning"></i>{{ _('Senior Review') }}
+ </a>
+ </li>
+ {% endif %}
 
-            <!-- Summary (Senior, Manager, Admin) -->
-            {% if current_user.role in ['senior', 'manager', 'admin'] %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('api.sample_summary') }}">
-                <i class="bi bi-table me-1"></i>{{ _('Summary') }}
-              </a>
-            </li>
-            {% endif %}
+ <!-- Summary (Senior, Manager, Admin) -->
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('api.sample_summary') }}">
+ <i class="bi bi-table me-1"></i>{{ _('Summary') }}
+ </a>
+ </li>
+ {% endif %}
 
-            <!-- Reports -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-bar-chart me-1"></i>{{ _('Reports') }}
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('reports.dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.consumption') }}">
-                  <i class="bi bi-table me-2"></i>{{ _('Analysis Summary') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.monthly_plan') }}">
-                  <i class="bi bi-bar-chart-line me-2"></i>{{ _('Monthly Plan') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('reports.chemist_report') }}">
-                  <i class="bi bi-person-badge me-2"></i>{{ _('Chemist Report') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">
-                  <i class="bi bi-graph-up me-2"></i>{{ _('Statistics') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('main.report_builder') }}">
-                  <i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>{{ _('Report Builder') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('analysis.shift_daily') }}">
-                  <i class="bi bi-calendar-day me-2"></i>{{ _('Shift Performance') }}
-                </a></li>
-              </ul>
-            </li>
+ <!-- Reports -->
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-bar-chart me-1"></i>{{ _('Reports') }}
+ </a>
+ <ul class="dropdown-menu">
+ <li><a class="dropdown-item" href="{{ url_for('reports.dashboard') }}">
+ <i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('reports.consumption') }}">
+ <i class="bi bi-table me-2"></i>{{ _('Analysis Summary') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('reports.monthly_plan') }}">
+ <i class="bi bi-bar-chart-line me-2"></i>{{ _('Monthly Plan') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('reports.chemist_report') }}">
+ <i class="bi bi-person-badge me-2"></i>{{ _('Chemist Report') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">
+ <i class="bi bi-graph-up me-2"></i>{{ _('Statistics') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('main.report_builder') }}">
+ <i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>{{ _('Report Builder') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('analysis.shift_daily') }}">
+ <i class="bi bi-calendar-day me-2"></i>{{ _('Shift Performance') }}
+ </a></li>
+ </ul>
+ </li>
 
-            <!-- Management (Senior, Manager, Admin) -->
-            {% if current_user.role in ['senior', 'manager', 'admin'] %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-gear me-1"></i>{{ _('Management') }}
-              </a>
-              <ul class="dropdown-menu">
-                {% if current_user.role == 'admin' %}
-                <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">
-                  <i class="bi bi-people me-2"></i>{{ _('Users') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                {% endif %}
-                {% if current_user.role in ['admin', 'manager'] %}
-                <li><a class="dropdown-item" href="{{ url_for('license.info') }}">
-                  <i class="bi bi-key me-2"></i>{{ _('License') }}
-                </a></li>
-                {% endif %}
-                <li><a class="dropdown-item" href="{{ url_for('admin.analysis_config_simple') }}">
-                  <i class="bi bi-sliders me-2"></i>{{ _('Analysis Config') }}
-                </a></li>
-                {# TEMPORARILY HIDDEN - repeatability limits page
-                <li><a class="dropdown-item" href="{{ url_for('settings.repeatability_limits') }}">
-                  <i class="bi bi-rulers me-2"></i>{{ _('Repeatability Limits') }}
-                </a></li>
-                #}
-                <li><a class="dropdown-item" href="{{ url_for('settings.bottles_index') }}">
-                  <i class="bi bi-flask me-2"></i>{{ _('Bottles (TRD)') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('settings.email_recipients') }}">
-                  <i class="bi bi-envelope-at me-2"></i>{{ _('Report Email') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('importer.import_historical_csv') }}">
-                  <i class="bi bi-file-earmark-arrow-up me-2"></i>{{ _('CSV Import') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('api.audit_hub') }}">
-                  <i class="bi bi-clock-history me-2"></i>{{ _('Audit') }}
-                </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('api.system_audit') }}">
-                  <i class="bi bi-shield-lock me-2"></i>{{ _('System Audit') }}
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('main.instrument_readings') }}">
-                  <i class="bi bi-cpu me-2 text-info"></i>{{ _('Instrument Readings') }}
-                </a></li>
-                {% if current_user.role == 'admin' %}
-                <li><a class="dropdown-item" href="{{ url_for('main.workflow_admin') }}">
-                  <i class="bi bi-diagram-3 me-2 text-purple"></i>{{ _('Workflow Config') }}
-                </a></li>
-                {% endif %}
-              </ul>
-            </li>
-            {% endif %}
-            {% endif %}{# end is_water_lab else #}
-          {% endif %}{# end is_authenticated #}
-        </ul>
+ <!-- Management (Senior, Manager, Admin) -->
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-gear me-1"></i>{{ _('Management') }}
+ </a>
+ <ul class="dropdown-menu">
+ {% if current_user.role == 'admin' %}
+ <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">
+ <i class="bi bi-people me-2"></i>{{ _('Users') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ {% endif %}
+ {% if current_user.role in ['admin', 'manager'] %}
+ <li><a class="dropdown-item" href="{{ url_for('license.info') }}">
+ <i class="bi bi-key me-2"></i>{{ _('License') }}
+ </a></li>
+ {% endif %}
+ <li><a class="dropdown-item" href="{{ url_for('admin.analysis_config_simple') }}">
+ <i class="bi bi-sliders me-2"></i>{{ _('Analysis Config') }}
+ </a></li>
+ {# TEMPORARILY HIDDEN - repeatability limits page
+ <li><a class="dropdown-item" href="{{ url_for('settings.repeatability_limits') }}">
+ <i class="bi bi-rulers me-2"></i>{{ _('Repeatability Limits') }}
+ </a></li>
+ #}
+ <li><a class="dropdown-item" href="{{ url_for('settings.bottles_index') }}">
+ <i class="bi bi-flask me-2"></i>{{ _('Bottles (TRD)') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('settings.email_recipients') }}">
+ <i class="bi bi-envelope-at me-2"></i>{{ _('Report Email') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('importer.import_historical_csv') }}">
+ <i class="bi bi-file-earmark-arrow-up me-2"></i>{{ _('CSV Import') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('api.audit_hub') }}">
+ <i class="bi bi-clock-history me-2"></i>{{ _('Audit') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('api.system_audit') }}">
+ <i class="bi bi-shield-lock me-2"></i>{{ _('System Audit') }}
+ </a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item" href="{{ url_for('main.instrument_readings') }}">
+ <i class="bi bi-cpu me-2 text-info"></i>{{ _('Instrument Readings') }}
+ </a></li>
+ {% if current_user.role == 'admin' %}
+ <li><a class="dropdown-item" href="{{ url_for('main.workflow_admin') }}">
+ <i class="bi bi-diagram-3 me-2 text-purple"></i>{{ _('Workflow Config') }}
+ </a></li>
+ {% endif %}
+ </ul>
+ </li>
+ {% endif %}
+ {% endif %}{# end is_water_lab else #}
+ {% endif %}{# end is_authenticated #}
+ </ul>
 
-        <ul class="navbar-nav ms-auto align-items-center gap-2">
-          {% if current_user.is_authenticated and current_user.role in ['senior', 'admin'] %}
-          <li class="nav-item">
-            <a class="nav-link text-success" href="{{ url_for('main.send_hourly_report') }}"
-               title="{{ _('Send Hourly Report') }}"
-               onclick="return confirm('{{ _("Send hourly report?") }}')">
-              <i class="bi bi-envelope-paper-fill"></i>
-            </a>
-          </li>
-          {% endif %}
+ <ul class="navbar-nav ms-auto align-items-center gap-2">
+ {% if current_user.is_authenticated and current_user.role in ['senior', 'admin'] %}
+ <li class="nav-item">
+ <a class="nav-link text-success" href="{{ url_for('main.send_hourly_report') }}"
+ title="{{ _('Send Hourly Report') }}"
+ data-click-confirm='{{ _("Send hourly report?") }}'>
+ <i class="bi bi-envelope-paper-fill"></i>
+ </a>
+ </li>
+ {% endif %}
 
-          <li class="nav-item me-2">
-            {% set cur_lang = get_locale()|string %}
-            {% set next_lang = 'mn' if cur_lang == 'en' else 'en' %}
-            <a href="{{ url_for('main.set_language', lang=next_lang) }}"
-               class="btn btn-outline-secondary btn-sm" title="{{ _('Switch language') }}">
-              {{ cur_lang|upper }}
-            </a>
-          </li>
+ <li class="nav-item me-2">
+ {% set cur_lang = get_locale()|string %}
+ {% set next_lang = 'mn' if cur_lang == 'en' else 'en' %}
+ <a href="{{ url_for('main.set_language', lang=next_lang) }}"
+ class="btn btn-outline-secondary btn-sm" title="{{ _('Switch language') }}">
+ {{ cur_lang|upper }}
+ </a>
+ </li>
 
-          {% if current_user.is_authenticated %}
-          <!-- Notification Bell -->
-          <li class="nav-item dropdown" id="notifDropdownItem" style="display:none;">
-            <a class="nav-link position-relative px-2" href="#" id="notifBell"
-               data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Alerts') }}">
-              <i class="bi bi-bell-fill" style="font-size:1.15rem;color:#fbbf24;"></i>
-              <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                    style="font-size:0.6rem;display:none;">0</span>
-            </a>
-            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0"
-                 id="notifDropdown"
-                 style="min-width:320px;max-width:380px;border-radius:12px;overflow:hidden;">
-              <div style="background:#1e293b;color:#fff;padding:10px 14px;font-weight:700;font-size:0.85rem;">
-                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _("Chemical Alerts") }}
-                <span id="notifTotalBadge" class="badge bg-danger ms-1"></span>
-              </div>
-              <div id="notifList" style="max-height:340px;overflow-y:auto;background:#fff;"></div>
-              <div style="background:#f8fafc;padding:8px 14px;border-top:1px solid #e2e8f0;">
-                <a href="{{ url_for('chemicals.chemical_list', view='expiring') }}"
-                   class="btn btn-sm btn-outline-warning w-100" style="border-radius:8px;font-size:0.8rem;">
-                  <i class="bi bi-list-ul me-1"></i>{{ _("View all expiring") }}
-                </a>
-              </div>
-            </div>
-          </li>
-          {% endif %}
+ {% if current_user.is_authenticated %}
+ <!-- Notification Bell -->
+ <li class="nav-item dropdown hidden" id="notifDropdownItem">
+ <a class="nav-link position-relative px-2" href="#" id="notifBell"
+ data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Alerts') }}">
+ <i class="bi bi-bell-fill text-[1.15rem] text-[#fbbf24]"></i>
+ <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-3xs hidden"
+>0</span>
+ </a>
+ <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 min-w-[320px] max-w-[380px] rounded-xl overflow-hidden"
+ id="notifDropdown"
+>
+ <div class="bg-slate-800 text-white py-[10px] px-[14px] font-bold text-sm-3">
+ <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _("Chemical Alerts") }}
+ <span id="notifTotalBadge" class="badge bg-danger ms-1"></span>
+ </div>
+ <div class="max-h-[340px] overflow-y-auto bg-white" id="notifList"></div>
+ <div class="bg-slate-50 py-[8px] px-[14px] border-t border-slate-200">
+ <a href="{{ url_for('chemicals.chemical_list', view='expiring') }}"
+ class="btn btn-sm btn-outline-warning w-100 rounded-lg text-sm-1">
+ <i class="bi bi-list-ul me-1"></i>{{ _("View all expiring") }}
+ </a>
+ </div>
+ </div>
+ </li>
+ {% endif %}
 
-          {% if current_user.is_authenticated %}
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-              <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
-                <i class="bi bi-person-gear me-2"></i>{{ _('Profile') }}
-              </a></li>
-              <li><a class="dropdown-item" href="{{ url_for('main.profile') }}"><i class="bi bi-key me-2"></i>{{ _('Change Password') }}</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">
-                <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
-              </a></li>
-            </ul>
-          </li>
-          {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main.login') }}">{{ _('Login') }}</a>
-          </li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-  </nav>
+ {% if current_user.is_authenticated %}
+ <li class="nav-item dropdown">
+ <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+ <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
+ </a>
+ <ul class="dropdown-menu dropdown-menu-end">
+ <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
+ <i class="bi bi-person-gear me-2"></i>{{ _('Profile') }}
+ </a></li>
+ <li><a class="dropdown-item" href="{{ url_for('main.profile') }}"><i class="bi bi-key me-2"></i>{{ _('Change Password') }}</a></li>
+ <li><hr class="dropdown-divider"></li>
+ <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">
+ <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
+ </a></li>
+ </ul>
+ </li>
+ {% else %}
+ <li class="nav-item">
+ <a class="nav-link" href="{{ url_for('main.login') }}">{{ _('Login') }}</a>
+ </li>
+ {% endif %}
+ </ul>
+ </div>
+ </div>
+ </nav>
 
-  <!-- Toast Messages -->
-  <div class="toast-container position-fixed top-0 end-0 p-3" style="margin-top: 70px;">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-        <div class="toast show" role="alert">
-          <div class="toast-header">
-            <strong class="me-auto text-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' }}">
-              <i class="bi bi-bell me-1"></i>LIMS
-            </strong>
-            <button class="btn-close" data-bs-dismiss="toast"></button>
-          </div>
-          <div class="toast-body">{{ message }}</div>
-        </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
+ <!-- Toast Messages -->
+ <div class="toast-container position-fixed top-0 end-0 p-3 mt-[70px]">
+ {% with messages = get_flashed_messages(with_categories=true) %}
+ {% if messages %}
+ {% for category, message in messages %}
+ <div class="toast show" role="alert">
+ <div class="toast-header">
+ <strong class="me-auto text-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' }}">
+ <i class="bi bi-bell me-1"></i>LIMS
+ </strong>
+ <button class="btn-close" data-bs-dismiss="toast"></button>
+ </div>
+ <div class="toast-body">{{ message }}</div>
+ </div>
+ {% endfor %}
+ {% endif %}
+ {% endwith %}
+ </div>
 
-  <!-- Main Content -->
-  <main class="container-fluid mt-3 lims-main">
-    {% block content %}{% endblock %}
-  </main>
+ <!-- Main Content -->
+ <main class="container-fluid mt-3 lims-main">
+ {% block content %}{% endblock %}
+ </main>
 
-  <!-- Footer -->
-  <footer class="lims-footer">
-    © {{ now_local().year }} CORELINK LIMS · Energy Resources LLC
-  </footer>
+ <!-- Footer -->
+ <footer class="lims-footer">
+ © {{ now_local().year }} CORELINK LIMS · Energy Resources LLC
+ </footer>
 
-  <!-- Core Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+ <!-- htmx CSP-safe тохиргоо: <style> блок inject хийхгүй (CSP nonce шаардлагатай
+      тул htmx-ийн runtime style injection блоклогдоно). Indicator CSS-ийг
+      өөрсдөө src/styles.css-д тогтоосон. -->
+ <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
 
-  <!-- SheetJS - Excel export -->
-  <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
+ <!-- Vite bundle: jQuery + Bootstrap + Alpine + collapse plugin + htmx -->
+ {{ vite_js_tag('src/main.js') }}
 
-  <!-- DataTables (Quality Records pages) -->
-  <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
+ <!-- SheetJS - Excel export -->
+ <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
 
-  <!-- Alpine.js - Collapse plugin (must load before Alpine core) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.3/dist/cdn.min.js"></script>
-  <!-- Alpine.js - Lightweight reactive framework -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+ <!-- DataTables (Quality Records pages, Sprint 2-д CDN хэвээр) -->
+ <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
 
-  <!-- htmx - HTML over the wire -->
-  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+ <script nonce="{{ csp_nonce }}">
+ // Production-д console.log/debug хаах (console.warn/error хэвээрээ)
+ if (!window.DEBUG) {
+ console.log = function() {};
+ console.debug = function() {};
+ }
 
-  <script nonce="{{ csp_nonce }}">
-    // Production-д console.log/debug хаах (console.warn/error хэвээрээ)
-    if (!window.DEBUG) {
-      console.log = function() {};
-      console.debug = function() {};
-    }
+ // htmx CSRF тохиргоо - Flask-WTF csrf token
+ document.addEventListener('htmx:configRequest', function(evt) {
+ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+ if (csrfToken) {
+ evt.detail.headers['X-CSRFToken'] = csrfToken;
+ }
+ });
+ </script>
 
-    // htmx CSRF тохиргоо - Flask-WTF csrf token
-    document.addEventListener('htmx:configRequest', function(evt) {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-      if (csrfToken) {
-        evt.detail.headers['X-CSRFToken'] = csrfToken;
-      }
-    });
-  </script>
+ <!-- Global Excel export helper -->
+ <script nonce="{{ csp_nonce }}">
+ /**
+ * AG-Grid өгөгдлийг .xlsx файл болгон татах.
+ * @param {object} api - AG-Grid gridApi
+ * @param {string} fileName - Файлын нэр (e.g. 'journal.xlsx')
+ * @param {string} [sheetName] - Sheet нэр
+ */
+ function gridToXlsx(api, fileName, sheetName) {
+ if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
+ var displayedCols = null;
+ try { displayedCols = api.getAllDisplayedColumns(); } catch(e) {}
+ var headers = [], data;
 
-  <!-- Global Excel export helper -->
-  <script nonce="{{ csp_nonce }}">
-    /**
-     * AG-Grid өгөгдлийг .xlsx файл болгон татах.
-     * @param {object} api - AG-Grid gridApi
-     * @param {string} fileName - Файлын нэр (e.g. 'journal.xlsx')
-     * @param {string} [sheetName] - Sheet нэр
-     */
-    function gridToXlsx(api, fileName, sheetName) {
-      if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
-      var displayedCols = null;
-      try { displayedCols = api.getAllDisplayedColumns(); } catch(e) {}
-      var headers = [], data;
+ if (displayedCols && displayedCols.length) {
+ // Primary path: use displayed columns + valueGetter/valueFormatter
+ displayedCols.forEach(function(c) {
+ var cd = c.colDef || {};
+ headers.push(cd.headerName || cd.field || '');
+ });
+ data = [headers];
+ api.forEachNodeAfterFilterAndSort(function(node) {
+ var row = [];
+ displayedCols.forEach(function(col) {
+ var val = '';
+ var cd = col.colDef || {};
+ try {
+ if (typeof cd.valueGetter === 'function') {
+ val = cd.valueGetter({ data: node.data, node: node, colDef: cd, column: col, api: api });
+ } else if (cd.field) {
+ val = node.data[cd.field];
+ }
+ } catch(e) {
+ if (cd.field) val = node.data[cd.field];
+ }
+ // Apply valueFormatter for clean numeric display
+ try {
+ if (val != null && val !== '' && typeof cd.valueFormatter === 'function') {
+ val = cd.valueFormatter({ value: val, data: node.data, node: node, colDef: cd });
+ }
+ } catch(e) {}
+ row.push(val != null ? val : '');
+ });
+ data.push(row);
+ });
+ } else {
+ // Fallback: flatten columnDefs (handles column groups)
+ var colDefs = [];
+ try { colDefs = api.getColumnDefs() || []; } catch(e) {}
+ var flat = [];
+ (function walk(defs) {
+ (defs || []).forEach(function(d) {
+ if (d.children) walk(d.children);
+ else flat.push(d);
+ });
+ })(colDefs);
+ flat.forEach(function(d) {
+ headers.push(d.headerName || d.field || '');
+ });
+ data = [headers];
+ api.forEachNodeAfterFilterAndSort(function(node) {
+ var row = flat.map(function(d) {
+ return d.field ? (node.data[d.field] != null ? node.data[d.field] : '') : '';
+ });
+ data.push(row);
+ });
+ }
 
-      if (displayedCols && displayedCols.length) {
-        // Primary path: use displayed columns + valueGetter/valueFormatter
-        displayedCols.forEach(function(c) {
-          var cd = c.colDef || {};
-          headers.push(cd.headerName || cd.field || '');
-        });
-        data = [headers];
-        api.forEachNodeAfterFilterAndSort(function(node) {
-          var row = [];
-          displayedCols.forEach(function(col) {
-            var val = '';
-            var cd = col.colDef || {};
-            try {
-              if (typeof cd.valueGetter === 'function') {
-                val = cd.valueGetter({ data: node.data, node: node, colDef: cd, column: col, api: api });
-              } else if (cd.field) {
-                val = node.data[cd.field];
-              }
-            } catch(e) {
-              if (cd.field) val = node.data[cd.field];
-            }
-            // Apply valueFormatter for clean numeric display
-            try {
-              if (val != null && val !== '' && typeof cd.valueFormatter === 'function') {
-                val = cd.valueFormatter({ value: val, data: node.data, node: node, colDef: cd });
-              }
-            } catch(e) {}
-            row.push(val != null ? val : '');
-          });
-          data.push(row);
-        });
-      } else {
-        // Fallback: flatten columnDefs (handles column groups)
-        var colDefs = [];
-        try { colDefs = api.getColumnDefs() || []; } catch(e) {}
-        var flat = [];
-        (function walk(defs) {
-          (defs || []).forEach(function(d) {
-            if (d.children) walk(d.children);
-            else flat.push(d);
-          });
-        })(colDefs);
-        flat.forEach(function(d) {
-          headers.push(d.headerName || d.field || '');
-        });
-        data = [headers];
-        api.forEachNodeAfterFilterAndSort(function(node) {
-          var row = flat.map(function(d) {
-            return d.field ? (node.data[d.field] != null ? node.data[d.field] : '') : '';
-          });
-          data.push(row);
-        });
-      }
+ var ws = XLSX.utils.aoa_to_sheet(data);
+ var colWidths = headers.map(function(h, i) {
+ var max = (h || '').length;
+ data.forEach(function(r) { var len = String(r[i] || '').length; if (len> max) max = len; });
+ return { wch: Math.min(max + 2, 50) };
+ });
+ ws['!cols'] = colWidths;
+ var wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+ XLSX.writeFile(wb, fileName);
+ }
 
-      var ws = XLSX.utils.aoa_to_sheet(data);
-      var colWidths = headers.map(function(h, i) {
-        var max = (h || '').length;
-        data.forEach(function(r) { var len = String(r[i] || '').length; if (len > max) max = len; });
-        return { wch: Math.min(max + 2, 50) };
-      });
-      ws['!cols'] = colWidths;
-      var wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
-      XLSX.writeFile(wb, fileName);
-    }
+ /**
+ * HTML table-ийг .xlsx файл болгон татах.
+ * @param {string} tableId - Table element ID
+ * @param {string} fileName - Файлын нэр
+ * @param {string} [sheetName] - Sheet нэр
+ */
+ function tableToXlsx(tableId, fileName, sheetName) {
+ if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
+ var tbl = document.getElementById(tableId);
+ if (!tbl) { alert('Хүснэгт олдсонгүй'); return; }
+ var ws = XLSX.utils.table_to_sheet(tbl);
+ // Auto column widths
+ var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+ var colWidths = [];
+ for (var c = range.s.c; c <= range.e.c; c++) {
+ var max = 8;
+ for (var r = range.s.r; r <= range.e.r; r++) {
+ var cell = ws[XLSX.utils.encode_cell({r:r, c:c})];
+ if (cell && cell.v) { var len = String(cell.v).length; if (len> max) max = len; }
+ }
+ colWidths.push({ wch: Math.min(max + 2, 50) });
+ }
+ ws['!cols'] = colWidths;
+ var wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+ XLSX.writeFile(wb, fileName);
+ }
+ </script>
 
-    /**
-     * HTML table-ийг .xlsx файл болгон татах.
-     * @param {string} tableId - Table element ID
-     * @param {string} fileName - Файлын нэр
-     * @param {string} [sheetName] - Sheet нэр
-     */
-    function tableToXlsx(tableId, fileName, sheetName) {
-      if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
-      var tbl = document.getElementById(tableId);
-      if (!tbl) { alert('Хүснэгт олдсонгүй'); return; }
-      var ws = XLSX.utils.table_to_sheet(tbl);
-      // Auto column widths
-      var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-      var colWidths = [];
-      for (var c = range.s.c; c <= range.e.c; c++) {
-        var max = 8;
-        for (var r = range.s.r; r <= range.e.r; r++) {
-          var cell = ws[XLSX.utils.encode_cell({r:r, c:c})];
-          if (cell && cell.v) { var len = String(cell.v).length; if (len > max) max = len; }
-        }
-        colWidths.push({ wch: Math.min(max + 2, 50) });
-      }
-      ws['!cols'] = colWidths;
-      var wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
-      XLSX.writeFile(wb, fileName);
-    }
-  </script>
+ <!-- Utility scripts (logger.js is in <head>) -->
+ <script src="{{ url_for('static', filename='js/utils/safe-storage.js') }}"></script>
+ <script src="{{ url_for('static', filename='js/form_guards.js') }}?v=1"></script>
+ <script src="{{ url_for('static', filename='js/csp_handlers.js') }}?v=1"></script>
 
-  <!-- Utility scripts (logger.js is in <head>) -->
-  <script src="{{ url_for('static', filename='js/utils/safe-storage.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/form_guards.js') }}?v=1"></script>
+ {% if use_aggrid|default(false) %}
+ <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
+ <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=4"></script>
+ <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}?v=1"></script>
+ {% endif %}
 
-  {% if use_aggrid|default(false) %}
-  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
-  <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=4"></script>
-  <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}?v=1"></script>
-  {% endif %}
+ <!-- Navbar height CSS variable -->
+ <script nonce="{{ csp_nonce }}">
+ (function() {
+ function setNavHeight() {
+ const nav = document.getElementById('mainNav');
+ if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+ }
+ setNavHeight();
+ window.addEventListener('load', setNavHeight);
+ window.addEventListener('resize', setNavHeight);
+ })();
+ </script>
 
-  <!-- Navbar height CSS variable -->
-  <script nonce="{{ csp_nonce }}">
-    (function() {
-      function setNavHeight() {
-        const nav = document.getElementById('mainNav');
-        if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
-      }
-      setNavHeight();
-      window.addEventListener('load', setNavHeight);
-      window.addEventListener('resize', setNavHeight);
-    })();
-  </script>
+ <!-- User session check - Clear localStorage when different user logs in -->
+ {% if current_user.is_authenticated %}
+ <script nonce="{{ csp_nonce }}">
+ (function() {
+ const CURRENT_USER_ID = {{ current_user.id }};
+ const STORAGE_KEY = 'lims_current_user_id';
 
-  <!-- User session check - Clear localStorage when different user logs in -->
-  {% if current_user.is_authenticated %}
-  <script nonce="{{ csp_nonce }}">
-    (function() {
-      const CURRENT_USER_ID = {{ current_user.id }};
-      const STORAGE_KEY = 'lims_current_user_id';
+ const storedUserId = localStorage.getItem(STORAGE_KEY);
 
-      const storedUserId = localStorage.getItem(STORAGE_KEY);
+ if (storedUserId && parseInt(storedUserId) !== CURRENT_USER_ID) {
+ // Өөр хэрэглэгч нэвтэрсэн - worksheet болон draft цэвэрлэх
+ console.log(`🔄 User changed: ${storedUserId} → ${CURRENT_USER_ID}. Clearing worksheets & drafts.`);
 
-      if (storedUserId && parseInt(storedUserId) !== CURRENT_USER_ID) {
-        // Өөр хэрэглэгч нэвтэрсэн - worksheet болон draft цэвэрлэх
-        console.log(`🔄 User changed: ${storedUserId} → ${CURRENT_USER_ID}. Clearing worksheets & drafts.`);
+ const keysToRemove = [];
+ for (let i = 0; i < localStorage.length; i++) {
+ const key = localStorage.key(i);
+ if (key && (key.startsWith('worksheet_') || key.startsWith('draft_'))) {
+ keysToRemove.push(key);
+ }
+ }
 
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.startsWith('worksheet_') || key.startsWith('draft_'))) {
-            keysToRemove.push(key);
-          }
-        }
+ keysToRemove.forEach(key => {
+ localStorage.removeItem(key);
+ console.log(` 🗑️ Removed: ${key}`);
+ });
 
-        keysToRemove.forEach(key => {
-          localStorage.removeItem(key);
-          console.log(`  🗑️ Removed: ${key}`);
-        });
+ if (keysToRemove.length> 0) {
+ console.log(`✅ Cleared ${keysToRemove.length} worksheet/draft items`);
+ }
+ }
 
-        if (keysToRemove.length > 0) {
-          console.log(`✅ Cleared ${keysToRemove.length} worksheet/draft items`);
-        }
-      }
+ // Одоогийн хэрэглэгчийн ID хадгалах
+ localStorage.setItem(STORAGE_KEY, CURRENT_USER_ID);
+ })();
+ </script>
+ {% endif %}
 
-      // Одоогийн хэрэглэгчийн ID хадгалах
-      localStorage.setItem(STORAGE_KEY, CURRENT_USER_ID);
-    })();
-  </script>
-  {% endif %}
+ <!-- Real-time notification (6 min interval) -->
+ <script nonce="{{ csp_nonce }}">
+ document.addEventListener('DOMContentLoaded', function() {
+ function checkReadySamples() {
+ fetch("{{ url_for('api.check_ready_samples') }}")
+ .then(r => r.ok ? r.json() : Promise.reject())
+ .then(data => {
+ if (data.ready_count> 0) {
+ document.title = `(${data.ready_count}) Ready! - LIMS`;
+ } else {
+ document.title = "{{ title|default('LIMS') }} - CORELINK";
+ }
+ })
+ .catch(() => {});
+ }
+ setInterval(checkReadySamples, 360000);
+ });
+ </script>
 
-  <!-- Real-time notification (6 min interval) -->
-  <script nonce="{{ csp_nonce }}">
-    document.addEventListener('DOMContentLoaded', function() {
-      function checkReadySamples() {
-        fetch("{{ url_for('api.check_ready_samples') }}")
-          .then(r => r.ok ? r.json() : Promise.reject())
-          .then(data => {
-            if (data.ready_count > 0) {
-              document.title = `(${data.ready_count}) Ready! - LIMS`;
-            } else {
-              document.title = "{{ title|default('LIMS') }} - CORELINK";
-            }
-          })
-          .catch(() => {});
-      }
-      setInterval(checkReadySamples, 360000);
-    });
-  </script>
+ {% if current_user.is_authenticated %}
+ <!-- Chemical Expiry Notification Bell -->
+ <script nonce="{{ csp_nonce }}">
+ (function() {
+ const NOTIF_URL = "{{ url_for('chemicals.api_notifications') }}";
+ const LAB_MAP = { coal: 'Нүүрс', water: 'Ус', microbiology: 'Микро', petrography: 'Петро', all: 'Бүх' };
 
-  {% if current_user.is_authenticated %}
-  <!-- Chemical Expiry Notification Bell -->
-  <script nonce="{{ csp_nonce }}">
-  (function() {
-    const NOTIF_URL = "{{ url_for('chemicals.api_notifications') }}";
-    const LAB_MAP = { coal: 'Нүүрс', water: 'Ус', microbiology: 'Микро', petrography: 'Петро', all: 'Бүх' };
+ function renderNotifItem(c, isExpired) {
+ const days = c.days;
+ let badge, bgColor;
+ if (isExpired) {
+ badge = `<span class="badge bg-danger text-2xs">${-days}д хэтэрсэн</span>`;
+ bgColor = '#fff5f5';
+ } else {
+ badge = `<span class="badge bg-warning text-dark text-2xs">${days}д үлдсэн</span>`;
+ bgColor = '#fffbeb';
+ }
+ const lab = LAB_MAP[c.lab_type] || c.lab_type;
+ const sw = c.ghs_signal_word ? `<span class="badge ${c.ghs_signal_word === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'} text-3xs ml-[3px]">${c.ghs_signal_word}</span>` : '';
+ return `<a href="/chemicals/${c.id}" class="d-flex align-items-start gap-2 text-decoration-none px-3 py-2 border-b border-slate-100 text-slate-800"
+ data-bg-color="${bgColor}">
+ <i class="bi bi-flask-fill text-warning mt-1 text-base shrink-0"></i>
+ <div class="flex-1 min-w-0">
+ <div class="fw-semibold text-truncate text-sm-2">${c.name}${sw}</div>
+ <div class="text-xs-3 text-slate-500">${lab}${c.lot_number ? ' · Lot: ' + c.lot_number : ''}</div>
+ </div>
+ ${badge}
+ </a>`;
+ }
 
-    function renderNotifItem(c, isExpired) {
-      const days = c.days;
-      let badge, bgColor;
-      if (isExpired) {
-        badge = `<span class="badge bg-danger" style="font-size:0.65rem;">${-days}д хэтэрсэн</span>`;
-        bgColor = '#fff5f5';
-      } else {
-        badge = `<span class="badge bg-warning text-dark" style="font-size:0.65rem;">${days}д үлдсэн</span>`;
-        bgColor = '#fffbeb';
-      }
-      const lab = LAB_MAP[c.lab_type] || c.lab_type;
-      const sw = c.ghs_signal_word ? `<span class="badge ${c.ghs_signal_word === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'}" style="font-size:0.6rem;margin-left:3px;">${c.ghs_signal_word}</span>` : '';
-      return `<a href="/chemicals/${c.id}" class="d-flex align-items-start gap-2 text-decoration-none px-3 py-2"
-                 style="background:${bgColor};border-bottom:1px solid #f1f5f9;color:#1e293b;">
-        <i class="bi bi-flask-fill text-warning mt-1" style="font-size:1rem;flex-shrink:0;"></i>
-        <div style="flex:1;min-width:0;">
-          <div class="fw-semibold text-truncate" style="font-size:0.82rem;">${c.name}${sw}</div>
-          <div style="font-size:0.72rem;color:#64748b;">${lab}${c.lot_number ? ' · Lot: ' + c.lot_number : ''}</div>
-        </div>
-        ${badge}
-      </a>`;
-    }
+ function fetchNotifications() {
+ fetch(NOTIF_URL)
+ .then(r => r.ok ? r.json() : Promise.reject())
+ .then(data => {
+ const total = data.total || 0;
+ const bellItem = document.getElementById('notifDropdownItem');
+ const badge = document.getElementById('notifBadge');
+ const totalBadge = document.getElementById('notifTotalBadge');
+ const list = document.getElementById('notifList');
+ if (!bellItem) return;
 
-    function fetchNotifications() {
-      fetch(NOTIF_URL)
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(data => {
-          const total = data.total || 0;
-          const bellItem = document.getElementById('notifDropdownItem');
-          const badge = document.getElementById('notifBadge');
-          const totalBadge = document.getElementById('notifTotalBadge');
-          const list = document.getElementById('notifList');
-          if (!bellItem) return;
+ if (total> 0) {
+ bellItem.style.display = '';
+ badge.style.display = '';
+ badge.textContent = total> 99 ? '99+' : total;
+ totalBadge.textContent = total;
 
-          if (total > 0) {
-            bellItem.style.display = '';
-            badge.style.display = '';
-            badge.textContent = total > 99 ? '99+' : total;
-            totalBadge.textContent = total;
+ let html = '';
+ if (data.expired && data.expired.length) {
+ html += `<div class="py-[6px] px-[14px] bg-rose-50 text-xs-3 font-bold text-fail-rose uppercase tracking-[0.5px]">
+ <i class="bi bi-x-octagon-fill me-1"></i>Хугацаа хэтэрсэн (${data.expired_count})
+ </div>`;
+ data.expired.forEach(c => { html += renderNotifItem(c, true); });
+ }
+ if (data.expiring && data.expiring.length) {
+ html += `<div class="py-[6px] px-[14px] bg-amber-50 text-xs-3 font-bold text-warn-bold uppercase tracking-[0.5px]">
+ <i class="bi bi-clock-history me-1"></i>Дуусах дөхсөн (${data.expiring_count})
+ </div>`;
+ data.expiring.forEach(c => { html += renderNotifItem(c, false); });
+ }
+ if (!html) html = '<div class="p-3 text-muted text-center small">Мэдэгдэл байхгүй</div>';
+ list.innerHTML = html;
+ if (window.applyDynamicStyles) window.applyDynamicStyles(list);
+ } else {
+ bellItem.style.display = 'none';
+ }
+ })
+ .catch(() => {});
+ }
 
-            let html = '';
-            if (data.expired && data.expired.length) {
-              html += `<div style="padding:6px 14px;background:#fff1f2;font-size:0.72rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px;">
-                <i class="bi bi-x-octagon-fill me-1"></i>Хугацаа хэтэрсэн (${data.expired_count})
-              </div>`;
-              data.expired.forEach(c => { html += renderNotifItem(c, true); });
-            }
-            if (data.expiring && data.expiring.length) {
-              html += `<div style="padding:6px 14px;background:#fffbeb;font-size:0.72rem;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.5px;">
-                <i class="bi bi-clock-history me-1"></i>Дуусах дөхсөн (${data.expiring_count})
-              </div>`;
-              data.expiring.forEach(c => { html += renderNotifItem(c, false); });
-            }
-            if (!html) html = '<div class="p-3 text-muted text-center small">Мэдэгдэл байхгүй</div>';
-            list.innerHTML = html;
-          } else {
-            bellItem.style.display = 'none';
-          }
-        })
-        .catch(() => {});
-    }
+ // Load on page ready
+ fetchNotifications();
+ // Refresh every 10 minutes
+ setInterval(fetchNotifications, 600000);
+ })();
+ </script>
+ {% endif %}
 
-    // Load on page ready
-    fetchNotifications();
-    // Refresh every 10 minutes
-    setInterval(fetchNotifications, 600000);
-  })();
-  </script>
-  {% endif %}
+ <!-- Ээлжийн огнооны глобал функц -->
+ <script nonce="{{ csp_nonce }}">
+ window.LIMS = window.LIMS || {};
+ /**
+ * Ээлжийн огноо авах
+ * Шөнийн ээлж (0:00-6:59) бол өмнөх өдрийн огноо буцаана
+ * @returns {string} YYYY-MM-DD формат
+ */
+ window.LIMS.getShiftDate = function() {
+ const d = new Date();
+ const h = d.getHours();
+ if (h < 7) {
+ d.setDate(d.getDate() - 1);
+ }
+ return d.getFullYear() + '-' +
+ String(d.getMonth()+1).padStart(2,'0') + '-' +
+ String(d.getDate()).padStart(2,'0');
+ };
+ // Shortcut
+ window.getShiftDate = window.LIMS.getShiftDate;
 
-  <!-- Ээлжийн огнооны глобал функц -->
-  <script nonce="{{ csp_nonce }}">
-    window.LIMS = window.LIMS || {};
-    /**
-     * Ээлжийн огноо авах
-     * Шөнийн ээлж (0:00-6:59) бол өмнөх өдрийн огноо буцаана
-     * @returns {string} YYYY-MM-DD формат
-     */
-    window.LIMS.getShiftDate = function() {
-      const d = new Date();
-      const h = d.getHours();
-      if (h < 7) {
-        d.setDate(d.getDate() - 1);
-      }
-      return d.getFullYear() + '-' +
-             String(d.getMonth()+1).padStart(2,'0') + '-' +
-             String(d.getDate()).padStart(2,'0');
-    };
-    // Shortcut
-    window.getShiftDate = window.LIMS.getShiftDate;
+ /**
+ * Dateны input-үүдэд өнөөдрийн огноог default болгох
+ */
+ document.addEventListener('DOMContentLoaded', function() {
+ const today = new Date().toISOString().split('T')[0];
+ document.querySelectorAll('input[type="date"]').forEach(function(input) {
+ if (!input.value && !input.dataset.noDefault) {
+ input.value = today;
+ }
+ });
+ });
+ </script>
 
-    /**
-     * Dateны input-үүдэд өнөөдрийн огноог default болгох
-     */
-    document.addEventListener('DOMContentLoaded', function() {
-      const today = new Date().toISOString().split('T')[0];
-      document.querySelectorAll('input[type="date"]').forEach(function(input) {
-        if (!input.value && !input.dataset.noDefault) {
-          input.value = today;
-        }
-      });
-    });
-  </script>
+ {% block scripts %}{% endblock %}
 
-  {% block scripts %}{% endblock %}
-
-  {# Chat Widget - Real-time messaging #}
-  {% include "components/chat_widget.html" ignore missing %}
+ {# Chat Widget - Real-time messaging #}
+ {% include "components/chat_widget.html" ignore missing %}
 </body>
 </html>

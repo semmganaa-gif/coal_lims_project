@@ -1,0 +1,149 @@
+/*
+ * Vendor CSS — CDN-ээс bundle руу шилжүүлсэн (Sprint 2)
+ * Bootstrap, Bootstrap-Icons-ыг bundle-д суулгая. AG-Grid CSS-ийг хэрэглэдэг
+ * хуудсанд тус тусад нь импортлоно (огромный bundle-аас сэргийлэх).
+ */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+@import "tailwindcss";
+
+/*
+ * Coal LIMS — Design Tokens
+ * ==========================
+ * Tailwind v4 prefix-гүй ажиллана. Bootstrap-тай class collision-аас
+ * зайлсхийхийн тулд токенууд лабын домэйны нэртэй (pass/warn/fail/info-2).
+ *
+ * Layer ялгал:
+ *   - Bootstrap → component (modal, dropdown, nav, tooltip, ...)
+ *                + utility (text-success, m-3, ...) — хуучнаас орсон
+ *   - Tailwind  → utility, шинэ нэр (text-pass, m-[12px], ...) — collision үгүй
+ *
+ * Spacing — Tailwind-ын m-3/4/5 нь BS-ээс өөр утгатай тул migration script
+ * px-spacing-ийг үргэлж arbitrary value (m-[12px], p-[16px])-аар emit хийнэ.
+ */
+@theme {
+  /* ---- Семантик өнгө (UI state) ---- */
+  --color-pass: #20c997;          /* MNS лимит хангасан / OK */
+  --color-pass-soft: #d1fae5;
+  --color-pass-bold: #15803d;
+  --color-warn: #f59e0b;
+  --color-warn-soft: #fef3c7;
+  --color-warn-bold: #b45309;
+  --color-fail: #ef4444;
+  --color-fail-soft: #fee2e2;
+  --color-info-2: #3b82f6;        /* "info-2" — BS text-info (#0dcaf0)-аас зайлс */
+  --color-info-2-soft: #dbeafe;
+  --color-info-2-bold: #1d4ed8;
+  --color-accent: #8b5cf6;
+  --color-accent-soft: #ede9fe;
+  --color-accent-2: #6366f1;
+  --color-teal: #0d9488;
+  --color-success-emerald: #059669;
+  --color-fail-rose: #dc2626;
+
+  /* ---- Brand surface ---- */
+  --color-brand-deep: #0f172a;
+  --color-brand-primary: #1e40af;
+
+  /* ---- Typography scale (lab-dense таблицад зориулсан) ---- */
+  --text-3xs: 0.6rem;
+  --text-3xs--line-height: 0.85rem;
+  --text-2xs: 0.65rem;
+  --text-2xs--line-height: 0.9rem;
+  --text-xs-1: 0.68rem;
+  --text-xs-1--line-height: 0.95rem;
+  --text-xs-2: 0.7rem;
+  --text-xs-2--line-height: 1rem;
+  --text-xs-3: 0.72rem;
+  --text-xs-3--line-height: 1.05rem;
+  --text-sm-1: 0.8rem;
+  --text-sm-1--line-height: 1.15rem;
+  --text-sm-2: 0.82rem;
+  --text-sm-2--line-height: 1.2rem;
+  --text-sm-3: 0.85rem;
+  --text-sm-3--line-height: 1.25rem;
+}
+
+/*
+ * ---- Custom utilities ----
+ * Tailwind v4 @utility директивээр төслийн design system class-уудыг бүртгэнэ.
+ */
+@utility bg-brand-gradient {
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-primary));
+}
+
+@utility bg-brand-gradient-text {
+  background: linear-gradient(135deg, var(--color-brand-deep), var(--color-brand-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-brand-deep-gradient {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+}
+
+@utility bg-pass-gradient {
+  background: linear-gradient(135deg, #d1fae5, #bbf7d0);
+}
+
+@utility bg-warn-gradient {
+  background: linear-gradient(135deg, #fef3c7, #fffbeb);
+}
+
+@utility bg-info-gradient {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+
+@utility bg-accent-gradient {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+@utility bg-fail-gradient {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+@utility bg-slate-gradient {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+}
+
+@utility bg-indigo-gradient {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+@utility bg-purple-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+@utility bg-amber-gradient {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+@utility bg-sky-gradient {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+}
+
+/*
+ * ---- Animations ----
+ * Runtime-д <style> блок үүсгэж DOM-д оруулахаас зайлсхийн static CSS-д
+ * keyframe-уудыг тогтоосон. CSP3 style-src-elem-ийн nonce шаардлагатай нийцнэ.
+ */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/*
+ * ---- htmx indicator styles ----
+ * htmx-ийн `includeIndicatorStyles=false` config-той хослон ажиллана —
+ * htmx runtime <style> блок inject хийхгүй, бид өөрсдөө equivalent тогтооно.
+ */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}

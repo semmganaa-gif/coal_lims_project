@@ -1,20 +1,41 @@
 /**
- * LIMS Main Entry Point
+ * LIMS Main Entry Point — Vite bundle
  *
- * Vite ашиглан build хийгдэнэ.
- * Development: npm run dev
- * Production:  npm run build
+ * Бүх vendor library (Bootstrap, jQuery, Alpine, htmx, etc.) болон LIMS-ийн
+ * глобал helper-уудыг агуулна. Production-д `npm run build` гүйцэтгэхэд
+ * `app/static/dist/js/main-[hash].js` болж хадгалагдана.
+ *
+ * Development: npm run dev      (Vite dev server, HMR)
+ * Production:  npm run build    (vite build → manifest.json)
  */
 
-// Alpine.js (CDN-ээс npm руу шилжүүлэх бол)
-// import Alpine from 'alpinejs'
-// window.Alpine = Alpine
-// Alpine.start()
+// ─────────────────────────────────────────────────────────────
+// Vendor libraries — CDN-ээс bundle руу шилжүүлсэн
+// ─────────────────────────────────────────────────────────────
 
-// htmx (CDN-ээс npm руу шилжүүлэх бол)
-// import 'htmx.org'
+// jQuery — DataTables-д шаардлагатай
+import $ from 'jquery'
+window.$ = window.jQuery = $
 
-// LIMS namespace
+// Bootstrap (Popper-тэй bundle)
+import * as bootstrap from 'bootstrap'
+window.bootstrap = bootstrap
+
+// Alpine.js + collapse plugin
+import Alpine from 'alpinejs'
+import collapse from '@alpinejs/collapse'
+Alpine.plugin(collapse)
+window.Alpine = Alpine
+// Note: Alpine.start() нь DOMContentLoaded-д автомат дуудагдана
+
+// htmx
+import 'htmx.org'
+// Note: htmx нь global `htmx` объект өөрөө үүсгэнэ
+
+// ─────────────────────────────────────────────────────────────
+// LIMS глобал namespace + helpers
+// ─────────────────────────────────────────────────────────────
+
 window.LIMS = window.LIMS || {}
 
 /**
@@ -35,8 +56,6 @@ window.LIMS.getShiftDate = function () {
     String(d.getDate()).padStart(2, '0')
   )
 }
-
-// Shortcut
 window.getShiftDate = window.LIMS.getShiftDate
 
 /**
@@ -52,17 +71,16 @@ document.addEventListener('DOMContentLoaded', function () {
 })
 
 /**
- * CSRF token helper - htmx болон fetch-д ашиглах
+ * CSRF token helper — htmx болон fetch-д ашиглах
  */
 window.LIMS.getCsrfToken = function () {
   return document.querySelector('meta[name="csrf-token"]')?.content || ''
 }
 
 /**
- * Toast notification helper
+ * Toast notification helper (Bootstrap toast)
  */
 window.LIMS.toast = function (message, type = 'info') {
-  // Bootstrap toast ашиглах
   const toastContainer =
     document.getElementById('toast-container') || createToastContainer()
 
@@ -77,12 +95,8 @@ window.LIMS.toast = function (message, type = 'info') {
   `
 
   toastContainer.appendChild(toastEl)
-
-  // Bootstrap Toast init
   const toast = new bootstrap.Toast(toastEl, { delay: 3000 })
   toast.show()
-
-  // Cleanup
   toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove())
 }
 
@@ -98,4 +112,4 @@ function createToastContainer() {
 // Export for ES modules
 export { }
 
-console.log('LIMS main.js loaded')
+console.log('LIMS main.js bundle loaded (Bootstrap, jQuery, Alpine, htmx)')
