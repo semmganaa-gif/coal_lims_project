@@ -439,15 +439,11 @@ def check_and_notify_westgard():
 
     Scheduler-ээс өдөр бүр дуудагдана.
     """
-    from app.models import QCControlChart
+    from app.repositories import QCControlChartRepository
     from app.utils.westgard import check_westgard_rules, get_qc_status
-    from sqlalchemy import select
 
     # Өвөрмөц analysis_code + qc_sample_name хосуудыг авах
-    unique_pairs = db.session.query(
-        QCControlChart.analysis_code,
-        QCControlChart.qc_sample_name
-    ).distinct().all()
+    unique_pairs = QCControlChartRepository.get_unique_analysis_qc_pairs()
 
     alerts_sent = 0
 
@@ -455,12 +451,9 @@ def check_and_notify_westgard():
         if not analysis_code or not qc_sample:
             continue
 
-        charts = db.session.execute(
-            select(QCControlChart).filter_by(
-                analysis_code=analysis_code,
-                qc_sample_name=qc_sample
-            ).order_by(QCControlChart.measurement_date.desc()).limit(20)
-        ).scalars().all()
+        charts = QCControlChartRepository.get_recent_for_qc(
+            analysis_code, qc_sample, limit=20,
+        )
 
         if len(charts) < 2:
             continue

@@ -51,6 +51,7 @@ from app.repositories.worksheets_repository import (
     WaterWorksheetRepository,
     WorksheetRowRepository,
 )
+from app.repositories.qc_chart_repository import QCControlChartRepository
 
 __all__ = [
     "SampleRepository",
@@ -73,6 +74,7 @@ __all__ = [
     "SolutionRecipeIngredientRepository",
     "WaterWorksheetRepository",
     "WorksheetRowRepository",
+    "QCControlChartRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",
