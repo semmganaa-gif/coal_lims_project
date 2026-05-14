@@ -8,10 +8,28 @@
 
 from typing import Optional, Dict, Any
 import json
+import logging
 
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.constants import DEFAULT_AUDIT_LOG_LIMIT
+
+
+# File-based loggers (logging_config.py-аас instance/logs/audit.log болон
+# security.log руу бичигдэнэ). Эдгээр нь зэрэгцээ DB AuditLog-той ажиллана.
+_audit_file_logger = logging.getLogger('audit')
+_security_file_logger = logging.getLogger('security')
+
+
+# Security-relevant action keywords: эдгээр action-уудыг security.log-д бичнэ.
+_SECURITY_ACTIONS = frozenset({
+    'login_success', 'login_failed', 'logout',
+    'tamper_blocked', 'tamper_detected', 'hardware_mismatch',
+    'permission_denied', 'rate_limit_exceeded',
+    'license_activated', 'license_expired', 'license_check_failed',
+    'password_changed', 'password_reset',
+    'admin_action', 'create_user', 'delete_user', 'edit_user',
+})
 
 
 def log_audit(
@@ -107,15 +125,46 @@ def log_audit(
             db.session.commit()
         except SQLAlchemyError as e:
             db.session.rollback()
-            import logging
             # ISO 17025: Audit failure нь silent байх ёсгүй. CRITICAL log + raise.
-            logger = logging.getLogger('security')
-            logger.critical(
+            _security_file_logger.critical(
                 f"Failed to write audit log (action={action}, "
                 f"resource={resource_type}#{resource_id}): {e}"
             )
             raise
     # commit=False: дуудагч тал commit хийнэ (transaction consistency)
+
+    # File-based logger (parallel to DB AuditLog):
+    # - Бүх action `audit.log`-д бичигдэнэ
+    # - Security-relevant action `security.log`-д ч бас бичигдэнэ
+    _write_file_log(action, resource_type, resource_id, user_id, ip_address, details_str)
+
+
+def _write_file_log(action: str, resource_type: Optional[str],
+                    resource_id: Optional[int], user_id: Optional[int],
+                    ip_address: Optional[str], details_str: Optional[str]) -> None:
+    """File-based audit/security loggers-д бичих (silent — алдаа throw хийхгүй).
+
+    ISO 17025 retention хадгалалт + production grep-friendly text format.
+    """
+    try:
+        # Single-line message format (grep + log-aggregation tool-д тохиромжтой)
+        parts = [f"action={action}"]
+        if user_id is not None:
+            parts.append(f"user_id={user_id}")
+        if resource_type:
+            parts.append(f"resource={resource_type}#{resource_id}")
+        if ip_address:
+            parts.append(f"ip={ip_address}")
+        if details_str:
+            parts.append(f"details={details_str}")
+        message = " ".join(parts)
+
+        _audit_file_logger.info(message)
+        if action in _SECURITY_ACTIONS:
+            _security_file_logger.info(message)
+    except Exception:
+        # File logger failure нь main flow-ыг blocking хийхгүй
+        pass
 
 
 def get_recent_audit_logs(limit: int = DEFAULT_AUDIT_LOG_LIMIT, action: Optional[str] = None) -> list:

@@ -244,7 +244,7 @@ class LicenseManager:
         return result
 
     def _log_event(self, license_obj, event_type: str, details: str):
-        """Лог бүртгэх"""
+        """Лог бүртгэх (DB LicenseLog + file security.log)"""
         from app.models import LicenseLog
         from app import db
 
@@ -260,6 +260,18 @@ class LicenseManager:
             db.session.commit()
         except (SQLAlchemyError, OSError) as e:
             logger.error(f"Failed to log license event: {e}")
+
+        # File logger-д бичих (security.log) — production audit trail-д
+        try:
+            security_logger = logging.getLogger('security')
+            security_logger.warning(
+                f"license event_type={event_type} "
+                f"hardware={generate_short_hardware_id()} "
+                f"ip={request.remote_addr if request else 'N/A'} "
+                f"details={details[:200]}"
+            )
+        except Exception:
+            pass
 
     def activate_license(self, license_key: str) -> dict:
         """Лиценз идэвхжүүлэх"""
