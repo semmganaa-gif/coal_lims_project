@@ -29,7 +29,7 @@
 | Document | Description | Status |
 |----------|-------------|--------|
 | [Developer Onboarding Guide](LIMS_-_Developer_Onboarding_Guide.md) | Environment setup, project structure, coding standards, Git workflow | Current |
-| [Testing Guide](Testing_Guide.md) | Test strategy, pytest, fixtures, coverage (39%), CI/CD pipeline | Current |
+| [Testing Guide](Testing_Guide.md) | Test strategy, pytest, fixtures, coverage (89%), CI/CD pipeline | Current |
 | [Docstring & Comment Standard](LIMS_-_Docstring_&_Comment_Standard.md) | Code documentation conventions (Google-style) | Current |
 | [Template Macros Guide](Template_Macros_-_Хэрэглэх_заавар.md) | Jinja2 form/table macros usage | Outdated |
 
