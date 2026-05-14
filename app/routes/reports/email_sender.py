@@ -136,7 +136,7 @@ def send_email(id):
             safe_commit("Имэйл амжилттай илгээгдлэн.", "Имэйл статус хадгалахад алдаа гарлаа")
             return redirect(url_for("pdf_reports.report_detail", id=id))
         else:
-            flash(f"Имэйл илгээхэд алдаа: {error}", "danger")
+            flash(_l("Имэйл илгээхэд алдаа: %(error)s") % {"error": error}, "danger")
 
     return render_template(
         "reports/send_email.html",

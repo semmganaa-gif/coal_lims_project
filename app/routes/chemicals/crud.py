@@ -147,11 +147,11 @@ def add_chemical():
 
         except ValueError as e:
             db.session.rollback()
-            flash(f"Буруу утга: {e}", "danger")
+            flash(_l("Буруу утга: %(value)s") % {"value": e}, "danger")
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Error adding chemical: {e}")
-            flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
+            flash(_l("Алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     lab = request.args.get("lab", "all")
     return render_template(
@@ -224,11 +224,11 @@ def edit_chemical(id):
 
         except ValueError as e:
             db.session.rollback()
-            flash(f"Буруу утга: {e}", "danger")
+            flash(_l("Буруу утга: %(value)s") % {"value": e}, "danger")
         except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Error editing chemical: {e}")
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return render_template(
         "chemicals/chemical_form.html",
@@ -280,7 +280,7 @@ def receive_chemical(id):
     except (ValueError, TypeError) as e:
         db.session.rollback()
         current_app.logger.error(f"Error receiving chemical: {e}")
-        flash(f"Алдаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return redirect(url_for("chemicals.chemical_detail", id=id))
 
@@ -331,7 +331,7 @@ def consume_chemical(id):
     except (ValueError, TypeError) as e:
         db.session.rollback()
         current_app.logger.error(f"Error consuming chemical: {e}")
-        flash(f"Алдаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return redirect(url_for("chemicals.chemical_detail", id=id))
 
@@ -364,7 +364,7 @@ def dispose_chemical(id):
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error disposing chemical: {e}")
-        flash(f"Алдаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return redirect(url_for("chemicals.chemical_list"))
 

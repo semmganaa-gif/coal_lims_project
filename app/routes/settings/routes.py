@@ -425,7 +425,7 @@ def repeatability_limits():
             if not isinstance(parsed, dict):
                 raise ValueError("JSON обьект байх ёстой.")
         except (json.JSONDecodeError, ValueError) as e:
-            flash(f"JSON задлах алдаа: {e}", "danger")
+            flash(_l("JSON задлах алдаа: %(error)s") % {"error": e}, "danger")
             return render_template(
                 "settings/repeatability_limits.html",
                 title="Repeatability лимитүүд",

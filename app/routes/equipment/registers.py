@@ -161,7 +161,7 @@ def add_register_item(register_type):
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error adding register item: {e}")
-        flash(f"Алдаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
 
@@ -209,7 +209,7 @@ def edit_register_item(id):
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error editing register item: {e}")
-        flash(f"Алдаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
 
@@ -237,9 +237,9 @@ def delete_register_items():
 
     try:
         db.session.commit()
-        flash(f"{deleted} мөр устгагдлаа.", "success")
+        flash(_l("%(count)s мөр устгагдлаа.") % {"count": deleted}, "success")
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting register items: {e}")
-        flash(f"Устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
+        flash(_l("Устгахад алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))

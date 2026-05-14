@@ -136,7 +136,7 @@ def add_waste():
 
         except (ValueError, TypeError) as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return render_template(
         "chemicals/waste_form.html",
@@ -184,7 +184,7 @@ def edit_waste(id):
 
         except (ValueError, TypeError) as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     return render_template(
         "chemicals/waste_form.html",

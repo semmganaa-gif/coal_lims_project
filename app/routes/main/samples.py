@@ -66,7 +66,10 @@ def register_routes(bp):
                 db.func.upper(Sample.sample_code) == new_code.upper(),
                 Sample.id != sample_id
             ).first():
-                flash(f'АЛДАА: "{new_code}_l(" кодтой дээж аль хэдийн бүртгэгдсэн байна.', ")danger")
+                flash(
+                    _l('АЛДАА: "%(code)s" кодтой дээж аль хэдийн бүртгэгдсэн байна.') % {'code': new_code},
+                    "danger",
+                )
             else:
                 try:
                     if code_changed:
@@ -140,13 +143,16 @@ def register_routes(bp):
         if deleted_count > 0:
             try:
                 db.session.commit()
-                flash(f"{deleted_count} дээж амжилттай устгагдлаа.", "success")
+                flash(_l("%(count)s дээж амжилттай устгагдлаа.") % {"count": deleted_count}, "success")
             except SQLAlchemyError as e:
                 db.session.rollback()
                 current_app.logger.error(f"Bulk delete commit error: {e}")
                 flash(_l("Устгах үед алдаа гарлаа. Дахин оролдоно уу."), "danger")
         if failed_samples:
-            flash(f'Алдаа: Дараах дээжүүд устгагдсангүй: {", ".join(failed_samples)}', "danger")
+            flash(
+                _l('Алдаа: Дараах дээжүүд устгагдсангүй: %(samples)s') % {'samples': ", ".join(failed_samples)},
+                "danger",
+            )
 
         return redirect(url_for("main.index"))
 
@@ -211,10 +217,10 @@ def register_routes(bp):
         if disposed_count > 0:
             try:
                 db.session.commit()
-                flash(f"{disposed_count} дээж устгагдсан гэж тэмдэглэгдлээ.", "success")
+                flash(_l("%(count)s дээж устгагдсан гэж тэмдэглэгдлээ.") % {"count": disposed_count}, "success")
             except SQLAlchemyError as e:
                 db.session.rollback()
-                flash(f"Алдаа: {str(e)[:100]}", "danger")
+                flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
         return redirect(url_for("main.sample_disposal"))
 
@@ -240,7 +246,7 @@ def register_routes(bp):
             if days < 1 or days > 3650:
                 raise ValueError("Хугацаа 1-3650 хоногийн хооронд байх ёстой")
         except ValueError as e:
-            flash(f"Буруу хугацаа: {e}", "danger")
+            flash(_l("Буруу хугацаа: %(time)s") % {"time": e}, "danger")
             return redirect(url_for("main.sample_disposal"))
 
         updated_count = 0
@@ -258,7 +264,12 @@ def register_routes(bp):
         if updated_count > 0:
             try:
                 db.session.commit()
-                flash(f"{updated_count} дээжинд хадгалах хугацаа {retention_date} гэж тохирууллаа.", "success")
+                flash(
+                    _l("%(count)s дээжинд хадгалах хугацаа %(date)s гэж тохирууллаа.") % {
+                        'count': updated_count, 'date': retention_date,
+                    },
+                    "success",
+                )
                 # Audit: Хадгалах хугацаа тохируулсан
                 log_audit(
                     action='retention_date_set',
@@ -271,7 +282,7 @@ def register_routes(bp):
                 )
             except SQLAlchemyError as e:
                 db.session.rollback()
-                flash(f"Алдаа: {str(e)[:100]}", "danger")
+                flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
         return redirect(url_for("main.sample_disposal"))
 

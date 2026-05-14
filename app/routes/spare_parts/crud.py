@@ -217,7 +217,7 @@ def add_spare_part():
 
         spare_part, error = create_spare_part(data, user_id=current_user.id)
         if error:
-            flash(f'Алдаа: {error}', 'danger')
+            flash(_l('Алдаа: %(error)s') % {'error': error}, 'danger')
         elif safe_commit(f"'{spare_part.name}' амжилттай нэмэгдлээ.", "Сэлбэг нэмэхэд алдаа гарлаа"):
             return redirect(url_for('spare_parts.spare_part_list'))
 
@@ -290,7 +290,7 @@ def edit_spare_part(id):
         if error == 'not_found':
             abort(404)
         elif error:
-            flash(f'Алдаа: {error}', 'danger')
+            flash(_l('Алдаа: %(error)s') % {'error': error}, 'danger')
         elif safe_commit('Амжилттай шинэчлэгдлээ.', 'Сэлбэг шинэчлэхэд алдаа гарлаа'):
             return redirect(url_for('spare_parts.spare_part_detail', id=id))
 

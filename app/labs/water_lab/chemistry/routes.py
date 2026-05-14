@@ -527,9 +527,19 @@ def register_sample():
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж registered successfully. ({n_analyses} шинжилгээ)', 'success')
+                flash(
+                    _l('%(count)s дээж registered successfully. (%(n)s шинжилгээ)') % {
+                        'count': len(created), 'n': n_analyses,
+                    },
+                    'success',
+                )
             if skipped:
-                flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
+                flash(
+                    _l('%(count)s дээж аль хэдийн бүртгэгдсэн: %(names)s') % {
+                        'count': len(skipped), 'names': ', '.join(skipped),
+                    },
+                    'warning',
+                )
             if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
                 return redirect(url_for('microbiology.register_sample'))
             return redirect(url_for('water.register_sample'))
@@ -1279,7 +1289,7 @@ def worksheet_new():
                 return redirect(url_for('water.worksheet_detail', ws_id=ws.id))
             except SQLAlchemyError as e:
                 db.session.rollback()
-                flash(f'Алдаа: {e}', 'danger')
+                flash(_l('Алдаа: %(error)s') % {'error': e}, 'danger')
 
     reagents = []
     try:
@@ -1340,7 +1350,7 @@ def worksheet_submit(ws_id):
         flash(_l('Ажлын хуудас хянуулахаар илгээгдлээ.'), 'success')
     except SQLAlchemyError as e:
         db.session.rollback()
-        flash(f'Алдаа: {e}', 'danger')
+        flash(_l('Алдаа: %(error)s') % {'error': e}, 'danger')
     return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
 
 
@@ -1367,7 +1377,7 @@ def worksheet_approve(ws_id):
         flash(_l('Ажлын хуудас батлагдлаа.'), 'success')
     except SQLAlchemyError as e:
         db.session.rollback()
-        flash(f'Алдаа: {e}', 'danger')
+        flash(_l('Алдаа: %(error)s') % {'error': e}, 'danger')
     return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
 
 
@@ -1391,7 +1401,7 @@ def worksheet_reject(ws_id):
         flash(_l('Ажлын хуудас буцаагдлаа.'), 'warning')
     except SQLAlchemyError as e:
         db.session.rollback()
-        flash(f'Алдаа: {e}', 'danger')
+        flash(_l('Алдаа: %(error)s') % {'error': e}, 'danger')
     return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
 
 

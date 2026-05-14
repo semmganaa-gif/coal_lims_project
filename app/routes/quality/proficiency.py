@@ -90,7 +90,12 @@ def register_routes(bp):
                 return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
 
             logger.info(f"PT created: {pt.pt_program}, Z-score: {z_score:.2f}, user: {current_user.username}")
-            flash(f"PT {pt.pt_program} амжилттай бүртгэгдлээ. (Z-score: {z_score:.2f})", "success")
+            flash(
+                _l("PT %(program)s амжилттай бүртгэгдлээ. (Z-score: %(z)s)") % {
+                    'program': pt.pt_program, 'z': f"{z_score:.2f}",
+                },
+                "success",
+            )
             return redirect(url_for('quality.proficiency_list'))
 
         return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")

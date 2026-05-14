@@ -161,7 +161,10 @@ def register_routes(bp):
                 if not result.success and result.error == "DUPLICATE_CODE":
                     return render_template("index.html", **_index_template_context(form))
                 if result.failed_codes:
-                    flash(f'Анхааруулга: {", ".join(result.failed_codes)}', "warning")
+                    flash(
+                        _l('Анхааруулга: %(codes)s') % {'codes': ', '.join(result.failed_codes)},
+                        "warning",
+                    )
 
             # --- 2) WTL auto-generate (WTL/Size/FL) ---
             elif not list_type and client_name == "WTL" and sample_type in ["WTL", "Size", "FL"]:

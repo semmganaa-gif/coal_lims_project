@@ -153,7 +153,7 @@ def _commit_with_audit(action: str, eq: Equipment, **extra_details) -> bool:
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in {action}: {e}")
-        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
+        flash(_l("Алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
         return False
 
 
@@ -352,7 +352,7 @@ def bulk_delete():
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in bulk_delete: {e}")
-        flash(f"Олноор устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
+        flash(_l("Олноор устгахад алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     msg = []
@@ -456,7 +456,8 @@ def _handle_file_upload(error_redirect_url: str) -> str | None | bool:
     file.seek(0)
 
     if file_size > MAX_FILE_SIZE:
-        flash(f"Файл хэт том байна (дээд хэмжээ {MAX_FILE_SIZE / 1024 / 1024:.0f}MB).", "danger")
+        max_mb = f"{MAX_FILE_SIZE / 1024 / 1024:.0f}"
+        flash(_l("Файл хэт том байна (дээд хэмжээ %(max)sMB).") % {"max": max_mb}, "danger")
         return False
 
     filename = secure_filename(file.filename)
@@ -466,7 +467,13 @@ def _handle_file_upload(error_redirect_url: str) -> str | None | bool:
 
     ext = filename.rsplit(".", 1)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        flash(f"Файлын төрөл зөвшөөрөгдөөгүй (.{ext}). Зөвшөөрөгдөх: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
+        flash(
+            _l("Файлын төрөл зөвшөөрөгдөөгүй (.%(ext)s). Зөвшөөрөгдөх: %(allowed)s") % {
+                "ext": ext,
+                "allowed": ', '.join(ALLOWED_EXTENSIONS),
+            },
+            "danger",
+        )
         return False
 
     unique_filename = f"{int(now_local().timestamp())}_{filename}"

@@ -111,7 +111,12 @@ def add_signature():
                     raw_name = secure_filename(file.filename)
                     ext = raw_name.rsplit('.', 1)[-1].lower() if '.' in raw_name else ''
                     if ext not in ALLOWED_IMAGE_EXTENSIONS:
-                        flash(f"Зөвшөөрөгдөөгүй файлын төрөл: .{ext}. Зөвхөн {', '.join(ALLOWED_IMAGE_EXTENSIONS)}", "danger")
+                        flash(
+                            _l("Зөвшөөрөгдөөгүй файлын төрөл: .%(ext)s. Зөвхөн %(allowed)s") % {
+                                'ext': ext, 'allowed': ', '.join(ALLOWED_IMAGE_EXTENSIONS),
+                            },
+                            "danger",
+                        )
                         return redirect(url_for("pdf_reports.signature_list"))
 
                     # Файлын хэмжээ шалгах
@@ -158,7 +163,7 @@ def add_signature():
 
         except (OSError, SQLAlchemyError, ValueError) as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
     users = User.query.filter(User.role.in_(['senior', 'manager', 'admin'])).all()
     return render_template(

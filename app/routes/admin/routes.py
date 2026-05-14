@@ -304,7 +304,7 @@ def delete_pattern_profile(profile_id):
             flash(_l('Дүрэм устгагдлаа.'), 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Устгах алдаа: {str(e)[:100]}', 'danger')
+            flash(_l('Устгах алдаа: %(error)s') % {'error': str(e)[:100]}, 'danger')
     else:
         flash(_l('Анхдагч тохиргоог устгах боломжгүй.'), 'warning')
     return redirect(url_for('admin.analysis_config'))

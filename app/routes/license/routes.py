@@ -35,7 +35,10 @@ def activate():
             flash(_l('Лиценз амжилттай идэвхжүүлэгдлээ!'), 'success')
             return redirect(url_for('main.index'))
         else:
-            flash(f'Лиценз идэвхжүүлэхэд алдаа: {result["error"]}', 'error')
+            flash(
+                _l('Лиценз идэвхжүүлэхэд алдаа: %(error)s') % {'error': result['error']},
+                'error',
+            )
 
     return render_template('license/activate.html', hardware_info=hardware_info)
 

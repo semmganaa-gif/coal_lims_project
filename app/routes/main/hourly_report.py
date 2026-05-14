@@ -406,7 +406,7 @@ def send_hourly_report():
         sent_to = ", ".join(to_list)
         if cc_list:
             sent_to += f" (CC: {', '.join(cc_list)})"
-        flash(f"Амжилттай илгээгдлээ! → {sent_to}", "success")
+        flash(_l("Амжилттай илгээгдлээ! → %(to)s") % {"to": sent_to}, "success")
 
     except (OSError, RuntimeError, ValueError) as e:
         current_app.logger.exception("Error in send_hourly_report")

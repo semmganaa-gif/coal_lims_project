@@ -215,9 +215,19 @@ def register_sample():
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж registered successfully. ({n_analyses} шинжилгээ)', 'success')
+                flash(
+                    _l('%(count)s дээж registered successfully. (%(n)s шинжилгээ)') % {
+                        'count': len(created), 'n': n_analyses,
+                    },
+                    'success',
+                )
             if skipped:
-                flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
+                flash(
+                    _l('%(count)s дээж аль хэдийн бүртгэгдсэн: %(names)s') % {
+                        'count': len(skipped), 'names': ', '.join(skipped),
+                    },
+                    'warning',
+                )
             return redirect(url_for('microbiology.register_sample'))
         except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
