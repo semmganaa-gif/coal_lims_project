@@ -1,0 +1,985 @@
+{
+  "total": 140,
+  "occurrences": [
+    {
+      "file": "app/templates/add_sample.html",
+      "line": 827,
+      "event": "click",
+      "value": "selectUnit('{{ subfield.data }}', '{{ subfield.label.text }}')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/add_sample.html",
+      "line": 860,
+      "event": "click",
+      "value": "goBackToHub()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/analytics_dashboard.html",
+      "line": 21,
+      "event": "click",
+      "value": "showExportModal()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/analytics_dashboard.html",
+      "line": 75,
+      "event": "click",
+      "value": "doExport()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/audit_hub.html",
+      "line": 217,
+      "event": "click",
+      "value": "searchAudit()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/audit_hub.html",
+      "line": 239,
+      "event": "click",
+      "value": "clearSearch()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/audit_log_page.html",
+      "line": 323,
+      "event": "click",
+      "value": "saveRepeatChoice({{ ri.result_id }})",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/base.html",
+      "line": 513,
+      "event": "click",
+      "value": "return confirm('{{ _(",
+      "category": "return_complex"
+    },
+    {
+      "file": "app/templates/components/_alpine_examples.html",
+      "line": 13,
+      "event": "click",
+      "value": "$('#menu').toggle()",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/components/chat_widget.html",
+      "line": 636,
+      "event": "click",
+      "value": "closePopup('templatePopup')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/components/chat_widget.html",
+      "line": 644,
+      "event": "click",
+      "value": "closePopup('emojiPopup')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/components/chat_widget.html",
+      "line": 652,
+      "event": "click",
+      "value": "closePopup('samplePopup')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/components/chat_widget.html",
+      "line": 673,
+      "event": "click",
+      "value": "clearSelectedSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/components/mobile_drawer.html",
+      "line": 37,
+      "event": "error",
+      "value": "this.style.display='none'",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 100,
+      "event": "change",
+      "value": "updateAnalysis()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 108,
+      "event": "change",
+      "value": "updateAnalysis()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 115,
+      "event": "click",
+      "value": "openStandardsModal()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 125,
+      "event": "input",
+      "value": "manualUpdate()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 129,
+      "event": "input",
+      "value": "manualUpdate()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 136,
+      "event": "input",
+      "value": "manualUpdate()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 172,
+      "event": "click",
+      "value": "closeStandardsModal()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 190,
+      "event": "click",
+      "value": "saveAllStandards()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 193,
+      "event": "click",
+      "value": "closeStandardsModal()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 239,
+      "event": "change",
+      "value": "updateStd(${index}, 'name', this.value)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 240,
+      "event": "change",
+      "value": "updateStd(${index}, 'm', this.value)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 241,
+      "event": "change",
+      "value": "updateStd(${index}, 'c', this.value)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/correlation_check.html",
+      "line": 243,
+      "event": "click",
+      "value": "applyStandard(${index})",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/edit_sample.html",
+      "line": 15,
+      "event": "input",
+      "value": "this.value = this.value.toUpperCase()",
+      "category": "set_value_simple"
+    },
+    {
+      "file": "app/templates/instrument_readings.html",
+      "line": 243,
+      "event": "click",
+      "value": "approveOne(${params.data.id})",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/instrument_readings.html",
+      "line": 246,
+      "event": "click",
+      "value": "rejectOne(${params.data.id})",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/maceral_form.html",
+      "line": 30,
+      "event": "click",
+      "value": "loadSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/maceral_form.html",
+      "line": 42,
+      "event": "click",
+      "value": "saveResults()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/mineral_form.html",
+      "line": 29,
+      "event": "click",
+      "value": "loadSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/mineral_form.html",
+      "line": 41,
+      "event": "click",
+      "value": "addRow()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/mineral_form.html",
+      "line": 44,
+      "event": "click",
+      "value": "saveResults()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/thin_section_form.html",
+      "line": 32,
+      "event": "click",
+      "value": "saveResults()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/vitrinite_form.html",
+      "line": 29,
+      "event": "click",
+      "value": "loadSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/vitrinite_form.html",
+      "line": 60,
+      "event": "click",
+      "value": "calcStats()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/analysis_forms/vitrinite_form.html",
+      "line": 63,
+      "event": "click",
+      "value": "saveResults()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/petrography/petro_hub.html",
+      "line": 158,
+      "event": "click",
+      "value": "event.preventDefault();",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/petrography/petro_hub.html",
+      "line": 180,
+      "event": "click",
+      "value": "document.getElementById('samplesPanel').style.display='none'",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/anions_form.html",
+      "line": 32,
+      "event": "click",
+      "value": "addSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/anions_form.html",
+      "line": 43,
+      "event": "click",
+      "value": "saveAll()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/metals_form.html",
+      "line": 32,
+      "event": "click",
+      "value": "addSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/metals_form.html",
+      "line": 43,
+      "event": "click",
+      "value": "saveAll()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/physical_form.html",
+      "line": 32,
+      "event": "click",
+      "value": "addSample()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/analysis_forms/physical_form.html",
+      "line": 43,
+      "event": "click",
+      "value": "saveAll()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/reports/water_consumption.html",
+      "line": 78,
+      "event": "change",
+      "value": "this.form.submit()",
+      "category": "form_submit"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/reports/water_consumption.html",
+      "line": 108,
+      "event": "click",
+      "value": "this.nextElementSibling.classList.toggle('collapsed')",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_form.html",
+      "line": 61,
+      "event": "change",
+      "value": "updateChemicalInfo()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_form.html",
+      "line": 78,
+      "event": "change",
+      "value": "checkStock()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_journal.html",
+      "line": 135,
+      "event": "submit",
+      "value": "return confirm('{{ _(",
+      "category": "return_complex"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipe_detail.html",
+      "line": 112,
+      "event": "change",
+      "value": "calculateRequired()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipe_form.html",
+      "line": 104,
+      "event": "click",
+      "value": "removeIngredient(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipe_form.html",
+      "line": 132,
+      "event": "click",
+      "value": "removeIngredient(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipe_form.html",
+      "line": 139,
+      "event": "click",
+      "value": "addIngredient()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipe_form.html",
+      "line": 203,
+      "event": "click",
+      "value": "removeIngredient(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipes.html",
+      "line": 30,
+      "event": "click",
+      "value": "window.location='{{ url_for('water.recipe_detail', id=recipe.id) }}'",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipes.html",
+      "line": 88,
+      "event": "click",
+      "value": "event.stopPropagation();",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/solution_recipes.html",
+      "line": 92,
+      "event": "click",
+      "value": "event.stopPropagation();",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 161,
+      "event": "click",
+      "value": "refreshSampleGrid()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 164,
+      "event": "click",
+      "value": "clearDateFilter()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 202,
+      "event": "click",
+      "value": "selectUnit('{{ key }}')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 215,
+      "event": "click",
+      "value": "goBack()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 231,
+      "event": "click",
+      "value": "toggleAllSamples(true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 232,
+      "event": "click",
+      "value": "toggleAllSamples(false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 256,
+      "event": "click",
+      "value": "setNowTime()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 260,
+      "event": "click",
+      "value": "setQuickTime('08:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 261,
+      "event": "click",
+      "value": "setQuickTime('10:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 262,
+      "event": "click",
+      "value": "setQuickTime('12:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 263,
+      "event": "click",
+      "value": "setQuickTime('14:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 264,
+      "event": "click",
+      "value": "setQuickTime('16:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 324,
+      "event": "click",
+      "value": "toggleAll('wc_drink',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 325,
+      "event": "click",
+      "value": "toggleAll('wc_drink',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 339,
+      "event": "click",
+      "value": "toggleAll('wc_waste',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 340,
+      "event": "click",
+      "value": "toggleAll('wc_waste',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 354,
+      "event": "click",
+      "value": "toggleAll('wc_other',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_register.html",
+      "line": 355,
+      "event": "click",
+      "value": "toggleAll('wc_other',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/water_summary.html",
+      "line": 40,
+      "event": "click",
+      "value": "generateCoaForSelected()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 144,
+      "event": "click",
+      "value": "return confirm('Хянуулахаар илгээх үү?')",
+      "category": "return_confirm"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 155,
+      "event": "click",
+      "value": "return confirm('Батлах уу?')",
+      "category": "return_confirm"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 163,
+      "event": "click",
+      "value": "return confirm('Буцаах уу?')",
+      "category": "return_confirm"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 180,
+      "event": "click",
+      "value": "addRow('unknown')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 183,
+      "event": "click",
+      "value": "addRow('blank')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 186,
+      "event": "click",
+      "value": "addRow('control')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 189,
+      "event": "click",
+      "value": "addRow('duplicate')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/chemistry/worksheet_detail.html",
+      "line": 192,
+      "event": "click",
+      "value": "addRow('spike')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 147,
+      "event": "click",
+      "value": "refreshSampleGrid()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 150,
+      "event": "click",
+      "value": "clearDateFilter()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 188,
+      "event": "click",
+      "value": "selectUnit('{{ key }}')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 201,
+      "event": "click",
+      "value": "goBack()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 217,
+      "event": "click",
+      "value": "toggleAllSamples(true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 218,
+      "event": "click",
+      "value": "toggleAllSamples(false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 236,
+      "event": "click",
+      "value": "setNowTime()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 240,
+      "event": "click",
+      "value": "setQuickTime('08:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 241,
+      "event": "click",
+      "value": "setQuickTime('10:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 242,
+      "event": "click",
+      "value": "setQuickTime('12:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 243,
+      "event": "click",
+      "value": "setQuickTime('14:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 244,
+      "event": "click",
+      "value": "setQuickTime('16:00')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 294,
+      "event": "click",
+      "value": "toggleAll('mc_water',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 295,
+      "event": "click",
+      "value": "toggleAll('mc_water',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 309,
+      "event": "click",
+      "value": "toggleAll('mc_air',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 310,
+      "event": "click",
+      "value": "toggleAll('mc_air',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 324,
+      "event": "click",
+      "value": "toggleAll('mc_swab',true)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/micro_register.html",
+      "line": 325,
+      "event": "click",
+      "value": "toggleAll('mc_swab',false)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/reports/micro_consumption.html",
+      "line": 78,
+      "event": "change",
+      "value": "this.form.submit()",
+      "category": "form_submit"
+    },
+    {
+      "file": "app/templates/labs/water/microbiology/reports/micro_consumption.html",
+      "line": 108,
+      "event": "click",
+      "value": "this.nextElementSibling.classList.toggle('collapsed')",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/license/activate.html",
+      "line": 205,
+      "event": "click",
+      "value": "copyToClipboard('{{ hardware_info.short_id }}')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/macros/form_helpers.html",
+      "line": 177,
+      "event": "submit",
+      "value": "return confirm('{{ delete_confirm | e }}');",
+      "category": "return_confirm"
+    },
+    {
+      "file": "app/templates/partials/_morning_start.html",
+      "line": 157,
+      "event": "click",
+      "value": "toggleSlam(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_morning_start.html",
+      "line": 165,
+      "event": "click",
+      "value": "toggleSlam(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_morning_start.html",
+      "line": 173,
+      "event": "click",
+      "value": "toggleSlam(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_morning_start.html",
+      "line": 181,
+      "event": "click",
+      "value": "toggleSlam(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_sample_disposal_content.html",
+      "line": 99,
+      "event": "change",
+      "value": "toggleAll(this, 'return')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_sample_disposal_content.html",
+      "line": 148,
+      "event": "change",
+      "value": "toggleAll(this, 'expired')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/partials/_sample_disposal_content.html",
+      "line": 276,
+      "event": "change",
+      "value": "toggleAll(this, 'nodate')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/qc_dashboard.html",
+      "line": 91,
+      "event": "change",
+      "value": "qcSelectSpec('{{ key|e }}')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/qc_norm_limit.html",
+      "line": 357,
+      "event": "click",
+      "value": "resetToDefaults()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/qc_norm_limit.html",
+      "line": 379,
+      "event": "change",
+      "value": "onSpecChange()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/qc_norm_limit.html",
+      "line": 400,
+      "event": "input",
+      "value": "handleSpecInput(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/qc_norm_limit.html",
+      "line": 418,
+      "event": "input",
+      "value": "handleToleranceInput(this)",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/quality/complaints_dashboard.html",
+      "line": 210,
+      "event": "click",
+      "value": "tableToXlsx('dashTable','complaints_{{ year }}.xlsx','Records')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/quality/control_charts.html",
+      "line": 270,
+      "event": "click",
+      "value": "collapseAll()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/quality/control_charts.html",
+      "line": 273,
+      "event": "click",
+      "value": "expandAll()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/quality/control_charts.html",
+      "line": 277,
+      "event": "click",
+      "value": "location.reload()",
+      "category": "location_reload"
+    },
+    {
+      "file": "app/templates/quality/control_charts_backup.html",
+      "line": 37,
+      "event": "click",
+      "value": "location.reload()",
+      "category": "location_reload"
+    },
+    {
+      "file": "app/templates/report_builder.html",
+      "line": 355,
+      "event": "click",
+      "value": "this.closest('.filter-row').remove()",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/reports/consumption.html",
+      "line": 330,
+      "event": "change",
+      "value": "this.form.submit()",
+      "category": "form_submit"
+    },
+    {
+      "file": "app/templates/reports/monthly_plan.html",
+      "line": 579,
+      "event": "click",
+      "value": "this.parentElement.querySelector('.consignor-body').classList.toggle('d-none')",
+      "category": "complex_inline"
+    },
+    {
+      "file": "app/templates/reports/report_detail.html",
+      "line": 152,
+      "event": "submit",
+      "value": "return confirm('{{ _(",
+      "category": "return_complex"
+    },
+    {
+      "file": "app/templates/reports/report_list.html",
+      "line": 29,
+      "event": "change",
+      "value": "this.form.submit()",
+      "category": "form_submit"
+    },
+    {
+      "file": "app/templates/reports/report_list.html",
+      "line": 40,
+      "event": "change",
+      "value": "this.form.submit()",
+      "category": "form_submit"
+    },
+    {
+      "file": "app/templates/reports/signature_list.html",
+      "line": 50,
+      "event": "submit",
+      "value": "return confirm('{{ _(",
+      "category": "return_complex"
+    },
+    {
+      "file": "app/templates/reports/signature_list.html",
+      "line": 88,
+      "event": "submit",
+      "value": "return confirm('{{ _(",
+      "category": "return_complex"
+    },
+    {
+      "file": "app/templates/sample_disposal.html",
+      "line": 105,
+      "event": "change",
+      "value": "toggleAll(this, 'return')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/sample_disposal.html",
+      "line": 154,
+      "event": "change",
+      "value": "toggleAll(this, 'expired')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/sample_disposal.html",
+      "line": 282,
+      "event": "change",
+      "value": "toggleAll(this, 'nodate')",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/system_audit.html",
+      "line": 104,
+      "event": "click",
+      "value": "exportExcel()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/system_audit.html",
+      "line": 153,
+      "event": "click",
+      "value": "loadData()",
+      "category": "function_call_simple"
+    },
+    {
+      "file": "app/templates/system_audit.html",
+      "line": 156,
+      "event": "click",
+      "value": "resetFilters()",
+      "category": "function_call_simple"
+    }
+  ]
+}

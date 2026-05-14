@@ -1,0 +1,135 @@
+Total inline style attributes: 1149
+Unique CSS declarations:       495
+Dynamic (Jinja-templated):     10
+
+======================================================================
+Top 80 declarations by frequency
+======================================================================
+   70  display: none    (32 files)
+   34  text-align: center    (10 files)
+   31  flex: 1    (8 files)
+   22  cursor: pointer    (14 files)
+   21  font-size: 0.7rem    (11 files)
+   21  width: 100%    (19 files)
+   20  display: flex    (7 files)
+   20  color: #20c997    (7 files)
+   19  white-space: pre-wrap    (5 files)
+   18  font-weight: 700    (11 files)
+   17  font-size: 0.75rem    (8 files)
+   17  font-size: 0.72rem    (8 files)
+   17  color: #8b5cf6    (5 files)
+   17  color: #3b82f6    (10 files)
+   17  min-width: 120px    (6 files)
+   16  background: #f7fafc    (3 files)
+   16  font-size: 0.8rem    (10 files)
+   16  color: #64748b    (12 files)
+   16  white-space: nowrap    (5 files)
+   16  width: 25%    (4 files)
+   15  color: #fff    (15 files)
+   15  min-width: 100px    (4 files)
+   14  border-radius: 10px    (7 files)
+   14  font-size: 0.65rem    (7 files)
+   14  align-items: center    (6 files)
+   14  font-weight: 600    (7 files)
+   13  overflow: hidden    (12 files)
+   13  text-align: left    (8 files)
+   12  overflow-y: auto    (12 files)
+   12  flex: 0.8    (1 files)
+   11  color: #6366f1    (8 files)
+   11  border-radius: 8px    (6 files)
+   11  width: 22px    (6 files)
+   11  width: 70px    (5 files)
+   11  gap: 4px    (2 files)
+   10  width: 40px    (9 files)
+   10  font-size: 0.85rem    (7 files)
+   10  border-radius: 12px    (8 files)
+   10  width: 100px    (9 files)
+   10  min-width: 140px    (9 files)
+   10  height: 22px    (5 files)
+   10  border-color: #cbd5e0    (5 files)
+   10  min-width: 350px    (2 files)
+   10  width: 30%    (5 files)
+   10  font-size: 0.68rem    (2 files)
+    9  width: 6%    (3 files)
+    9  width: 55px    (5 files)
+    9  width: 90px    (6 files)
+    9  color: #94a3b8    (5 files)
+    9  background: #fef3c7    (5 files)
+    8  border: none    (5 files)
+    8  font-size: 0.82rem    (5 files)
+    8  flex: 0.7    (1 files)
+    8  color: #15803d    (7 files)
+    8  background: #20c997    (5 files)
+    8  text-align: right    (6 files)
+    8  width: 50%    (4 files)
+    7  border: 1px solid #e2e8f0    (3 files)
+    7  font-weight: bold    (4 files)
+    7  min-width: 50px    (4 files)
+    7  width: 130px    (4 files)
+    7  width: 80px    (3 files)
+    7  color: #0d9488    (3 files)
+    7  color: #b45309    (7 files)
+    7  color: #1d4ed8    (6 files)
+    7  min-width: 130px    (5 files)
+    7  height: calc(100vh - 280px)    (7 files)
+    6  background: #f8fafc    (5 files)
+    6  width: 45px    (2 files)
+    6  width: 60px    (5 files)
+    6  flex: 1.5    (1 files)
+    6  min-width: 45px    (1 files)
+    6  height: 100%    (4 files)
+    6  color: #f59e0b    (6 files)
+    6  font-size: 0.6rem    (4 files)
+    6  min-height: 450px    (6 files)
+    6  background: linear-gradient(135deg,#0f172a,#1e40af)    (6 files)
+    6  max-height: 400px    (5 files)
+    6  border-radius: 16px    (6 files)
+    6  font-size: 1.2rem    (2 files)
+
+======================================================================
+Dynamic declarations (10)
+======================================================================
+  app/templates/analysis_hub.html:429  animation-delay: {{ loop.index0 * 0.05 }}s
+  app/templates/chemicals/chemical_detail.html:199  background: {{ info[1] }}
+  app/templates/chemicals/chemical_form.html:215  background: {{ ghs_colors[i] }}
+  app/templates/equipment/detail.html:543  display: {% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}
+  app/templates/equipment/detail.html:562  display: {% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}
+  app/templates/equipment/detail.html:572  display: {% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}
+  app/templates/reports/shift_daily.html:135  width: {{ team_pct }}%
+  app/templates/labs/water/chemistry/water_analysis_hub.html:282  animation-delay: {{ loop.index0 * 0.05 }}s
+  app/templates/labs/water/microbiology/reports/micro_dashboard.html:111  color: {% if pass_rate >= 90 %}#059669{% else %}#dc2626{% endif %}
+  app/templates/labs/water/chemistry/reports/water_dashboard.html:111  color: {% if pass_rate >= 90 %}#059669{% else %}#dc2626{% endif %}
+
+======================================================================
+Top 30 raw style attributes (full strings)
+======================================================================
+   34  style="display:none;"
+   21  style="flex:1"
+   19  style="color:#20c997"
+   19  style="display:none"
+   18  style="white-space: pre-wrap;"
+   17  style="color:#8b5cf6"
+   16  style="color:#3b82f6"
+   16  style="width:25%"
+   12  style="flex:0.8"
+   12  style="min-width:100px;"
+   11  style="font-size:0.75rem;"
+   10  style="width: 22px; height: 22px; cursor: pointer;"
+   10  style="border-color: #cbd5e0;"
+   10  style="background:#f7fafc;"
+   10  style="min-width:350px;"
+   10  style="min-width:120px;"
+   10  style="white-space:nowrap"
+   10  style="font-size:0.68rem;"
+    9  style="display: none;"
+    9  style="width: 6%; text-align:center;"
+    9  style="width:30%"
+    8  style="font-size:0.82rem;"
+    8  style="font-size:0.72rem;"
+    8  style="color:#6366f1"
+    8  style="width:50%"
+    7  style="width:130px;"
+    6  style="width: 45px;"
+    6  style="min-width:50px;"
+    6  style="flex:1.5"
+    6  style="flex:0.7"

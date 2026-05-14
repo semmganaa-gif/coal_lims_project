@@ -1,0 +1,101 @@
+Total inline event handlers: 140
+
+======================================================================
+By event type
+======================================================================
+    107  onclick
+     21  onchange
+      6  oninput
+      5  onsubmit
+      1  onerror
+
+======================================================================
+By pattern (event × category)
+======================================================================
+     91  onclick      function_call_simple
+     16  onchange     function_call_simple
+     10  onclick      complex_inline
+      5  oninput      function_call_simple
+      5  onchange     form_submit
+      4  onsubmit     return_complex
+      3  onclick      return_confirm
+      2  onclick      location_reload
+      1  onclick      return_complex
+      1  onerror      complex_inline
+      1  oninput      set_value_simple
+      1  onsubmit     return_confirm
+
+======================================================================
+Top called functions (likely to migrate as named handlers)
+======================================================================
+     18  toggleAll()    [4 files]
+     10  setQuickTime()    [2 files]
+      6  addRow()    [2 files]
+      4  saveResults()    [4 files]
+      4  toggleAllSamples()    [2 files]
+      4  toggleSlam()    [1 files]
+      3  selectUnit()    [3 files]
+      3  closePopup()    [1 files]
+      3  manualUpdate()    [1 files]
+      3  updateStd()    [1 files]
+      3  loadSample()    [3 files]
+      3  addSample()    [3 files]
+      3  saveAll()    [3 files]
+      3  removeIngredient()    [1 files]
+      2  updateAnalysis()    [1 files]
+      2  closeStandardsModal()    [1 files]
+      2  refreshSampleGrid()    [2 files]
+      2  clearDateFilter()    [2 files]
+      2  goBack()    [2 files]
+      2  setNowTime()    [2 files]
+      1  goBackToHub()    [1 files]
+      1  showExportModal()    [1 files]
+      1  doExport()    [1 files]
+      1  searchAudit()    [1 files]
+      1  clearSearch()    [1 files]
+      1  saveRepeatChoice()    [1 files]
+      1  clearSelectedSample()    [1 files]
+      1  openStandardsModal()    [1 files]
+      1  saveAllStandards()    [1 files]
+      1  applyStandard()    [1 files]
+
+======================================================================
+Pattern samples (up to 4 per category)
+======================================================================
+
+--- complex_inline ---
+  app/templates/components/_alpine_examples.html:13  onclick="$('#menu').toggle()"
+  app/templates/components/mobile_drawer.html:37  onerror="this.style.display='none'"
+  app/templates/labs/petrography/petro_hub.html:158  onclick="event.preventDefault();"
+  app/templates/labs/petrography/petro_hub.html:180  onclick="document.getElementById('samplesPanel').style.display='none'"
+
+--- form_submit ---
+  app/templates/labs/water/chemistry/reports/water_consumption.html:78  onchange="this.form.submit()"
+  app/templates/labs/water/microbiology/reports/micro_consumption.html:78  onchange="this.form.submit()"
+  app/templates/reports/consumption.html:330  onchange="this.form.submit()"
+  app/templates/reports/report_list.html:29  onchange="this.form.submit()"
+
+--- function_call_simple ---
+  app/templates/add_sample.html:827  onclick="selectUnit('{{ subfield.data }}', '{{ subfield.label.text }}')"
+  app/templates/add_sample.html:860  onclick="goBackToHub()"
+  app/templates/analytics_dashboard.html:21  onclick="showExportModal()"
+  app/templates/analytics_dashboard.html:75  onclick="doExport()"
+
+--- location_reload ---
+  app/templates/quality/control_charts.html:277  onclick="location.reload()"
+  app/templates/quality/control_charts_backup.html:37  onclick="location.reload()"
+
+--- return_complex ---
+  app/templates/base.html:513  onclick="return confirm('{{ _("
+  app/templates/labs/water/chemistry/solution_journal.html:135  onsubmit="return confirm('{{ _("
+  app/templates/reports/report_detail.html:152  onsubmit="return confirm('{{ _("
+  app/templates/reports/signature_list.html:50  onsubmit="return confirm('{{ _("
+
+--- return_confirm ---
+  app/templates/labs/water/chemistry/worksheet_detail.html:144  onclick="return confirm('Хянуулахаар илгээх үү?')"
+  app/templates/labs/water/chemistry/worksheet_detail.html:155  onclick="return confirm('Батлах уу?')"
+  app/templates/labs/water/chemistry/worksheet_detail.html:163  onclick="return confirm('Буцаах уу?')"
+  app/templates/macros/form_helpers.html:177  onsubmit="return confirm('{{ delete_confirm | e }}');"
+
+--- set_value_simple ---
+  app/templates/edit_sample.html:15  oninput="this.value = this.value.toUpperCase()"

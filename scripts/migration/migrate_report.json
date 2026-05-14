@@ -1,0 +1,21 @@
+{
+  "mode": "report",
+  "totals": {
+    "files": 1,
+    "style_attrs": 0,
+    "migrated": 0,
+    "skipped_dynamic": 0,
+    "skipped_unmappable": 0
+  },
+  "unmappable": [],
+  "per_file": [
+    {
+      "file": "app/templates/base.html",
+      "total": 0,
+      "migrated": 0,
+      "skipped_dynamic": 0,
+      "skipped_unmappable": 0,
+      "unmappable_decls": []
+    }
+  ]
+}
