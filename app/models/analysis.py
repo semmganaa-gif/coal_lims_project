@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import CheckConstraint, UniqueConstraint
 from app import db
+from app.constants import AnalysisResultStatus
 from app.utils.datetime import now_local as now_mn
 from app.models.mixins import FLOAT_EPSILON
 
@@ -101,7 +102,8 @@ class AnalysisResult(db.Model):
     __table_args__ = (
         UniqueConstraint('sample_id', 'analysis_code', name='uq_sample_analysis_code'),
         CheckConstraint(
-            "status IN ('pending_review','approved','rejected','reanalysis')",
+            # AnalysisResultStatus enum-аас generate (app/constants/enums.py)
+            AnalysisResultStatus.check_constraint("status"),
             name="ck_analysis_result_status",
         ),
         db.Index('ix_analysis_result_sample_status', 'sample_id', 'status'),

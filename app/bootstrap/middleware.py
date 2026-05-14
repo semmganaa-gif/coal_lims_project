@@ -4,6 +4,8 @@
 from flask import redirect, url_for, flash, request, g
 from flask_login import current_user
 
+from app.constants import UserRole
+
 
 # Endpoints exempt from license validation
 LICENSE_EXEMPT_ENDPOINTS = {
@@ -52,7 +54,7 @@ def init_middleware(app):
         if not result['valid']:
             error = result.get('error', 'UNKNOWN_ERROR')
 
-            if current_user.role == 'admin':
+            if current_user.role == UserRole.ADMIN.value:
                 if error == 'LICENSE_NOT_FOUND':
                     flash('License not found. Please activate.', 'warning')
                     return redirect(url_for('license.activate'))

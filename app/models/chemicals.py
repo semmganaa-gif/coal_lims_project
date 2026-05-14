@@ -7,6 +7,7 @@ Separated from models.py for maintainability.
 
 from sqlalchemy import CheckConstraint
 from app import db
+from app.constants import ChemicalStatus
 from app.models.mixins import HashableMixin
 from app.utils.datetime import now_local as now_mn
 
@@ -81,7 +82,7 @@ class Chemical(db.Model):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('active','low_stock','expired','empty','disposed')",
+            ChemicalStatus.check_constraint("status"),
             name="ck_chemical_status",
         ),
     )

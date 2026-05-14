@@ -10,6 +10,8 @@ from typing import Callable, Any, Optional
 from flask import flash, redirect, url_for, abort
 from flask_login import current_user
 
+from app.constants import LabKey, UserRole
+
 
 def role_required(*allowed_roles: str) -> Callable:
     """
@@ -61,7 +63,7 @@ def admin_required(f: Callable) -> Callable:
     """
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
-        if getattr(current_user, "role", None) != "admin":
+        if getattr(current_user, "role", None) != UserRole.ADMIN.value:
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
@@ -71,7 +73,7 @@ def senior_or_admin_required(f: Callable) -> Callable:
     """Senior эсвэл admin эрхтэй хэрэглэгчид зориулсан decorator."""
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
-        if getattr(current_user, "role", None) not in ("senior", "admin"):
+        if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
@@ -139,10 +141,10 @@ def lab_required(lab_key: str) -> Callable:
                 return redirect(url_for('auth.login'))
 
             # Admin бүх лабд нэвтрэх боломжтой
-            if current_user.role == 'admin':
+            if current_user.role == UserRole.ADMIN.value:
                 return f(*args, **kwargs)
 
-            user_labs = current_user.allowed_labs or ['coal']
+            user_labs = current_user.allowed_labs or [LabKey.COAL.value]
             if lab_key not in user_labs:
                 flash(f'You do not have access to this laboratory.', 'danger')
                 return redirect(url_for('main.lab_selector'))

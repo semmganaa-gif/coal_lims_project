@@ -26,3 +26,16 @@ from .analysis_types import *    # noqa: F401,F403
 from .error_reasons import *     # noqa: F401,F403
 from .qc_specs import *          # noqa: F401,F403
 from .app_config import *        # noqa: F401,F403
+
+# Enum-уудыг тус тусдаа export (wildcard биш, тодорхой нэрсээр)
+from .enums import (              # noqa: F401
+    SampleStatus,
+    AnalysisResultStatus,
+    UserRole,
+    UserLanguage,
+    LabKey,
+    ChemicalStatus,
+    EquipmentStatus,
+    CorrectiveActionStatus,
+    CorrectiveActionSeverity,
+)

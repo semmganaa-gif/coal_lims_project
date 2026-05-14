@@ -28,9 +28,11 @@ ALLOWED_CLIENT_NAMES = [
     "maiga", "sum", "uurhaichin", "gallerey", "sbutsb",
 ]
 
-ALLOWED_STATUSES = ["new", "in_progress", "analysis", "completed", "archived"]
+# Enum-аас гаргасан жагсаалтууд — single source of truth
+from app.constants import SampleStatus, LabKey
 
-ALLOWED_LAB_TYPES = ["coal", "petrography", "water_chemistry", "microbiology"]
+ALLOWED_STATUSES = SampleStatus.values()
+ALLOWED_LAB_TYPES = LabKey.values()
 
 
 class SampleSchema(Schema):

@@ -10,6 +10,7 @@ AnalysisResult моделийн validation, serialization.
 import math
 import re
 
+from app.constants import AnalysisResultStatus
 from marshmallow import (
     Schema,
     fields,
@@ -73,10 +74,8 @@ class AnalysisResultSchema(Schema):
     reason = fields.Str(allow_none=True)
 
     status = fields.Str(
-        validate=validate.OneOf(
-            ["pending_review", "approved", "rejected", "reanalysis"]
-        ),
-        load_default="pending_review",
+        validate=validate.OneOf(AnalysisResultStatus.values()),
+        load_default=AnalysisResultStatus.PENDING_REVIEW.value,
         error_messages={
             "validator_failed": "Статус буруу (pending_review/approved/rejected/reanalysis)"
         },

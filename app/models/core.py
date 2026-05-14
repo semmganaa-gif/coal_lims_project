@@ -13,6 +13,8 @@ from sqlalchemy.types import Date, Text
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates
 
+from app.constants import LabKey, SampleStatus, UserRole
+
 class User(UserMixin, db.Model):
     """
     Хэрэглэгчийн модел (ISO 17025 compliance).
@@ -52,9 +54,9 @@ class User(UserMixin, db.Model):
 
     def has_lab_access(self, lab_key: str) -> bool:
         """Хэрэглэгч тухайн лабд нэвтрэх эрхтэй эсэх."""
-        if self.role == 'admin':
+        if self.role == UserRole.ADMIN.value:
             return True
-        labs = self.allowed_labs or ['coal']
+        labs = self.allowed_labs or [LabKey.COAL.value]
         return lab_key in labs
 
     def set_password(self, password: str) -> None:
@@ -277,7 +279,8 @@ class Sample(db.Model):
             name="ck_sample_client_name",
         ),
         CheckConstraint(
-            "status IN ('new','in_progress','analysis','completed','archived')",
+            # SampleStatus enum нь app/constants/enums.py-д тодорхойлогдсон.
+            SampleStatus.check_constraint("status"),
             name="ck_sample_status",
         ),
         # H-9: Composite indexes — dashboard болон workspace query-уудыг хурдасгах

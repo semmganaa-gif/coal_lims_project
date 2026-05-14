@@ -7,6 +7,7 @@ import json
 
 from sqlalchemy import CheckConstraint, event
 from app import db
+from app.constants import CorrectiveActionStatus, CorrectiveActionSeverity
 from app.models.mixins import HashableMixin
 from app.utils.datetime import now_local as now_mn
 
@@ -60,11 +61,11 @@ class CorrectiveAction(db.Model):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('open','in_progress','reviewed','closed')",
+            CorrectiveActionStatus.check_constraint("status"),
             name="ck_corrective_action_status",
         ),
         CheckConstraint(
-            "severity IN ('Critical','Major','Minor')",
+            CorrectiveActionSeverity.check_constraint("severity"),
             name="ck_corrective_action_severity",
         ),
     )

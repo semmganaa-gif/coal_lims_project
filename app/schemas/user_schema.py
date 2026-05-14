@@ -19,9 +19,13 @@ from marshmallow import (
 )
 
 
-ALLOWED_ROLES = ["prep", "chemist", "senior", "manager", "admin"]
-ALLOWED_LANGUAGES = ["en", "mn"]
-ALLOWED_LABS = ["coal", "petrography", "water_chemistry", "microbiology"]
+# NOTE: Enum-аас гаргасан жагсаалтууд (app/constants/enums.py — single source of truth).
+# Хэрэв enum-д шинэ утга нэмэх бол энэ файл засах шаардлагагүй.
+from app.constants import UserRole, UserLanguage, LabKey
+
+ALLOWED_ROLES = UserRole.values()
+ALLOWED_LANGUAGES = UserLanguage.values()
+ALLOWED_LABS = LabKey.values()
 
 
 class UserSchema(Schema):

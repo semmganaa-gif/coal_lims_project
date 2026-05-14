@@ -22,7 +22,10 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.constants import SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS, MASTER_ANALYSIS_TYPES_LIST
+from app.constants import (
+    SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS,
+    MASTER_ANALYSIS_TYPES_LIST, UserRole,
+)
 from app.models import (
     User, AnalysisType, AnalysisProfile,
     ControlStandard, GbwStandard,
@@ -214,7 +217,7 @@ def validate_and_create_user(
         return False, f'"{username}" хэрэглэгч аль хэдийн бүртгэгдсэн байна.', None
 
     # Admin constraint
-    if role == 'admin':
+    if role == UserRole.ADMIN.value:
         return False, _l('Шинэ админ хэрэглэгч үүсгэх боломжгүй.'), None
 
     # Create user
@@ -293,9 +296,9 @@ def update_user(
 
     # Admin role protection
     admin_role_warning = None
-    if user_to_edit.role != 'admin':
+    if user_to_edit.role != UserRole.ADMIN.value:
         user_to_edit.role = role
-    elif role != 'admin':
+    elif role != UserRole.ADMIN.value:
         admin_role_warning = _l('Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.')
 
     # Update fields
@@ -356,7 +359,7 @@ def delete_user(user_id: int, current_user_id: int) -> tuple[bool, str]:
     if user_to_delete is None:
         return False, 'not_found'
 
-    if user_to_delete.role == 'admin':
+    if user_to_delete.role == UserRole.ADMIN.value:
         return False, _l("Админ хэрэглэгчийг устгах боломжгүй.")
 
     username = user_to_delete.username
