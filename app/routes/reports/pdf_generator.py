@@ -14,6 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.utils.database import safe_commit
 from app.utils.datetime import now_local
 from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
@@ -124,11 +125,7 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        _logger.error(f"Microbiology report commit error: {e}")
+    if not safe_commit(error_msg="Microbiology report commit error", notify=False):
         return None, "Микробиологийн тайлан хадгалахад алдаа гарлаа."
 
     return report, None
@@ -309,11 +306,7 @@ def generate_water_coa(sample_id: int, created_by_id: int):
         _logger.error('CoA PDF үүсгэх алдаа: %s', e)
         report.pdf_path = None
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        _logger.error('CoA commit алдаа: %s', e)
+    if not safe_commit(error_msg="CoA commit алдаа", notify=False):
         return None, 'CoA хадгалахад алдаа гарлаа'
 
     return report, None
@@ -367,11 +360,7 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        _logger.error(f"Water report commit error: {e}")
+    if not safe_commit(error_msg="Water report commit error", notify=False):
         return None, "Усны тайлан хадгалахад алдаа гарлаа."
 
     return report, None
@@ -425,11 +414,7 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        _logger.error(f"Coal report commit error: {e}")
+    if not safe_commit(error_msg="Coal report commit error", notify=False):
         return None, "Нүүрсний тайлан хадгалахад алдаа гарлаа."
 
     return report, None
@@ -531,8 +516,4 @@ def regenerate_pdf(report):
     create_pdf_from_html(html_content, filepath)
 
     report.pdf_path = f"uploads/reports/{filename}"
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        _logger.error(f"Regenerate PDF commit error: {e}")
+    safe_commit(error_msg="Regenerate PDF commit error", notify=False)

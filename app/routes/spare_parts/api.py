@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
 from app.routes.spare_parts import spare_parts_bp
+from app.utils.database import safe_commit
 from app.services.spare_parts_service import (
     get_spare_parts_list_simple,
     get_low_stock_parts,
@@ -74,11 +75,7 @@ def api_consume():
         if error:
             return jsonify({'success': False, 'message': error}), 400
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            logger.error("Spare part consume commit error: %s", e, exc_info=True)
+        if not safe_commit(error_msg="Spare part consume commit error", notify=False):
             return jsonify({'success': False, 'message': 'Сэлбэг зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
@@ -118,11 +115,7 @@ def api_consume_bulk():
             purpose=data.get('purpose', 'Засвар'),
         )
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            logger.error("Spare part bulk consume commit error: %s", e, exc_info=True)
+        if not safe_commit(error_msg="Spare part bulk consume commit error", notify=False):
             return jsonify({'success': False, 'message': 'Олноор зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
