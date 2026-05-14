@@ -159,6 +159,26 @@ def auto_populate_profiles() -> bool:
         return False
 
 
+@transactional()
+def _delete_pattern_profile_atomic(profile_id: int) -> tuple[bool, str]:
+    """delete_pattern_profile-ийн atomic core."""
+    profile = db.session.get(AnalysisProfile, profile_id)
+    if profile is None:
+        return False, 'not_found'
+    if not profile.pattern:
+        return False, _l('Анхдагч тохиргоог устгах боломжгүй.')
+    db.session.delete(profile)
+    return True, _l('Дүрэм устгагдлаа.')
+
+
+def delete_pattern_profile(profile_id: int) -> tuple[bool, str]:
+    """Pattern профайл устгах."""
+    try:
+        return _delete_pattern_profile_atomic(profile_id)
+    except SQLAlchemyError as e:
+        return _admin_db_error("delete_pattern_profile", e, "Устгах алдаа: {msg}")
+
+
 def load_gi_shift_config() -> dict:
     """Gi ээлжийн тохиргоо DB-с унших, default утгатай."""
     gi_shift_config = {}

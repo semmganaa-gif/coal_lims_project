@@ -30,6 +30,7 @@ from app.services.sla_service import (
     get_sla_config_all,
     set_sla_config,
     delete_sla_config,
+    set_sample_sla,
 )
 
 
@@ -110,21 +111,14 @@ def register_routes(bp):
         if getattr(current_user, "role", None) not in ("senior", "manager", "admin"):
             return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
-        sample = db.session.get(Sample, sample_id)
-        if not sample:
-            return jsonify({"success": False, "message": _("Дээж олдсонгүй")}), 404
-
         data = request.get_json(silent=True) or {}
-        sla_hours = data.get("sla_hours")
-        priority = data.get("priority")
-
-        if sla_hours is not None:
-            sample.sla_hours = int(sla_hours)
-        if priority in ("normal", "urgent", "rush"):
-            sample.priority = priority
-
-        assign_sla(sample)
-        db.session.commit()
+        sample = set_sample_sla(
+            sample_id,
+            sla_hours=data.get("sla_hours"),
+            priority=data.get("priority"),
+        )
+        if sample is None:
+            return jsonify({"success": False, "message": _("Дээж олдсонгүй")}), 404
 
         return jsonify({
             "success": True,

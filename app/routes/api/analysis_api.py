@@ -25,6 +25,7 @@ from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
 from app.utils.codes import norm_code, BASE_TO_ALIASES
 from app.utils.audit import log_audit
+from app.utils.database import safe_commit
 from .helpers import _requires_mass_gate, _has_m_task_sql
 from .analysis_save import register_save_routes
 from datetime import timedelta
@@ -206,11 +207,7 @@ def register_routes(bp):
             }
         )
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Unassign analysis commit error: {e}")
+        if not safe_commit(error_msg="Unassign analysis commit error", notify=False):
             return jsonify({"success": False, "message": _("Хадгалахад алдаа гарлаа")}), 500
 
         return jsonify({
@@ -268,7 +265,8 @@ def register_routes(bp):
                 reason=f"Нэгтгэлээс '{base_code}' шинжилгээ захиалсан",
                 sample_code_snapshot=sample.sample_code,
             )
-            db.session.commit()
+            if not safe_commit(error_msg="Request analysis error", notify=False):
+                return jsonify({"message": _("Мэдээллийн сангийн алдаа гарлаа")}), 500
 
             return jsonify({
                 "message": f"'{base_code}' шинжилгээ амжилттай захиалагдлаа",
@@ -277,7 +275,6 @@ def register_routes(bp):
             })
 
         except SQLAlchemyError as e:
-            db.session.rollback()
             current_app.logger.error(f"Request analysis error: {e}", exc_info=True)
             return jsonify({"message": _("Мэдээллийн сангийн алдаа гарлаа")}), 500
 

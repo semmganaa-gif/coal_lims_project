@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
+from app.repositories.chat_repository import ChatMessageRepository
 from sqlalchemy import or_, and_
 from sqlalchemy.exc import SQLAlchemyError
 from app.utils.security import escape_like_pattern
@@ -156,21 +157,20 @@ def register_routes(bp):
         )
 
         # Mark as read
-        from app.utils.datetime import now_local as now_mn
-        unread_from_user = ChatMessage.query.filter(
-            ChatMessage.sender_id == user_id,
-            ChatMessage.receiver_id == current_user.id,
-            ChatMessage.read_at.is_(None)
-        ).all()
-
-        for msg in unread_from_user:
-            msg.read_at = now_mn()
-
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Mark messages read commit error: {e}")
+        unread_ids = [
+            row.id for row in
+            ChatMessage.query.filter(
+                ChatMessage.sender_id == user_id,
+                ChatMessage.receiver_id == current_user.id,
+                ChatMessage.read_at.is_(None),
+            ).with_entities(ChatMessage.id).all()
+        ]
+        if unread_ids:
+            try:
+                ChatMessageRepository.mark_as_read(unread_ids, commit=True)
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                current_app.logger.error(f"Mark messages read commit error: {e}")
 
         return jsonify({
             'messages': [m.to_dict() for m in reversed(messages.items)],

@@ -21,6 +21,7 @@ from app.services.chemical_service import (
     get_chemical_stats,
     get_usage_history,
 )
+from app.utils.database import safe_commit
 
 
 # -------------------------------------------------
@@ -171,11 +172,7 @@ def api_consume():
         if not result.success:
             return api_error(result.error)
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"API consume commit error: {e}")
+        if not safe_commit(error_msg="API consume commit error", notify=False):
             return api_error("Хэрэглээ хадгалахад алдаа гарлаа", status_code=500)
 
         return api_success({
@@ -289,11 +286,7 @@ def api_consume_bulk():
         if not result.success and result.error:
             return api_error(result.error)
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Bulk consume commit error: {e}")
+        if not safe_commit(error_msg="Bulk consume commit error", notify=False):
             return api_error("Багц хэрэглээ хадгалахад алдаа гарлаа", status_code=500)
 
         return api_success({

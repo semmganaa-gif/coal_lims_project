@@ -190,6 +190,25 @@ def mark_completed(sample: Sample) -> None:
     sample.completed_at = now_local()
 
 
+@transactional()
+def set_sample_sla(sample_id: int, sla_hours: int | None,
+                   priority: str | None) -> Sample | None:
+    """Нэг дээжийн SLA тохируулах: sla_hours, priority шинэчилж due_date тооцох.
+
+    Returns:
+        Sample object on success, None if not found.
+    """
+    sample = db.session.get(Sample, sample_id)
+    if not sample:
+        return None
+    if sla_hours is not None:
+        sample.sla_hours = int(sla_hours)
+    if priority in ("normal", "urgent", "rush"):
+        sample.priority = priority
+    assign_sla(sample)
+    return sample
+
+
 # ---------------------------------------------------------------------------
 # SLA summary (dashboard)
 # ---------------------------------------------------------------------------

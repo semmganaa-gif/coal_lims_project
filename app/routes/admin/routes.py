@@ -38,6 +38,7 @@ from app.services.admin_service import (
     update_gbw as svc_update_gbw,
     delete_gbw as svc_delete_gbw,
     activate_gbw as svc_activate_gbw,
+    delete_pattern_profile as svc_delete_pattern_profile,
     deactivate_gbw as svc_deactivate_gbw,
 )
 
@@ -294,19 +295,15 @@ def analysis_config_simple_save():
 @senior_or_admin_required
 def delete_pattern_profile(profile_id):
     """Pattern профайл устгах."""
-    profile = db.session.get(AnalysisProfile, profile_id)
-    if profile is None:
+    success, msg = svc_delete_pattern_profile(profile_id)
+    if msg == 'not_found':
         abort(404)
-    if profile.pattern:
-        db.session.delete(profile)
-        try:
-            db.session.commit()
-            flash(_l('Дүрэм устгагдлаа.'), 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash(_l('Устгах алдаа: %(error)s') % {'error': str(e)[:100]}, 'danger')
+    if success:
+        flash(msg, 'success')
+    elif str(msg).startswith('Устгах алдаа'):
+        flash(msg, 'danger')
     else:
-        flash(_l('Анхдагч тохиргоог устгах боломжгүй.'), 'warning')
+        flash(msg, 'warning')
     return redirect(url_for('admin.analysis_config'))
 
 # ==============================================================================
