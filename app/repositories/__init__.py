@@ -56,6 +56,7 @@ from app.repositories.license_repository import (
     SystemLicenseRepository,
     LicenseLogRepository,
 )
+from app.repositories.analysis_audit_repository import AnalysisResultLogRepository
 
 __all__ = [
     "SampleRepository",
@@ -81,6 +82,7 @@ __all__ = [
     "QCControlChartRepository",
     "SystemLicenseRepository",
     "LicenseLogRepository",
+    "AnalysisResultLogRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",

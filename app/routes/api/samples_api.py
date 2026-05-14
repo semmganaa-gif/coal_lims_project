@@ -167,12 +167,8 @@ def register_routes(bp):
             .order_by(AnalysisResult.created_at.desc())
             .all()
         )
-        logs = (
-            AnalysisResultLog.query
-            .filter_by(sample_id=sample_id)
-            .order_by(AnalysisResultLog.timestamp.desc())
-            .all()
-        )
+        from app.repositories import AnalysisResultLogRepository
+        logs = AnalysisResultLogRepository.get_for_sample(sample_id)
         return render_template(
             "sample_history.html",
             title=f"History: {sample.sample_code}",

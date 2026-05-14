@@ -23,27 +23,10 @@ from app.utils.settings import get_error_reason_labels
 
 def _aggregate_error_reason_stats(date_from=None, date_to=None, user_name=None):
     """Timestamp ашиглан алдааны статистик гаргах"""
-    q = db.session.query(
-        AnalysisResultLog.error_reason,
-        func.count(AnalysisResultLog.id),
-    ).filter(
-        AnalysisResultLog.error_reason.isnot(None),
-        AnalysisResultLog.error_reason != "",
+    from app.repositories import AnalysisResultLogRepository
+    rows = AnalysisResultLogRepository.get_error_reason_counts(
+        date_from=date_from, date_to=date_to, username=user_name,
     )
-
-    if date_from is not None:
-        q = q.filter(AnalysisResultLog.timestamp >= date_from)
-    if date_to is not None:
-        q = q.filter(AnalysisResultLog.timestamp < date_to)
-
-    # Химичийн нэрээр шүүх
-    if user_name:
-        safe_user = escape_like_pattern(user_name)
-        q = q.join(User, AnalysisResultLog.user_id == User.id).filter(
-            User.username.ilike(f"%{safe_user}%")
-        )
-
-    rows = q.group_by(AnalysisResultLog.error_reason).all()
 
     stats = {code: 0 for code in ERROR_REASON_KEYS}
     other_total = 0
