@@ -17,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app import models as M
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 
 # ------------------------------------------------------------------
@@ -249,18 +250,8 @@ def build_monthly_plan_context(year, month):
 #  Save monthly plans (upsert)
 # ------------------------------------------------------------------
 
-def save_monthly_plans(plans_dict, year, month, user_id):
-    """
-    Upsert monthly plan rows.
-
-    Args:
-        plans_dict: { "CHPP|2 hourly|1": 10, ... }
-        year, month: int
-        user_id: int (created_by_id for new rows)
-
-    Returns:
-        (success: bool, saved_count: int, error_msg: str | None)
-    """
+@transactional()
+def _save_monthly_plans_atomic(plans_dict, year, month, user_id):
     saved_count = 0
     for key, planned_count in plans_dict.items():
         parts = key.split("|")
@@ -288,13 +279,25 @@ def save_monthly_plans(plans_dict, year, month, user_id):
             db.session.add(new_plan)
 
         saved_count += 1
+    return saved_count
 
+
+def save_monthly_plans(plans_dict, year, month, user_id):
+    """
+    Upsert monthly plan rows.
+
+    Args:
+        plans_dict: { "CHPP|2 hourly|1": 10, ... }
+        year, month: int
+        user_id: int (created_by_id for new rows)
+
+    Returns:
+        (success: bool, saved_count: int, error_msg: str | None)
+    """
     try:
-        db.session.commit()
+        saved_count = _save_monthly_plans_atomic(plans_dict, year, month, user_id)
     except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, saved_count, f"Monthly plan save error: {e}"
-
+        return False, 0, f"Monthly plan save error: {e}"
     return True, saved_count, None
 
 
@@ -302,13 +305,8 @@ def save_monthly_plans(plans_dict, year, month, user_id):
 #  Save staff settings (upsert)
 # ------------------------------------------------------------------
 
-def save_staff_settings(year, month, preparers, chemists):
-    """
-    Upsert staff settings for a given year/month.
-
-    Returns:
-        (success: bool, error_msg: str | None)
-    """
+@transactional()
+def _save_staff_settings_atomic(year, month, preparers, chemists):
     existing = M.StaffSettings.query.filter_by(year=year, month=month).first()
 
     if existing:
@@ -322,12 +320,18 @@ def save_staff_settings(year, month, preparers, chemists):
         )
         db.session.add(new_settings)
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Staff settings save error: {e}"
 
+def save_staff_settings(year, month, preparers, chemists):
+    """
+    Upsert staff settings for a given year/month.
+
+    Returns:
+        (success: bool, error_msg: str | None)
+    """
+    try:
+        _save_staff_settings_atomic(year, month, preparers, chemists)
+    except SQLAlchemyError as e:
+        return False, f"Staff settings save error: {e}"
     return True, None
 
 

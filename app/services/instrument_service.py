@@ -15,6 +15,7 @@ from app.models.core import Sample
 from app.models.analysis import AnalysisResult
 from app.instrument_parsers import get_parser, PARSER_REGISTRY
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 
 def parse_instrument_file(file_path: str, instrument_type: str,
@@ -67,6 +68,7 @@ def parse_instrument_file(file_path: str, instrument_type: str,
     return instrument_readings
 
 
+@transactional()
 def import_instrument_file(file_path: str, instrument_type: str,
                            instrument_name: str = "") -> int:
     """Parse and save instrument readings to database. Returns count."""
@@ -76,7 +78,6 @@ def import_instrument_file(file_path: str, instrument_type: str,
 
     for r in readings:
         db.session.add(r)
-    db.session.commit()
     return len(readings)
 
 
@@ -89,6 +90,7 @@ def get_pending_readings(instrument_type: str = None,
     return query.order_by(InstrumentReading.created_at.desc()).limit(limit).all()
 
 
+@transactional()
 def approve_reading(reading_id: int, user_id: int) -> InstrumentReading:
     """Approve a pending reading and link to AnalysisResult."""
     reading = db.session.get(InstrumentReading, reading_id)
@@ -117,10 +119,10 @@ def approve_reading(reading_id: int, user_id: int) -> InstrumentReading:
                 f"analysis_code={reading.analysis_code}"
             )
 
-    db.session.commit()
     return reading
 
 
+@transactional()
 def reject_reading(reading_id: int, user_id: int,
                    reason: str = "") -> InstrumentReading:
     """Reject a pending reading."""
@@ -135,7 +137,6 @@ def reject_reading(reading_id: int, user_id: int,
     reading.reviewed_at = now_local()
     reading.reject_reason = reason
 
-    db.session.commit()
     return reading
 
 

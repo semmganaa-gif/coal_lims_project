@@ -17,6 +17,7 @@ from app.models import (
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from app.utils.audit import log_audit
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -418,10 +419,13 @@ def process_bulk_usage_items(items, user_id, username):
         elif is_repair:
             count += 1
 
+    @transactional()
+    def _persist():
+        pass  # objects added to session — commit нь @transactional-аар
+
     try:
-        db.session.commit()
+        _persist()
     except SQLAlchemyError as e:
-        db.session.rollback()
         logger.error("Bulk usage log commit error: %s", e)
         return False, 0, _l("Хадгалахад алдаа гарлаа")
 
