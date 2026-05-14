@@ -412,6 +412,79 @@ def register_commands(app):
         click.echo("")
         click.echo("Захиалагч энэ Short ID-г чамд илгээнэ.")
 
+    @license.command("allow-hardware")
+    @click.argument("hardware_id")
+    def allow_hardware(hardware_id):
+        """Идэвхтэй лицензийн allowed_hardware_ids-д hardware ID нэмэх.
+
+        Ингэснээр нэг лицензээр хэд хэдэн компьютераас нэвтрэх боломжтой.
+
+        Жишээ:
+            flask license allow-hardware e14cee1cb85d9ad
+            flask license allow-hardware <full-or-short-hwid>
+        """
+        import json as _json
+        from app.models import SystemLicense
+
+        lic = db.session.execute(
+            select(SystemLicense).filter_by(is_active=True)
+        ).scalars().first()
+        if not lic:
+            click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
+            return
+
+        new_id = (hardware_id or "").strip().lower()
+        if not new_id:
+            click.echo("❌ Hardware ID хоосон байна.")
+            return
+
+        # Хуучин жагсаалт unsорох
+        existing = []
+        if lic.allowed_hardware_ids:
+            try:
+                existing = _json.loads(lic.allowed_hardware_ids)
+            except (_json.JSONDecodeError, TypeError):
+                existing = []
+
+        existing_norm = [str(x).strip().lower() for x in existing if x]
+        if new_id in existing_norm:
+            click.echo(f"✔ {new_id} аль хэдийн нэмэгдсэн байна.")
+        else:
+            existing_norm.append(new_id)
+            lic.allowed_hardware_ids = _json.dumps(existing_norm)
+            # Tampering flag-ыг буцаах (хэрэв өмнөх failure-аар тавигдсан)
+            if lic.tampering_detected:
+                lic.tampering_detected = False
+                lic.tampering_details = None
+                click.echo("  ⚠ tampering_detected flag-ыг арилгасан.")
+            db.session.commit()
+            click.echo(f"✅ {new_id} зөвшөөрөгдсөн жагсаалтад нэмэгдлээ.")
+
+        click.echo("")
+        click.echo("Одоогийн зөвшөөрөгдсөн hardware ID-ууд:")
+        click.echo(f"  Primary:    {lic.hardware_id or '-'}")
+        for hid in existing_norm:
+            click.echo(f"  Allowed:    {hid}")
+
+    @license.command("clear-tamper")
+    def clear_tamper():
+        """tampering_detected flag-ыг арилгах (false alarm-ыг солих)."""
+        from app.models import SystemLicense
+
+        lic = db.session.execute(
+            select(SystemLicense).filter_by(is_active=True)
+        ).scalars().first()
+        if not lic:
+            click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
+            return
+        if not lic.tampering_detected:
+            click.echo("✔ Tampering flag-ыг тавиагүй байна.")
+            return
+        lic.tampering_detected = False
+        lic.tampering_details = None
+        db.session.commit()
+        click.echo("✅ tampering_detected flag арилсан. Дахин нэвтэрнэ үү.")
+
     # ---------- EXPORT ----------
     @equipment.command("export-excel")
     @click.argument("excel_path")
