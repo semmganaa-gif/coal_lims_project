@@ -7,7 +7,7 @@ Instrument reading business logic — parse, store, review, approve.
 import hashlib
 
 from flask import current_app
-from sqlalchemy import and_, select
+from sqlalchemy import select
 
 from app.bootstrap.extensions import db
 from app.models.instrument import InstrumentReading

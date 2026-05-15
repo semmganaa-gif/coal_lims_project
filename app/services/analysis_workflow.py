@@ -35,7 +35,6 @@ from app.utils.datetime import now_local
 from app.utils.normalize import normalize_raw_data
 from app.utils.notifications import notify_sample_status_change
 from app.utils.security import escape_like_pattern
-from app.utils.settings import get_error_reason_labels
 from app.utils.shifts import get_shift_info
 from app.utils.analysis_rules import determine_result_status
 from app.utils.server_calculations import verify_and_recalculate

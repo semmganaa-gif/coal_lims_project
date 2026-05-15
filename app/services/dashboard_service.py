@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy import case, extract, func, select
 

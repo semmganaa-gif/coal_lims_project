@@ -16,11 +16,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy import func, case, or_, select
 from flask_babel import lazy_gettext as _l
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.constants import AnalysisResultStatus, CHEMICAL_LIST_LIMIT, DASHBOARD_RECENT_LIMIT
@@ -817,7 +816,7 @@ def invalidate_results_by_lot(
     Returns:
         LotInvalidationResult — хэдэн үр дүн нөлөөлсөн, алдаа
     """
-    from app.models import AnalysisResult, Sample
+    from app.models import AnalysisResult
 
     chemical = db.session.get(Chemical, lot_id)
     if not chemical:

@@ -12,14 +12,12 @@ AI-Powered Analytics Service — LIMS Intelligence Layer.
   - Predictive alerts
 """
 
-import math
 import statistics
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Optional
+from dataclasses import dataclass
+from datetime import timedelta
 
-from sqlalchemy import and_, func, desc, select
+from sqlalchemy import func, desc, select
 from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db

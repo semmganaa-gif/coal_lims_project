@@ -11,12 +11,12 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy import func, select
 
 from app import db
-from app.models import AnalysisResult, Sample
+from app.models import Sample
 from app.repositories import AnalysisResultRepository
 from app.utils.codes import to_base_list
 from app.utils.security import escape_like_pattern

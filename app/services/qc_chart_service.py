@@ -11,11 +11,7 @@ import statistics
 from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import and_
-
 from app.bootstrap.extensions import db
-from app.models.core import Sample
-from app.models.analysis import AnalysisResult
 from app.utils.datetime import now_local
 from app.utils.transaction import transactional
 

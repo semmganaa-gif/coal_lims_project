@@ -34,11 +34,10 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import func, and_, or_, cast, select, String
-from sqlalchemy.orm import joinedload
+from sqlalchemy import func, select
 
 from app.bootstrap.extensions import db
-from app.models.core import Sample, User
+from app.models.core import Sample
 from app.models.analysis import AnalysisResult, AnalysisType
 from app.models.settings import SystemSetting
 from app.utils.datetime import now_local
