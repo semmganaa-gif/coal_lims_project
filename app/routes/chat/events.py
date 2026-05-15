@@ -62,8 +62,13 @@ def handle_connect():
 
 
 @socketio.on('disconnect')
-def handle_disconnect():
-    """WebSocket холболт тасарсан үед"""
+def handle_disconnect(reason=None):
+    """WebSocket холболт тасарсан үед.
+
+    python-socketio 5.x-ээс эхлэн disconnect event handler нь `reason`
+    parameter дамжуулдаг (transport close, client disconnect, server kill...).
+    Optional default-той тогтоосон тул backward-compatible.
+    """
     if not current_user.is_authenticated:
         return
 
