@@ -3,6 +3,7 @@
 
 from sqlalchemy import func, select
 
+from app.constants import SampleStatus
 from app.labs.base import BaseLab
 
 
@@ -52,7 +53,7 @@ class MicrobiologyLab(BaseLab):
 
         return {
             'total': _count(),
-            'new': _count(Sample.status == 'new'),
-            'in_progress': _count(Sample.status.in_(['in_progress', 'analysis'])),
-            'completed': _count(Sample.status == 'completed'),
+            'new': _count(Sample.status == SampleStatus.NEW.value),
+            'in_progress': _count(Sample.status.in_([SampleStatus.IN_PROGRESS.value, SampleStatus.ANALYSIS.value])),
+            'completed': _count(Sample.status == SampleStatus.COMPLETED.value),
         }

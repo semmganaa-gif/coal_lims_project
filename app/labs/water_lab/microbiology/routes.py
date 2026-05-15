@@ -15,7 +15,7 @@ from sqlalchemy import extract, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.constants import UserRole
+from app.constants import UserRole, SampleStatus
 from app.models import Sample, AnalysisResult
 from app.labs.water_lab.microbiology.constants import (
     ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES,
@@ -155,7 +155,7 @@ def delete_samples():
             if not sample:
                 failed.append(f'ID={sid} (Олдсонгүй)')
                 continue
-            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != 'new':
+            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != SampleStatus.NEW.value:
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
 
@@ -635,7 +635,7 @@ def micro_summary_data():
 
     stmt = select(Sample).where(
         Sample.lab_type == 'microbiology',
-        Sample.status != 'archived',
+        Sample.status != SampleStatus.ARCHIVED.value,
     )
     if date_from:
         try:
@@ -684,7 +684,7 @@ def micro_archive():
     archived_count = db.session.execute(
         select(func.count(Sample.id)).where(
             Sample.lab_type == 'microbiology',
-            Sample.status == 'archived',
+            Sample.status == SampleStatus.ARCHIVED.value,
         )
     ).scalar_one()
     return render_template(
@@ -701,7 +701,7 @@ def micro_archive_data():
     """Архивлагдсан микробиологийн дээж."""
     stmt = select(Sample).where(
         Sample.lab_type == 'microbiology',
-        Sample.status == 'archived',
+        Sample.status == SampleStatus.ARCHIVED.value,
     )
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -721,7 +721,7 @@ def micro_archive_data():
     total = db.session.execute(
         select(func.count(Sample.id)).where(
             Sample.lab_type == 'microbiology',
-            Sample.status == 'archived',
+            Sample.status == SampleStatus.ARCHIVED.value,
         )
     ).scalar_one()
 

@@ -13,7 +13,7 @@ from sqlalchemy import or_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.constants import UserRole
+from app.constants import UserRole, SampleStatus, AnalysisResultStatus
 from app.models import Sample, AnalysisResult, Equipment
 from app.repositories import WaterWorksheetRepository, WorksheetRowRepository
 from app.labs.water_lab.chemistry.constants import (
@@ -315,7 +315,7 @@ def _build_multi_workspace(codes, template, title, analysis_code,
                         Sample.sample_code.contains(loc),
                         ~AnalysisResult.sample_id.in_(current_ids),
                         AnalysisResult.analysis_code == primary_code,
-                        AnalysisResult.status == 'approved',
+                        AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
                     )
                     .order_by(AnalysisResult.id.desc())
                     .limit(1)
@@ -433,7 +433,7 @@ def water_archive():
     archived_count = db.session.execute(
         select(func.count(Sample.id)).where(
             Sample.lab_type.in_(['water_chemistry', 'microbiology']),
-            Sample.status == 'archived',
+            Sample.status == SampleStatus.ARCHIVED.value,
         )
     ).scalar_one()
 
@@ -451,7 +451,7 @@ def archive_data():
     """Архивлагдсан усны дээжүүд + шинжилгээний үр дүн."""
     lab_type_filter = request.args.get('lab_type', 'all')
 
-    stmt = select(Sample).where(Sample.status == 'archived')
+    stmt = select(Sample).where(Sample.status == SampleStatus.ARCHIVED.value)
 
     if lab_type_filter == 'water_chemistry':
         stmt = stmt.where(Sample.lab_type == 'water_chemistry')
@@ -469,7 +469,7 @@ def archive_data():
         func.count(case((Sample.lab_type == 'microbiology', Sample.id))).label('micro'),
     ).where(
         Sample.lab_type.in_(['water_chemistry', 'microbiology']),
-        Sample.status == 'archived',
+        Sample.status == SampleStatus.ARCHIVED.value,
     )
     count_row = db.session.execute(count_stmt).first()
     water_count = count_row.water if count_row else 0
@@ -508,7 +508,7 @@ def summary_data():
 
     stmt = select(Sample).where(
         Sample.lab_type == 'water_chemistry',
-        Sample.status != 'archived',
+        Sample.status != SampleStatus.ARCHIVED.value,
     )
     if date_from:
         stmt = stmt.where(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
@@ -644,7 +644,7 @@ def workspace(code):
     # Approved дээжүүдийг хасах
     approved_ids = {r.sample_id for r in db.session.query(AnalysisResult.sample_id).filter(
         AnalysisResult.analysis_code == code_upper,
-        AnalysisResult.status == 'approved'
+        AnalysisResult.status == AnalysisResultStatus.APPROVED.value
     ).distinct().all()}
 
     # Хуучин хадгалагдсан (pending/rejected) + шинэ сонгосон
@@ -1024,7 +1024,7 @@ def save_results():
             .where(
                 AnalysisResult.sample_id == sample_id,
                 AnalysisResult.analysis_code == analysis_code,
-                AnalysisResult.status == 'approved',
+                AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
             )
             .with_for_update()
         ).scalar_one_or_none()
@@ -1185,7 +1185,7 @@ def delete_samples():
             if not sample:
                 failed.append(f'ID={sid} (Олдсонгүй)')
                 continue
-            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != 'new':
+            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != SampleStatus.NEW.value:
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
 
@@ -1193,7 +1193,7 @@ def delete_samples():
             approved_count = db.session.execute(
                 select(func.count(AnalysisResult.id)).where(
                     AnalysisResult.sample_id == sample.id,
-                    AnalysisResult.status == 'approved',
+                    AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
                 )
             ).scalar_one()
             if approved_count > 0 and current_user.role != 'admin':
