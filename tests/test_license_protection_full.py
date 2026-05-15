@@ -159,7 +159,7 @@ class TestLicenseManager:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() - timedelta(days=1)
+            mock_license.expiry_date = datetime.now() - timedelta(days=1)
             mock_license.id = 1
 
             with patch.object(manager, 'get_current_license', return_value=mock_license):
@@ -214,7 +214,7 @@ class TestLicenseManager:
             from app.utils.license_protection import LicenseManager
             manager = LicenseManager(app)
             manager._license_cache = 'some_cache'
-            manager._last_check = datetime.utcnow()
+            manager._last_check = datetime.now()
 
             manager.clear_cache()
 
@@ -274,7 +274,7 @@ class TestHardwareIdValidation:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.expiry_date = datetime.now() + timedelta(days=30)
             mock_license.hardware_id = 'different_hardware_id'
             mock_license.allowed_hardware_ids = None
             mock_license.id = 1
@@ -296,7 +296,7 @@ class TestHardwareIdValidation:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.expiry_date = datetime.now() + timedelta(days=30)
             mock_license.hardware_id = 'original_hw_id'
             mock_license.allowed_hardware_ids = json.dumps(['current_hw_id', 'another_hw_id'])
             mock_license.days_remaining = 30
@@ -318,7 +318,7 @@ class TestHardwareIdValidation:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.expiry_date = datetime.now() + timedelta(days=30)
             mock_license.hardware_id = 'original_hw_id'
             mock_license.allowed_hardware_ids = 'invalid json {'
             mock_license.id = 1
@@ -359,7 +359,7 @@ class TestHardwareIdValidation:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.expiry_date = datetime.now() + timedelta(days=30)
             mock_license.hardware_id = None  # No hardware check
             mock_license.days_remaining = 15  # Less than 30 days
             mock_license.check_count = 0
@@ -415,7 +415,7 @@ class TestActivateLicenseComplete:
             # Create license with wrong signature
             data = {
                 'company': 'Test',
-                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                'expiry': (datetime.now() + timedelta(days=30)).isoformat(),
                 'signature': 'wrong_signature'
             }
             encoded = base64.b64encode(json.dumps(data).encode()).decode()
@@ -434,7 +434,7 @@ class TestActivateLicenseComplete:
             # Create valid license for different hardware
             data = {
                 'company': 'Test',
-                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                'expiry': (datetime.now() + timedelta(days=30)).isoformat(),
                 'hardware_id': 'different_hardware'
             }
             data['signature'] = _create_signature(data)
@@ -457,8 +457,8 @@ class TestActivateLicenseComplete:
             data = {
                 'company': 'Test Company',
                 'company_code': 'TEST',
-                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
-                'issued': datetime.utcnow().isoformat(),
+                'expiry': (datetime.now() + timedelta(days=30)).isoformat(),
+                'issued': datetime.now().isoformat(),
                 'max_users': 10,
                 'max_samples': 5000,
                 'is_trial': False

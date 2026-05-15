@@ -161,7 +161,7 @@ class TestLicenseManager:
             mock_license = MagicMock()
             mock_license.is_active = True
             mock_license.tampering_detected = False
-            mock_license.expiry_date = datetime.utcnow() - timedelta(days=1)
+            mock_license.expiry_date = datetime.now() - timedelta(days=1)
             mock_license.id = 1
 
             with patch.object(manager, 'get_current_license', return_value=mock_license):
@@ -175,7 +175,7 @@ class TestLicenseManager:
         from app.utils.license_protection import LicenseManager
         manager = LicenseManager(app)
         manager._license_cache = "cached_data"
-        manager._last_check = datetime.utcnow()
+        manager._last_check = datetime.now()
         manager.clear_cache()
         assert manager._license_cache is None
         assert manager._last_check is None

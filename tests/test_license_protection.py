@@ -157,7 +157,7 @@ class TestLicenseManager:
 
         manager = LicenseManager(app)
         manager._license_cache = 'some_cache'
-        manager._last_check = datetime.utcnow()
+        manager._last_check = datetime.now()
 
         manager.clear_cache()
 
@@ -342,7 +342,7 @@ class TestLicenseValidation:
             license_obj = SystemLicense(
                 license_key='test_key',
                 company_name='Test',
-                expiry_date=datetime.utcnow() + timedelta(days=30),
+                expiry_date=datetime.now() + timedelta(days=30),
                 is_active=False
             )
             db.session.add(license_obj)
@@ -368,7 +368,7 @@ class TestLicenseValidation:
             license_obj = SystemLicense(
                 license_key='test_key',
                 company_name='Test',
-                expiry_date=datetime.utcnow() + timedelta(days=30),
+                expiry_date=datetime.now() + timedelta(days=30),
                 is_active=True,
                 tampering_detected=True
             )
@@ -397,7 +397,7 @@ class TestLicenseValidation:
             license_obj = SystemLicense(
                 license_key='test_key',
                 company_name='Test',
-                expiry_date=datetime.utcnow() - timedelta(days=1),  # Expired
+                expiry_date=datetime.now() - timedelta(days=1),  # Expired
                 is_active=True
             )
             db.session.add(license_obj)

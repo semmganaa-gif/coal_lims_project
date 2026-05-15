@@ -543,7 +543,7 @@ class TestSLAService:
         """Test SLA summary with actual sample data."""
         with app.app_context():
             from app.services.sla_service import get_sla_summary
-            now = datetime.utcnow()
+            now = datetime.now()
 
             user = User.query.filter_by(username="chemist").first()
             # Create overdue, due soon, and on-track samples
@@ -612,7 +612,7 @@ class TestSLAService:
         with app.app_context():
             from app.services.sla_service import get_overdue_samples
             # Use naive datetimes (SQLite stores naive)
-            now = datetime.utcnow()
+            now = datetime.now()
             user = User.query.filter_by(username="chemist").first()
 
             s = Sample(
@@ -639,7 +639,7 @@ class TestSLAService:
     def test_bulk_assign_sla_with_data(self, app, db):
         with app.app_context():
             from app.services.sla_service import bulk_assign_sla
-            now = datetime.utcnow()
+            now = datetime.now()
             user = User.query.filter_by(username="chemist").first()
 
             s = Sample(
@@ -1070,7 +1070,7 @@ class TestAnalyticsDB:
             s = Sample(
                 sample_code=f"QS-{uuid.uuid4().hex[:6]}",
                 user_id=user.id, client_name="CHPP",
-                received_date=datetime.utcnow() - timedelta(hours=2),
+                received_date=datetime.now() - timedelta(hours=2),
             )
             db.session.add(s)
             db.session.commit()
@@ -1079,7 +1079,7 @@ class TestAnalyticsDB:
                 sample_id=s.id, analysis_code="Mad",
                 user_id=user.id, status="approved",
                 final_result=5.5,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(),
             )
             db.session.add(ar)
             db.session.commit()
@@ -1171,7 +1171,7 @@ class TestAnalyticsDB:
         with app.app_context():
             from app.services.analytics_service import _compare_shifts
             user = User.query.filter_by(username="chemist").first()
-            now = datetime.utcnow()
+            now = datetime.now()
 
             # Day sample (hour=10)
             s_day = Sample(

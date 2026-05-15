@@ -124,7 +124,7 @@ class TestModels:
             license_obj = SystemLicense(
                 license_key='test_key',
                 company_name='Test Company',
-                expiry_date=datetime.utcnow()
+                expiry_date=datetime.now()
             )
             assert license_obj.company_name == 'Test Company'
 
