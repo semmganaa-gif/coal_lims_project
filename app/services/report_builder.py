@@ -38,7 +38,7 @@ from sqlalchemy import func, select
 
 from app.bootstrap.extensions import db
 from app.models.core import Sample
-from app.models.analysis import AnalysisResult, AnalysisType
+from app.models.analysis import AnalysisResult
 from app.models.settings import SystemSetting
 from app.utils.datetime import now_local
 from app.utils.transaction import transactional

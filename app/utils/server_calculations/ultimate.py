@@ -6,7 +6,7 @@ Ultimate analysis calculations: Sulfur (TS), Phosphorus (P), Fluorine (F), Chlor
 
 from typing import Optional, Dict
 
-from ._helpers import _safe_float, _get_from_dict
+from ._helpers import _get_from_dict
 
 
 def calc_sulfur_ts(raw_data: Dict) -> Optional[float]:

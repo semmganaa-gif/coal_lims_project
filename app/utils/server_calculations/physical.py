@@ -7,7 +7,7 @@ Physical property calculations: CSN, Gray-King (Gi), Free Moisture (FM), Solid, 
 from typing import Optional, Dict
 from math import isfinite, floor
 
-from ._helpers import _safe_float, _get_from_dict
+from ._helpers import _safe_float
 
 
 def calc_csn(raw_data: Dict) -> Optional[float]:

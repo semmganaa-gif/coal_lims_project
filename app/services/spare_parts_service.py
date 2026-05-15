@@ -9,7 +9,6 @@ from datetime import date
 
 from sqlalchemy import func, case
 from flask_babel import lazy_gettext as _l
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategory
@@ -20,7 +19,6 @@ from app.repositories import (
     SparePartLogRepository,
 )
 from app.utils.converters import to_float
-from app.utils.security import escape_like_pattern
 
 logger = logging.getLogger(__name__)
 

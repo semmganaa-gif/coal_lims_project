@@ -6,12 +6,11 @@ SLA (Service Level Agreement) turnaround tracking бизнес логик.
 Дээжний хүлээн авснаас хариу өгөх хүртэлх хугацааг хянах.
 """
 
-import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
-from sqlalchemy import and_, func, case, select
+from sqlalchemy import and_, func, select
 
 from app import db
 from app.constants import AnalysisResultStatus

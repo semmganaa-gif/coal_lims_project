@@ -16,7 +16,6 @@ Hardware Fingerprint - Компьютерийн өвөрмөц ID үүсгэх.
 """
 import hashlib
 import logging
-import os
 import platform
 import re
 import subprocess
