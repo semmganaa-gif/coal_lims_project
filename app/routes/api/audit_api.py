@@ -14,7 +14,7 @@ from datetime import datetime
 
 from flask import request, jsonify, render_template
 from flask_login import login_required, current_user
-from sqlalchemy import extract, or_
+from sqlalchemy import extract, or_, select
 from sqlalchemy.orm import joinedload
 
 from app import db
@@ -145,7 +145,9 @@ def register_routes(bp):
         original_users_map = {}
         if original_user_ids:
             original_users_map = {
-                u.id: u for u in User.query.filter(User.id.in_(original_user_ids)).all()
+                u.id: u for u in db.session.execute(
+                    select(User).where(User.id.in_(original_user_ids))
+                ).scalars().all()
             }
 
         for log_obj, sample_obj, user_obj in rows:
@@ -236,7 +238,9 @@ def register_routes(bp):
         }
 
         # Химичийн жагсаалт (шүүлтүүрт ашиглах)
-        all_users = User.query.filter(User.role.in_(["chemist", "senior", "manager", "admin"])).all()
+        all_users = list(db.session.execute(
+            select(User).where(User.role.in_(["chemist", "senior", "manager", "admin"]))
+        ).scalars().all())
 
         is_senior = getattr(current_user, "role", "") in ("senior", "admin")
 
@@ -359,26 +363,28 @@ def register_routes(bp):
         except (ValueError, TypeError):
             limit = 1000
 
-        query = AuditLog.query.options(joinedload(AuditLog.user))
+        stmt = select(AuditLog).options(joinedload(AuditLog.user))
 
         if start_date:
             try:
                 sd = datetime.strptime(start_date, '%Y-%m-%d')
-                query = query.filter(AuditLog.timestamp >= sd)
+                stmt = stmt.where(AuditLog.timestamp >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
                 ed = datetime.strptime(end_date, '%Y-%m-%d')
                 ed = datetime.combine(ed, datetime.max.time())
-                query = query.filter(AuditLog.timestamp <= ed)
+                stmt = stmt.where(AuditLog.timestamp <= ed)
             except ValueError:
                 pass
         if action:
             safe_action = escape_like_pattern(action)
-            query = query.filter(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
+            stmt = stmt.where(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
 
-        logs = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+        logs = list(db.session.execute(
+            stmt.order_by(AuditLog.timestamp.desc()).limit(limit)
+        ).scalars().all())
 
         # Excel export
         from app.utils.exports import create_audit_export
@@ -408,46 +414,48 @@ def register_routes(bp):
             except (ValueError, TypeError):
                 limit = 500
 
-            query = AuditLog.query.options(joinedload(AuditLog.user))
+            stmt = select(AuditLog).options(joinedload(AuditLog.user))
 
             if start_date:
                 try:
                     sd = datetime.strptime(start_date, '%Y-%m-%d')
-                    query = query.filter(AuditLog.timestamp >= sd)
+                    stmt = stmt.where(AuditLog.timestamp >= sd)
                 except ValueError:
                     pass
             if end_date:
                 try:
                     ed = datetime.strptime(end_date, '%Y-%m-%d')
                     ed = datetime.combine(ed, datetime.max.time())
-                    query = query.filter(AuditLog.timestamp <= ed)
+                    stmt = stmt.where(AuditLog.timestamp <= ed)
                 except ValueError:
                     pass
 
             if action_filter:
                 safe_action = escape_like_pattern(action_filter)
-                query = query.filter(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
+                stmt = stmt.where(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
 
             if user_filter:
                 try:
-                    query = query.filter(AuditLog.user_id == int(user_filter))
+                    stmt = stmt.where(AuditLog.user_id == int(user_filter))
                 except ValueError:
                     pass
 
             if resource_filter:
                 safe_res = escape_like_pattern(resource_filter)
-                query = query.filter(AuditLog.resource_type.ilike(f"%{safe_res}%", escape='\\'))
+                stmt = stmt.where(AuditLog.resource_type.ilike(f"%{safe_res}%", escape='\\'))
 
             if q:
                 safe_q = escape_like_pattern(q)
-                query = query.filter(or_(
+                stmt = stmt.where(or_(
                     AuditLog.action.ilike(f"%{safe_q}%", escape='\\'),
                     AuditLog.resource_type.ilike(f"%{safe_q}%", escape='\\'),
                     AuditLog.details.ilike(f"%{safe_q}%", escape='\\'),
                     AuditLog.ip_address.ilike(f"%{safe_q}%", escape='\\'),
                 ))
 
-            logs = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+            logs = list(db.session.execute(
+                stmt.order_by(AuditLog.timestamp.desc()).limit(limit)
+            ).scalars().all())
 
             return jsonify({
                 'success': True,
@@ -472,9 +480,11 @@ def register_routes(bp):
 
         # HTML хуудас
         # Хэрэглэгчдийн жагсаалт (шүүлтүүрт)
-        users = User.query.filter(
-            User.role.in_(['chemist', 'senior', 'manager', 'admin'])
-        ).order_by(User.username).all()
+        users = list(db.session.execute(
+            select(User).where(
+                User.role.in_(['chemist', 'senior', 'manager', 'admin'])
+            ).order_by(User.username)
+        ).scalars().all())
 
         return render_template(
             "system_audit.html",

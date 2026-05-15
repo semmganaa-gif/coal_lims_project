@@ -15,6 +15,8 @@ from flask_babel import lazy_gettext as _l
 # (equipment_service.save_equipment_with_audit)
 from werkzeug.utils import secure_filename
 
+from sqlalchemy import select
+
 from app import db
 from app.constants import UserRole
 from app.models import Equipment, MaintenanceLog, UsageLog
@@ -219,7 +221,11 @@ def equipment_detail(id):
     eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
-    usage_logs = UsageLog.query.filter_by(equipment_id=id).order_by(UsageLog.start_time.desc()).all()
+    usage_logs = list(db.session.execute(
+        select(UsageLog)
+        .where(UsageLog.equipment_id == id)
+        .order_by(UsageLog.start_time.desc())
+    ).scalars().all())
     return render_template("equipment/detail.html", eq=eq, usage_logs=usage_logs)
 
 
@@ -284,9 +290,13 @@ def delete_equipment(id):
         abort(404)
 
     eq_name = eq.name
-    has_history = (
-        MaintenanceLog.query.filter_by(equipment_id=eq.id).first()
-        or UsageLog.query.filter_by(equipment_id=eq.id).first()
+    has_history = bool(
+        db.session.execute(
+            select(MaintenanceLog).where(MaintenanceLog.equipment_id == eq.id).limit(1)
+        ).first()
+        or db.session.execute(
+            select(UsageLog).where(UsageLog.equipment_id == eq.id).limit(1)
+        ).first()
     )
 
     if has_history:
@@ -319,9 +329,13 @@ def bulk_delete():
         eq = EquipmentRepository.get_by_id(eq_id)
         if not eq:
             continue
-        has_history = (
-            MaintenanceLog.query.filter_by(equipment_id=eq.id).first()
-            or UsageLog.query.filter_by(equipment_id=eq.id).first()
+        has_history = bool(
+            db.session.execute(
+                select(MaintenanceLog).where(MaintenanceLog.equipment_id == eq.id).limit(1)
+            ).first()
+            or db.session.execute(
+                select(UsageLog).where(UsageLog.equipment_id == eq.id).limit(1)
+            ).first()
         )
         if has_history:
             eq.status = "retired"

@@ -8,6 +8,8 @@
 from datetime import date, timedelta
 from flask import jsonify, request as flask_request
 from flask_login import login_required
+from sqlalchemy import func, or_, select
+
 from app import db
 from app.models import Equipment, Sample
 
@@ -49,44 +51,60 @@ def register_routes(bp):
         sample_types = cfg['sample_types']
         equip_cats = cfg['equip_categories']
 
-        # Тоног төхөөрөмжийн category шүүлтүүр
-        def _equip_base():
-            return Equipment.query.filter(
-                Equipment.category.in_(equip_cats),
-                Equipment.status != 'retired',
-            )
+        # Тоног төхөөрөмжийн base filter conditions
+        equip_base_conds = [
+            Equipment.category.in_(equip_cats),
+            Equipment.status != 'retired',
+        ]
 
         # 1. Баталгаажуулалт дуусах дөхсөн (7 хоногийн дотор)
         week_later = today + timedelta(days=7)
-        calibration_due = _equip_base().filter(
-            Equipment.next_calibration_date <= week_later,
-            Equipment.next_calibration_date >= today,
-        ).order_by(Equipment.next_calibration_date).all()
+        calibration_due = list(db.session.execute(
+            select(Equipment)
+            .where(
+                *equip_base_conds,
+                Equipment.next_calibration_date <= week_later,
+                Equipment.next_calibration_date >= today,
+            )
+            .order_by(Equipment.next_calibration_date)
+        ).scalars().all())
 
         # 2. Хугацаа хэтэрсэн
-        calibration_overdue = _equip_base().filter(
-            Equipment.next_calibration_date < today,
-        ).order_by(Equipment.next_calibration_date).all()
+        calibration_overdue = list(db.session.execute(
+            select(Equipment)
+            .where(
+                *equip_base_conds,
+                Equipment.next_calibration_date < today,
+            )
+            .order_by(Equipment.next_calibration_date)
+        ).scalars().all())
 
         # 3. Эвдрэлтэй / засвартай
-        broken_equipment = Equipment.query.filter(
-            Equipment.category.in_(equip_cats),
-            Equipment.status.in_(['broken', 'maintenance', 'needs_spare']),
-        ).all()
+        broken_equipment = list(db.session.execute(
+            select(Equipment).where(
+                Equipment.category.in_(equip_cats),
+                Equipment.status.in_(['broken', 'maintenance', 'needs_spare']),
+            )
+        ).scalars().all())
 
         # 4. Дээж — лаб төрлөөр шүүх
-        today_new = Sample.query.filter(
+        def _count_samples(*conds):
+            return db.session.execute(
+                select(func.count(Sample.id)).where(*conds)
+            ).scalar_one()
+
+        today_new = _count_samples(
             Sample.lab_type.in_(sample_types),
             Sample.status == 'new',
-        ).count()
-        today_in_progress = Sample.query.filter(
+        )
+        today_in_progress = _count_samples(
             Sample.lab_type.in_(sample_types),
             Sample.status.in_(['in_progress', 'analysis']),
-        ).count()
-        today_total = Sample.query.filter(
+        )
+        today_total = _count_samples(
             Sample.lab_type.in_(sample_types),
-            db.func.date(Sample.received_date) == today,
-        ).count()
+            func.date(Sample.received_date) == today,
+        )
 
         return jsonify({
             'calibration_due': [{

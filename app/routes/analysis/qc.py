@@ -14,6 +14,8 @@ from flask import request, render_template, flash, redirect, url_for
 from flask_login import login_required
 from flask_babel import lazy_gettext as _l
 
+from sqlalchemy import select
+
 from app import db
 from app.models import Sample, AnalysisResult
 from app.utils.decorators import analysis_role_required
@@ -48,7 +50,9 @@ def _auto_find_hourly_samples(com_sample_ids: list) -> list:
         return []
 
     # COM дээжүүдийг татах
-    com_samples = Sample.query.filter(Sample.id.in_(com_sample_ids)).all()
+    com_samples = list(db.session.execute(
+        select(Sample).where(Sample.id.in_(com_sample_ids))
+    ).scalars().all())
     if not com_samples:
         return list(com_sample_ids)
 
@@ -70,9 +74,9 @@ def _auto_find_hourly_samples(com_sample_ids: list) -> list:
         # ✅ LIKE injection сэргийлэлт
         safe_family = escape_like_pattern(family)
         pattern = f"{safe_family}%"
-        matching_samples = Sample.query.filter(
-            Sample.sample_code.like(pattern, escape='\\')
-        ).all()
+        matching_samples = list(db.session.execute(
+            select(Sample).where(Sample.sample_code.like(pattern, escape='\\'))
+        ).scalars().all())
 
         for s in matching_samples:
             all_ids.add(s.id)
@@ -82,7 +86,9 @@ def _auto_find_hourly_samples(com_sample_ids: list) -> list:
 
 def _get_qc_stream_data(ids: list):
     """QC талбаруудын хамтын өгөгдөл боловсруулалт"""
-    samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).all()
+    samples = list(db.session.execute(
+        select(Sample).where(Sample.id.in_(ids)).order_by(Sample.sample_code.asc())
+    ).scalars().all())
     if not samples:
         return []
     samples_by_id = {s.id: s for s in samples}
@@ -244,7 +250,12 @@ def register_routes(bp):
             return redirect(url_for("analysis.sample_summary"))
 
         # Дээжүүдийг татах (✅ pagination limit нэмсэн)
-        samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).limit(5000).all()
+        samples = list(db.session.execute(
+            select(Sample)
+            .where(Sample.id.in_(ids))
+            .order_by(Sample.sample_code.asc())
+            .limit(5000)
+        ).scalars().all())
         if not samples:
             flash(_l("Дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
@@ -347,17 +358,21 @@ def register_routes(bp):
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ Pagination limit нэмсэн
-        samples = Sample.query.filter(Sample.id.in_(ids)).limit(5000).all()
+        samples = list(db.session.execute(
+            select(Sample).where(Sample.id.in_(ids)).limit(5000)
+        ).scalars().all())
         if not samples:
             flash(_l("Дээж олдсонгүй."), "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ N+1 QUERY ЗАСВАР: Бүх үр дүнг нэг query-ээр татах
         sample_ids = [s.id for s in samples]
-        all_results = AnalysisResult.query.filter(
-            AnalysisResult.sample_id.in_(sample_ids),
-            AnalysisResult.status.in_(["approved", "pending_review"])
-        ).all()
+        all_results = list(db.session.execute(
+            select(AnalysisResult).where(
+                AnalysisResult.sample_id.in_(sample_ids),
+                AnalysisResult.status.in_(["approved", "pending_review"]),
+            )
+        ).scalars().all())
 
         # sample_id-аар group хийх
         results_by_sample = defaultdict(list)

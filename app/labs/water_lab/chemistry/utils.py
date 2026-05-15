@@ -4,7 +4,7 @@
 import json
 from datetime import datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from app import db
 from app.models import Sample
@@ -45,10 +45,12 @@ def _generate_micro_lab_id(sample_date, next_batch=False):
             except (ValueError, IndexError):
                 pass
 
-    today_count = Sample.query.filter(
-        micro_filter,
-        Sample.sample_date == sample_date,
-    ).count()
+    today_count = db.session.execute(
+        select(func.count(Sample.id)).where(
+            micro_filter,
+            Sample.sample_date == sample_date,
+        )
+    ).scalar_one()
 
     if next_batch:
         # Шинэ багц - хамгийн том day_num + 1 (үргэлж шинэ дугаар)
@@ -87,7 +89,9 @@ def _generate_micro_lab_id(sample_date, next_batch=False):
         # Шинэ өдөр - шинэ day_num
         day_num = max_day_num + 1
 
-    total_samples = Sample.query.filter(micro_filter).count()
+    total_samples = db.session.execute(
+        select(func.count(Sample.id)).where(micro_filter)
+    ).scalar_one()
 
     return day_num, total_samples
 
@@ -127,10 +131,12 @@ def _generate_chem_lab_id(sample_date, next_batch=False):
 
     max_b = _max_batch()
 
-    today_count = Sample.query.filter(
-        chem_filter,
-        Sample.sample_date == sample_date,
-    ).count()
+    today_count = db.session.execute(
+        select(func.count(Sample.id)).where(
+            chem_filter,
+            Sample.sample_date == sample_date,
+        )
+    ).scalar_one()
 
     if next_batch:
         batch = max_b + 1
@@ -140,7 +146,9 @@ def _generate_chem_lab_id(sample_date, next_batch=False):
     else:
         batch = max_b + 1
 
-    total_samples = Sample.query.filter(chem_filter).count()
+    total_samples = db.session.execute(
+        select(func.count(Sample.id)).where(chem_filter)
+    ).scalar_one()
 
     return batch, total_samples
 
@@ -245,7 +253,9 @@ def create_water_micro_samples(form, user_id):
             else:
                 sample_code = f"{actual_name}_{sample_date.isoformat()}"
 
-            existing = Sample.query.filter_by(sample_code=sample_code).first()
+            existing = db.session.execute(
+                select(Sample).where(Sample.sample_code == sample_code)
+            ).scalar_one_or_none()
             if existing:
                 skipped.append(actual_name)
                 continue

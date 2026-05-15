@@ -14,6 +14,7 @@ from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 from werkzeug.utils import secure_filename
 
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -75,7 +76,9 @@ def report_list():
 @role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def signature_list():
     """Гарын үсэг, тамгын жагсаалт."""
-    signatures = ReportSignature.query.filter_by(is_active=True).all()
+    signatures = list(db.session.execute(
+        select(ReportSignature).where(ReportSignature.is_active.is_(True))
+    ).scalars().all())
     stamps = [s for s in signatures if s.signature_type == 'stamp']
     sigs = [s for s in signatures if s.signature_type == 'signature']
 
@@ -162,7 +165,9 @@ def add_signature():
             db.session.rollback()
             flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
-    users = User.query.filter(User.role.in_(['senior', 'manager', 'admin'])).all()
+    users = list(db.session.execute(
+        select(User).where(User.role.in_(['senior', 'manager', 'admin']))
+    ).scalars().all())
     return render_template(
         "reports/signature_form.html",
         signature=None,
@@ -195,17 +200,26 @@ def report_detail(id):
     report = LabReportRepository.get_by_id_or_404(id)
 
     # Гарын үсэг, тамгын сонголт
-    signatures = ReportSignature.query.filter_by(
-        is_active=True, signature_type='signature'
-    ).filter(
-        (ReportSignature.lab_type == report.lab_type) | (ReportSignature.lab_type == 'all')
-    ).all()
+    from sqlalchemy import or_
+    sig_lab_filter = or_(
+        ReportSignature.lab_type == report.lab_type,
+        ReportSignature.lab_type == 'all',
+    )
+    signatures = list(db.session.execute(
+        select(ReportSignature).where(
+            ReportSignature.is_active.is_(True),
+            ReportSignature.signature_type == 'signature',
+            sig_lab_filter,
+        )
+    ).scalars().all())
 
-    stamps = ReportSignature.query.filter_by(
-        is_active=True, signature_type='stamp'
-    ).filter(
-        (ReportSignature.lab_type == report.lab_type) | (ReportSignature.lab_type == 'all')
-    ).all()
+    stamps = list(db.session.execute(
+        select(ReportSignature).where(
+            ReportSignature.is_active.is_(True),
+            ReportSignature.signature_type == 'stamp',
+            sig_lab_filter,
+        )
+    ).scalars().all())
 
     return render_template(
         "reports/report_detail.html",
@@ -312,9 +326,12 @@ def get_next_report_number(lab_type):
     year = now_local().year
 
     # Сүүлийн тайлангийн дугаар
-    last_report = LabReport.query.filter(
-        LabReport.report_number.like(f"{year}_%")
-    ).order_by(LabReport.id.desc()).first()
+    last_report = db.session.execute(
+        select(LabReport)
+        .where(LabReport.report_number.like(f"{year}_%"))
+        .order_by(LabReport.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
 
     if last_report:
         try:
@@ -324,9 +341,11 @@ def get_next_report_number(lab_type):
             pass
 
     # Тоолох
-    count = LabReport.query.filter(
-        LabReport.report_number.like(f"{year}_%")
-    ).count()
+    count = db.session.execute(
+        select(func.count(LabReport.id)).where(
+            LabReport.report_number.like(f"{year}_%")
+        )
+    ).scalar_one()
 
     return f"{year}_{count + 1}"
 
