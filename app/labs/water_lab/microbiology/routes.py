@@ -23,7 +23,7 @@ from app.labs.water_lab.chemistry.constants import (
     WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
 )
 from app.labs.water_lab.microbiology.constants import MICRO_UNITS
-from app.utils.decorators import lab_required
+from app.utils.decorators import lab_required, role_required
 from app.utils.database import safe_commit
 from app.labs.water_lab.chemistry.constants import parse_display_name as _parse_display_name
 
@@ -128,6 +128,7 @@ def edit_sample(sample_id):
 @micro_bp.route('/delete_samples', methods=['POST'])
 @login_required
 @lab_required('microbiology')
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value)
 def delete_samples():
     """Микробиологийн дээж устгах (admin, senior)."""
     from app.utils.audit import log_audit
@@ -135,10 +136,6 @@ def delete_samples():
     sample_ids = request.form.getlist('sample_ids')
     if not sample_ids:
         flash('Please select samples to delete!', 'warning')
-        return redirect(url_for('microbiology.register_sample'))
-
-    if current_user.role not in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value):
-        flash('You do not have permission to delete samples.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
     from app.services.analysis_audit import log_analysis_action

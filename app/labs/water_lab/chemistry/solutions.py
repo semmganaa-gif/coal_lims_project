@@ -18,7 +18,7 @@ from app.repositories import (
     SolutionPreparationRepository,
     SolutionRecipeIngredientRepository,
 )
-from app.utils.decorators import lab_required
+from app.utils.decorators import lab_required, role_required
 from app.utils.converters import to_float
 from app.labs.water_lab.chemistry.routes import water_bp
 
@@ -246,14 +246,11 @@ def edit_solution(id):
 @water_bp.route('/solution_journal/delete/<int:id>', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def delete_solution(id):
     """Уусмал устгах."""
     from app.models import Chemical, ChemicalLog
     from app.utils.database import safe_commit
-
-    if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
-        flash('Access denied.', 'danger')
-        return redirect(url_for('water.solution_journal'))
 
     solution = SolutionPreparationRepository.get_by_id_or_404(id)
     name = solution.solution_name
@@ -664,12 +661,9 @@ def edit_recipe(id):
 @water_bp.route('/solution_recipes/delete/<int:id>', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def delete_recipe(id):
     """Уусмалын жор устгах."""
-    if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
-        flash('Access denied.', 'danger')
-        return redirect(url_for('water.solution_recipes'))
-
     recipe = SolutionRecipeRepository.get_by_id_or_404(id)
     name = recipe.name
 

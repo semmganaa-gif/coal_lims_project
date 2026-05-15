@@ -22,7 +22,7 @@ from app.labs.water_lab.chemistry.constants import (
     parse_display_name as _parse_display_name,
 )
 from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
-from app.utils.decorators import lab_required
+from app.utils.decorators import lab_required, role_required
 from app.utils.converters import to_float
 from app.utils.security import escape_like_pattern, is_safe_url
 
@@ -1161,6 +1161,7 @@ def edit_sample(sample_id):
 @water_bp.route('/delete_samples', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value)
 def delete_samples():
     """Усны/микро дээж устгах (admin, senior эрхтэй)."""
     from app.utils.audit import log_audit
@@ -1168,10 +1169,6 @@ def delete_samples():
     sample_ids = request.form.getlist('sample_ids')
     if not sample_ids:
         flash('Please select samples to delete!', 'warning')
-        return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
-
-    if current_user.role not in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value):
-        flash('You do not have permission to delete samples.', 'danger')
         return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
     from app.services.analysis_audit import log_analysis_action
@@ -1389,12 +1386,10 @@ def worksheet_submit(ws_id):
 @water_bp.route('/worksheets/<int:ws_id>/approve', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def worksheet_approve(ws_id):
     """Ажлын хуудас батлах (senior / manager / admin)."""
     from app.utils.datetime import now_local
-    if current_user.role not in (UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value):
-        flash(_l('Зөвхөн ахлах химич/менежер батлах боломжтой.'), 'danger')
-        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     if ws.status not in ('submitted', 'open'):
         flash(_l('Батлах боломжгүй төлөв.'), 'warning')
@@ -1415,12 +1410,10 @@ def worksheet_approve(ws_id):
 @water_bp.route('/worksheets/<int:ws_id>/reject', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def worksheet_reject(ws_id):
     """Ажлын хуудас буцаах."""
     from app.utils.datetime import now_local
-    if current_user.role not in (UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value):
-        flash(_l('Зөвхөн ахлах химич/менежер буцаах боломжтой.'), 'danger')
-        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     ws.status = 'rejected'
     ws.reviewer_id = current_user.id

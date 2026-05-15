@@ -172,7 +172,11 @@
       "Bash(awk '/data.status === .success./{for\\(i=NR-15;i<=NR+1;i++\\) print i\": \"lines[i]} {lines[NR]=$0}' app/static/js/equipment_modal.js)",
       "Bash(awk -F: '{print $1}')",
       "Bash(awk -F'\\\\\\\\.query\\\\\\\\.' '{print $2}')",
-      "Bash(awk -F'[\\(]' '{print $1}')"
+      "Bash(awk -F'[\\(]' '{print $1}')",
+      "Bash(FLASK_APP=app:create_app python -m flask db current)",
+      "Bash(FLASK_APP=app:create_app python -m flask db migrate -m \"iso17025_audit_user_id_set_null\")",
+      "Bash(FLASK_APP=app:create_app python -m flask db upgrade)",
+      "Bash(FLASK_APP=app:create_app python -m flask db migrate -m \"iso17025_operational_user_fk_set_null\")"
     ],
     "deny": [],
     "ask": []

@@ -8,7 +8,9 @@ Routes are thin wrappers; business logic lives in app.services.report_service.
 from flask import render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
 
+from app.constants import UserRole
 from app.utils.datetime import now_local
+from app.utils.decorators import role_required
 from app.routes.reports.routes import reports_bp, _year_arg
 from app.services.report_service import (
     calculate_weekly_performance,
@@ -85,14 +87,12 @@ def api_get_monthly_plan():
 
 @reports_bp.route("/api/monthly_plan", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def api_save_monthly_plan():
     """
     Сарын төлөвлөгөө хадгалах.
     JSON body: { year, month, plans: { "CHPP|2 hourly|1": 10, ... } }
     """
-    if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
-
     data = request.get_json()
     year = data.get("year")
     month = data.get("month")
@@ -114,14 +114,12 @@ def api_save_monthly_plan():
 
 @reports_bp.route("/api/staff_settings", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def api_save_staff_settings():
     """
     Ажилтны тоог хадгалах.
     JSON body: { year, month, staff_preparers, staff_chemists }
     """
-    if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
-
     data = request.get_json()
     year = data.get("year")
     month = data.get("month")

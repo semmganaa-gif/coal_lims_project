@@ -13,7 +13,8 @@ from sqlalchemy import extract, func, select
 
 from app import db
 from app.models import Sample, AnalysisResult
-from app.utils.decorators import lab_required
+from app.constants import UserRole
+from app.utils.decorators import lab_required, role_required
 from app.utils.datetime import now_local
 from app.labs.water_lab.microbiology.routes import micro_bp
 
@@ -526,10 +527,9 @@ def api_get_monthly_plan():
 @micro_bp.route('/api/monthly_plan', methods=['POST'])
 @login_required
 @lab_required('microbiology')
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def api_save_monthly_plan():
     from app import models as M
-    if current_user.role not in ['senior', 'admin']:
-        return jsonify({'error': 'Senior access only'}), 403
 
     req_data = request.get_json()
     year = req_data.get('year')
@@ -598,10 +598,9 @@ def api_plan_stats():
 @micro_bp.route('/api/save_staff', methods=['POST'])
 @login_required
 @lab_required('microbiology')
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def api_save_staff():
     from app import models as M
-    if current_user.role not in ['senior', 'admin']:
-        return jsonify({'error': 'Senior access only'}), 403
 
     req_data = request.get_json()
     year = req_data.get('year')

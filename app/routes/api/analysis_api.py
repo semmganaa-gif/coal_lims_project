@@ -27,6 +27,7 @@ from app.utils.datetime import now_local
 from app.utils.codes import norm_code, BASE_TO_ALIASES
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
+from app.utils.decorators import role_required
 from .helpers import _requires_mass_gate, _has_m_task_sql
 from .analysis_save import register_save_routes
 from datetime import timedelta
@@ -163,12 +164,10 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/unassign_sample", methods=["POST"])
     @login_required
+    @role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
     @limiter.limit("100 per minute")
     async def unassign_sample():
         """Дээжийг тухайн шинжилгээнээс хасах."""
-        if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
-            return jsonify({"success": False, "message": _("Ахлах эсвэл админ эрх шаардлагатай")}), 403
-
         data = request.get_json(silent=True)
         if not data:
             return jsonify({"success": False, "message": _("JSON өгөгдөл хүлээн аваагүй")}), 400

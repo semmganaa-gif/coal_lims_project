@@ -20,6 +20,7 @@ from app.models import Sample
 from app.repositories import SampleRepository
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
+from app.utils.decorators import role_required
 from app.services.sample_service import get_retention_context
 
 logger = logging.getLogger(__name__)
@@ -100,15 +101,12 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/delete_selected_samples", methods=["POST"])
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def delete_selected_samples():
         sample_ids_to_delete = request.form.getlist("sample_ids")
 
         if not sample_ids_to_delete:
             flash(_l("Устгах дээжүүдээ сонгоно уу!"), "warning")
-            return redirect(url_for("main.index"))
-
-        if current_user.role not in ["admin", "senior"]:
-            flash(_l("Дээж устгах эрхгүй байна."), "danger")
             return redirect(url_for("main.index"))
 
         deleted_count = 0
@@ -166,12 +164,9 @@ def register_routes(bp):
 
     @bp.route("/dispose_samples", methods=["POST"])
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def dispose_samples():
         """Mark samples as disposed (Bulk disposal)"""
-        if current_user.role not in ["admin", "senior"]:
-            flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
-            return redirect(url_for("main.sample_disposal"))
-
         sample_ids = request.form.getlist("sample_ids")
         disposal_method = request.form.get("disposal_method", "").strip()
 
@@ -217,12 +212,9 @@ def register_routes(bp):
 
     @bp.route("/set_retention_date", methods=["POST"])
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def set_retention_date():
         """Set sample retention date"""
-        if current_user.role not in ["admin", "senior"]:
-            flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
-            return redirect(url_for("main.sample_disposal"))
-
         sample_ids = request.form.getlist("sample_ids")
         retention_days = request.form.get("retention_days", "90")
 
