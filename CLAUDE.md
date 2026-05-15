@@ -180,8 +180,6 @@ flask license generate --company X --expiry YYYY-MM-DD
 
 - **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
   memory + partial-failure tolerance), `@transactional` applicable биш.
-- **Major dep upgrades** — celery 5.4→5.6 (minor), redis 5→7 (major),
-  gunicorn 24→26 (major). Тус тусын session-д careful upgrade.
 
 ### ✅ Sprint 4 closeout (2026-05-15)
 
