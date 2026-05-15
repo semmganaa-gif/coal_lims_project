@@ -26,7 +26,10 @@ import Alpine from 'alpinejs'
 import collapse from '@alpinejs/collapse'
 Alpine.plugin(collapse)
 window.Alpine = Alpine
-// Note: Alpine.start() нь DOMContentLoaded-д автомат дуудагдана
+// Alpine npm bundle нь CDN distribution-аас ялгаатай — auto-start хийдэггүй.
+// Manual start заавал хэрэгтэй; үгүй бол x-show / x-data / x-if нь үйлчилэхгүй
+// (mobile drawer гэх мэт элементүүд template төлвөөрөө харагдана).
+Alpine.start()
 
 // htmx
 import 'htmx.org'
