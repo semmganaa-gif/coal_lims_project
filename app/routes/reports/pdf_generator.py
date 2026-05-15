@@ -11,6 +11,7 @@ from flask import render_template, current_app, url_for, request
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -76,10 +77,14 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     from app.routes.reports.crud import get_next_report_number
 
     # Дээжүүд татах (microbiology, water & micro дээжүүд)
-    samples = Sample.query.filter(
-        Sample.id.in_(sample_ids),
-        Sample.lab_type.in_(['microbiology', 'water_chemistry'])
-    ).order_by(Sample.sample_date, Sample.id).all()
+    samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.id.in_(sample_ids),
+            Sample.lab_type.in_(['microbiology', 'water_chemistry']),
+        )
+        .order_by(Sample.sample_date, Sample.id)
+    ).scalars().all())
 
     if not samples:
         return None, "Sample not found"
@@ -90,7 +95,9 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     # Үр дүн татах
     results_data = []
     for sample in samples:
-        results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == sample.id)
+        ).scalars().all())
         results_data.append({
             'sample': sample,
             'results': {r.analysis_code: r for r in results if r.analysis_code}
@@ -145,12 +152,14 @@ def generate_water_coa(sample_id: int, created_by_id: int):
     from app.routes.reports.crud import get_next_report_number
     from app.labs.water_lab.chemistry.constants import ALL_WATER_PARAMS
 
-    sample = Sample.query.get(sample_id)
+    sample = db.session.get(Sample, sample_id)
     if not sample:
         return None, 'Дээж олдсонгүй'
 
     # ── Бүх үр дүн (хими + микро) ──
-    all_results = AnalysisResult.query.filter_by(sample_id=sample_id).all()
+    all_results = list(db.session.execute(
+        select(AnalysisResult).where(AnalysisResult.sample_id == sample_id)
+    ).scalars().all())
     results_by_code = {r.analysis_code: r for r in all_results}
 
     # ── Химийн үр дүнгийн мөрүүд ──
@@ -316,10 +325,14 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
     """Усны химийн тайлан үүсгэх."""
     from app.routes.reports.crud import get_next_report_number
 
-    samples = Sample.query.filter(
-        Sample.id.in_(sample_ids),
-        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
-    ).order_by(Sample.sample_date, Sample.id).all()
+    samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.id.in_(sample_ids),
+            Sample.lab_type.in_(['water_chemistry', 'microbiology']),
+        )
+        .order_by(Sample.sample_date, Sample.id)
+    ).scalars().all())
 
     if not samples:
         return None, "Sample not found"
@@ -328,7 +341,9 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
 
     results_data = []
     for sample in samples:
-        results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == sample.id)
+        ).scalars().all())
         results_data.append({
             'sample': sample,
             'results': {r.analysis_code: r for r in results if r.analysis_code}
@@ -370,10 +385,14 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
     """Нүүрсний тайлан үүсгэх."""
     from app.routes.reports.crud import get_next_report_number
 
-    samples = Sample.query.filter(
-        Sample.id.in_(sample_ids),
-        Sample.lab_type == 'coal'
-    ).order_by(Sample.sample_date, Sample.id).all()
+    samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.id.in_(sample_ids),
+            Sample.lab_type == 'coal',
+        )
+        .order_by(Sample.sample_date, Sample.id)
+    ).scalars().all())
 
     if not samples:
         return None, "Sample not found"
@@ -382,7 +401,9 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
 
     results_data = []
     for sample in samples:
-        results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == sample.id)
+        ).scalars().all())
         results_data.append({
             'sample': sample,
             'results': {r.analysis_code: r for r in results if r.analysis_code}
@@ -466,11 +487,15 @@ def generate_pdf_file(report, samples, results_data):
 
 def regenerate_pdf(report):
     """Баталгаажуулсан тайлангийн PDF дахин үүсгэх (гарын үсэгтэй)."""
-    samples = Sample.query.filter(Sample.id.in_(report.sample_ids or [])).all()
+    samples = list(db.session.execute(
+        select(Sample).where(Sample.id.in_(report.sample_ids or []))
+    ).scalars().all())
 
     results_data = []
     for sample in samples:
-        results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == sample.id)
+        ).scalars().all())
         results_data.append({
             'sample': sample,
             'results': {r.analysis_code: r for r in results if r.analysis_code}

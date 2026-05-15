@@ -9,7 +9,7 @@ from collections import defaultdict, OrderedDict
 
 from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, select
 
 from app import db
 from app.models import Sample, AnalysisResult
@@ -90,57 +90,69 @@ def micro_dashboard():
     year_start = datetime(year, 1, 1)
     year_end = datetime(year + 1, 1, 1)
 
-    samples_month = Sample.query.filter(
-        Sample.lab_type.in_(_MICRO_LAB_TYPES),
-        Sample.received_date >= month_start.date(),
-        Sample.received_date < month_end.date()
-    ).count()
+    samples_month = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type.in_(_MICRO_LAB_TYPES),
+            Sample.received_date >= month_start.date(),
+            Sample.received_date < month_end.date(),
+        )
+    ).scalar_one()
 
-    samples_year = Sample.query.filter(
-        Sample.lab_type.in_(_MICRO_LAB_TYPES),
-        Sample.received_date >= year_start.date(),
-        Sample.received_date < year_end.date()
-    ).count()
+    samples_year = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type.in_(_MICRO_LAB_TYPES),
+            Sample.received_date >= year_start.date(),
+            Sample.received_date < year_end.date(),
+        )
+    ).scalar_one()
 
-    analyses_month = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_MICRO_LAB_TYPES),
-        AnalysisResult.analysis_code.in_(_MICRO_CODES),
-        AnalysisResult.created_at >= month_start,
-        AnalysisResult.created_at < month_end
-    ).count()
+    analyses_month = db.session.execute(
+        select(func.count(AnalysisResult.id))
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .where(
+            Sample.lab_type.in_(_MICRO_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(_MICRO_CODES),
+            AnalysisResult.created_at >= month_start,
+            AnalysisResult.created_at < month_end,
+        )
+    ).scalar_one()
 
-    analyses_year = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_MICRO_LAB_TYPES),
-        AnalysisResult.analysis_code.in_(_MICRO_CODES),
-        AnalysisResult.created_at >= year_start,
-        AnalysisResult.created_at < year_end
-    ).count()
+    analyses_year = db.session.execute(
+        select(func.count(AnalysisResult.id))
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .where(
+            Sample.lab_type.in_(_MICRO_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(_MICRO_CODES),
+            AnalysisResult.created_at >= year_start,
+            AnalysisResult.created_at < year_end,
+        )
+    ).scalar_one()
 
     cat_counts = []
     cat_labels = {'MICRO_WATER': 'Ус', 'MICRO_AIR': 'Агаар', 'MICRO_SWAB': 'Арчдас'}
     for code in _MICRO_CODES:
-        cnt = AnalysisResult.query.join(
-            Sample, Sample.id == AnalysisResult.sample_id
-        ).filter(
-            Sample.lab_type.in_(_MICRO_LAB_TYPES),
-            AnalysisResult.analysis_code == code,
-            AnalysisResult.created_at >= year_start,
-            AnalysisResult.created_at < year_end
-        ).count()
+        cnt = db.session.execute(
+            select(func.count(AnalysisResult.id))
+            .join(Sample, Sample.id == AnalysisResult.sample_id)
+            .where(
+                Sample.lab_type.in_(_MICRO_LAB_TYPES),
+                AnalysisResult.analysis_code == code,
+                AnalysisResult.created_at >= year_start,
+                AnalysisResult.created_at < year_end,
+            )
+        ).scalar_one()
         cat_counts.append({'label': cat_labels.get(code, code), 'count': cnt})
 
-    all_results = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_MICRO_LAB_TYPES),
-        AnalysisResult.analysis_code.in_(_MICRO_CODES),
-        AnalysisResult.created_at >= year_start,
-        AnalysisResult.created_at < year_end
-    ).all()
+    all_results = list(db.session.execute(
+        select(AnalysisResult)
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .where(
+            Sample.lab_type.in_(_MICRO_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(_MICRO_CODES),
+            AnalysisResult.created_at >= year_start,
+            AnalysisResult.created_at < year_end,
+        )
+    ).scalars().all())
 
     # MNS limits per analysis code and field
     _LIMITS = {
@@ -196,14 +208,16 @@ def micro_dashboard():
             y -= 1
         m_start = datetime(y, m, 1)
         m_end = datetime(y, m + 1, 1) if m < 12 else datetime(y + 1, 1, 1)
-        cnt = AnalysisResult.query.join(
-            Sample, Sample.id == AnalysisResult.sample_id
-        ).filter(
-            Sample.lab_type.in_(_MICRO_LAB_TYPES),
-            AnalysisResult.analysis_code.in_(_MICRO_CODES),
-            AnalysisResult.created_at >= m_start,
-            AnalysisResult.created_at < m_end
-        ).count()
+        cnt = db.session.execute(
+            select(func.count(AnalysisResult.id))
+            .join(Sample, Sample.id == AnalysisResult.sample_id)
+            .where(
+                Sample.lab_type.in_(_MICRO_LAB_TYPES),
+                AnalysisResult.analysis_code.in_(_MICRO_CODES),
+                AnalysisResult.created_at >= m_start,
+                AnalysisResult.created_at < m_end,
+            )
+        ).scalar_one()
         monthly_stats.append({'month': m, 'year': y, 'label': f'{m}-р сар', 'count': cnt})
 
     return render_template(
@@ -412,9 +426,13 @@ def micro_monthly_plan():
     weeks = [{'week': w, 'start': s, 'end': e, 'days': (e - s).days + 1}
              for w, s, e in weeks_raw]
 
-    plans_db = M.MonthlyPlan.query.filter_by(year=year, month=month).filter(
-        M.MonthlyPlan.client_name.in_(_MICRO_CODES)
-    ).all()
+    plans_db = list(db.session.execute(
+        select(M.MonthlyPlan).where(
+            M.MonthlyPlan.year == year,
+            M.MonthlyPlan.month == month,
+            M.MonthlyPlan.client_name.in_(_MICRO_CODES),
+        )
+    ).scalars().all())
     plans = {}
     for p in plans_db:
         key = f"{p.client_name}|{p.sample_type}|{p.week}"
@@ -464,7 +482,12 @@ def micro_monthly_plan():
         grand_total['plan'] += cat_total['plan']
         grand_total['perf'] += cat_total['perf']
 
-    staff_settings = M.StaffSettings.query.filter_by(year=year, month=month).first()
+    staff_settings = db.session.execute(
+        select(M.StaffSettings).where(
+            M.StaffSettings.year == year,
+            M.StaffSettings.month == month,
+        )
+    ).scalar_one_or_none()
     staff_count = staff_settings.preparers if staff_settings else 3
 
     return render_template(
@@ -487,9 +510,13 @@ def api_get_monthly_plan():
     month = request.args.get('month', type=int)
     if not year or not month:
         return jsonify({'error': 'year and month required'}), 400
-    plans = M.MonthlyPlan.query.filter_by(year=year, month=month).filter(
-        M.MonthlyPlan.client_name.in_(_MICRO_CODES)
-    ).all()
+    plans = list(db.session.execute(
+        select(M.MonthlyPlan).where(
+            M.MonthlyPlan.year == year,
+            M.MonthlyPlan.month == month,
+            M.MonthlyPlan.client_name.in_(_MICRO_CODES),
+        )
+    ).scalars().all())
     result = {}
     for p in plans:
         result[f"{p.client_name}|{p.sample_type}|{p.week}"] = p.planned_count
@@ -518,10 +545,15 @@ def api_save_monthly_plan():
             continue
         client_name, sample_type, week = parts
         week = int(week)
-        existing = M.MonthlyPlan.query.filter_by(
-            year=year, month=month, week=week,
-            client_name=client_name, sample_type=sample_type
-        ).first()
+        existing = db.session.execute(
+            select(M.MonthlyPlan).where(
+                M.MonthlyPlan.year == year,
+                M.MonthlyPlan.month == month,
+                M.MonthlyPlan.week == week,
+                M.MonthlyPlan.client_name == client_name,
+                M.MonthlyPlan.sample_type == sample_type,
+            )
+        ).scalar_one_or_none()
         if existing:
             existing.planned_count = planned_count
             existing.updated_at = now_local()
@@ -578,7 +610,12 @@ def api_save_staff():
     if not year or not month:
         return jsonify({'error': 'year and month required'}), 400
 
-    existing = M.StaffSettings.query.filter_by(year=year, month=month).first()
+    existing = db.session.execute(
+        select(M.StaffSettings).where(
+            M.StaffSettings.year == year,
+            M.StaffSettings.month == month,
+        )
+    ).scalar_one_or_none()
     if existing:
         existing.preparers = count
         existing.updated_at = now_local()

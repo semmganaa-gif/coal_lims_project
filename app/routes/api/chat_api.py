@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
 from app.repositories.chat_repository import ChatMessageRepository
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from app.utils.security import escape_like_pattern
 
@@ -88,31 +88,42 @@ def register_routes(bp):
         contacts = []
 
         if current_user.role in ('chemist', 'prep'):
-            users = User.query.filter(
-                User.role.in_(['senior', 'admin']),
-                User.id != current_user.id
-            ).all()
+            users = list(db.session.execute(
+                select(User).where(
+                    User.role.in_(['senior', 'admin']),
+                    User.id != current_user.id,
+                )
+            ).scalars().all())
         else:
-            users = User.query.filter(
-                User.role.in_(['chemist', 'prep', 'senior', 'admin']),
-                User.id != current_user.id
-            ).all()
+            users = list(db.session.execute(
+                select(User).where(
+                    User.role.in_(['chemist', 'prep', 'senior', 'admin']),
+                    User.id != current_user.id,
+                )
+            ).scalars().all())
 
         for user in users:
-            unread_count = ChatMessage.query.filter(
-                ChatMessage.sender_id == user.id,
-                ChatMessage.receiver_id == current_user.id,
-                ChatMessage.read_at.is_(None),
-                ChatMessage.is_deleted.is_(False)
-            ).count()
+            unread_count = db.session.execute(
+                select(func.count(ChatMessage.id)).where(
+                    ChatMessage.sender_id == user.id,
+                    ChatMessage.receiver_id == current_user.id,
+                    ChatMessage.read_at.is_(None),
+                    ChatMessage.is_deleted.is_(False),
+                )
+            ).scalar_one()
 
-            last_msg = ChatMessage.query.filter(
-                or_(
-                    and_(ChatMessage.sender_id == user.id, ChatMessage.receiver_id == current_user.id),
-                    and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user.id)
-                ),
-                ChatMessage.is_deleted.is_(False)
-            ).order_by(ChatMessage.sent_at.desc()).first()
+            last_msg = db.session.execute(
+                select(ChatMessage)
+                .where(
+                    or_(
+                        and_(ChatMessage.sender_id == user.id, ChatMessage.receiver_id == current_user.id),
+                        and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user.id),
+                    ),
+                    ChatMessage.is_deleted.is_(False),
+                )
+                .order_by(ChatMessage.sent_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
 
             online_status = db.session.get(UserOnlineStatus, user.id)
             is_online = online_status.is_online if online_status else False
@@ -139,32 +150,32 @@ def register_routes(bp):
         per_page = min(request.args.get('per_page', 50, type=int), 200)
         search = request.args.get('search', '').strip()
 
-        query = ChatMessage.query.filter(
+        stmt = select(ChatMessage).where(
             or_(
                 and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user_id),
-                and_(ChatMessage.sender_id == user_id, ChatMessage.receiver_id == current_user.id)
+                and_(ChatMessage.sender_id == user_id, ChatMessage.receiver_id == current_user.id),
             ),
-            ChatMessage.is_deleted.is_(False)
+            ChatMessage.is_deleted.is_(False),
         )
 
         # Хайлт
         if search:
             safe_search = escape_like_pattern(search)
-            query = query.filter(ChatMessage.message.ilike(f'%{safe_search}%'))
+            stmt = stmt.where(ChatMessage.message.ilike(f'%{safe_search}%'))
 
-        messages = query.order_by(ChatMessage.sent_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
+        messages = db.paginate(
+            stmt.order_by(ChatMessage.sent_at.desc()),
+            page=page, per_page=per_page, error_out=False,
         )
 
         # Mark as read
-        unread_ids = [
-            row.id for row in
-            ChatMessage.query.filter(
+        unread_ids = list(db.session.execute(
+            select(ChatMessage.id).where(
                 ChatMessage.sender_id == user_id,
                 ChatMessage.receiver_id == current_user.id,
                 ChatMessage.read_at.is_(None),
-            ).with_entities(ChatMessage.id).all()
-        ]
+            )
+        ).scalars().all())
         if unread_ids:
             try:
                 ChatMessageRepository.mark_as_read(unread_ids, commit=True)
@@ -191,24 +202,26 @@ def register_routes(bp):
             return jsonify({'messages': []})
 
         safe_query_text = escape_like_pattern(query_text)
-        q = ChatMessage.query.filter(
+        stmt = select(ChatMessage).where(
             ChatMessage.message.ilike(f'%{safe_query_text}%'),
             ChatMessage.is_deleted.is_(False),
             or_(
                 ChatMessage.sender_id == current_user.id,
-                ChatMessage.receiver_id == current_user.id
-            )
+                ChatMessage.receiver_id == current_user.id,
+            ),
         )
 
         if user_id:
-            q = q.filter(
+            stmt = stmt.where(
                 or_(
                     and_(ChatMessage.sender_id == user_id, ChatMessage.receiver_id == current_user.id),
-                    and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user_id)
+                    and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user_id),
                 )
             )
 
-        messages = q.order_by(ChatMessage.sent_at.desc()).limit(50).all()
+        messages = list(db.session.execute(
+            stmt.order_by(ChatMessage.sent_at.desc()).limit(50)
+        ).scalars().all())
 
         return jsonify({
             'messages': [m.to_dict() for m in messages],
@@ -219,11 +232,13 @@ def register_routes(bp):
     @login_required
     async def get_unread_count():
         """Нийт уншаагүй мессежийн тоо"""
-        count = ChatMessage.query.filter(
-            ChatMessage.receiver_id == current_user.id,
-            ChatMessage.read_at.is_(None),
-            ChatMessage.is_deleted.is_(False)
-        ).count()
+        count = db.session.execute(
+            select(func.count(ChatMessage.id)).where(
+                ChatMessage.receiver_id == current_user.id,
+                ChatMessage.read_at.is_(None),
+                ChatMessage.is_deleted.is_(False),
+            )
+        ).scalar_one()
         return jsonify({'unread_count': count})
 
     @bp.route("/chat/upload", methods=["POST"])
@@ -287,13 +302,18 @@ def register_routes(bp):
             return jsonify({'samples': []})
 
         safe_query = escape_like_pattern(query)
-        samples = Sample.query.filter(
-            or_(
-                Sample.sample_code.ilike(f'%{safe_query}%'),
-                Sample.client_name.ilike(f'%{safe_query}%'),
-                Sample.sample_type.ilike(f'%{safe_query}%')
+        samples = list(db.session.execute(
+            select(Sample)
+            .where(
+                or_(
+                    Sample.sample_code.ilike(f'%{safe_query}%'),
+                    Sample.client_name.ilike(f'%{safe_query}%'),
+                    Sample.sample_type.ilike(f'%{safe_query}%'),
+                )
             )
-        ).order_by(Sample.id.desc()).limit(20).all()
+            .order_by(Sample.id.desc())
+            .limit(20)
+        ).scalars().all())
 
         return jsonify({
             'samples': [{
@@ -327,10 +347,15 @@ def register_routes(bp):
     @login_required
     async def get_broadcasts():
         """Broadcast зарлалууд"""
-        broadcasts = ChatMessage.query.filter(
-            ChatMessage.is_broadcast,
-            ChatMessage.is_deleted.is_(False)
-        ).order_by(ChatMessage.sent_at.desc()).limit(20).all()
+        broadcasts = list(db.session.execute(
+            select(ChatMessage)
+            .where(
+                ChatMessage.is_broadcast,
+                ChatMessage.is_deleted.is_(False),
+            )
+            .order_by(ChatMessage.sent_at.desc())
+            .limit(20)
+        ).scalars().all())
 
         return jsonify({
             'broadcasts': [b.to_dict() for b in broadcasts]
