@@ -121,9 +121,9 @@ flask license clear-tamper                   # tampering flag арилгах
 flask license generate --company X --expiry YYYY-MM-DD
 ```
 
-## Архитектурын төлөв (2026-05-14 байдлаар)
+## Архитектурын төлөв (2026-05-15 байдлаар)
 
-### ✅ ДУУССАН — Sprint 1, 2, 3, 4, 5 + test cleanup
+### ✅ ДУУССАН — Sprint 1, 2, 3, 4, 5 + Phase 4 (SA 2.0) + test cleanup
 
 **Sprint 1 (Security/CSP):** S1.1a-e, S1.3, S1.4 (өмнө хийсэн)
 
@@ -176,11 +176,6 @@ flask license generate --company X --expiry YYYY-MM-DD
 - Root cause: `get_locale` request context, LazyString → DB binding, legacy
   'water' lab_type, workflow mismatch, test fixture issues
 
-### 🔜 Үлдсэн ажил
-
-- **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
-  memory + partial-failure tolerance), `@transactional` applicable биш.
-
 ### ✅ Sprint 4 closeout (2026-05-15)
 
 - **`api/analysis_save.py`** — `db.session.commit()` ба StaleDataError/
@@ -191,6 +186,54 @@ flask license generate --company X --expiry YYYY-MM-DD
   _save_equipment_with_audit_atomic` (@transactional) + public
   `save_equipment_with_audit` translator-аар орлуулсан. Route helper нь
   одоо service дуудаад зөвхөн status-аар flash шиднэ.
+
+### ✅ Phase 4 — SQLAlchemy 2.0 native API миграц (2026-05-15)
+
+Legacy `Model.query.filter(...)` → modern `db.session.execute(select(Model).
+where(...))` бүхэлд нь шилжсэн. Зорилго: SA 2.0 deprecation warning арилгах,
+explicit session API-аар concurrent-safe + thread-pool friendly код.
+
+**Хамрах хүрээ — 86 файл, ~370 occurrence:**
+- Repository layer — 22 файл (`791a3fe`)
+- Service layer — 12 файл (`97121c4`)
+- Routes (4 batch) — 49 файл, ~165 occurrence (`556d900`, `49e1efc`,
+  `a35b31f`, `46c1765`)
+- Forms / Tasks / Utils — 4 файл (`46ab809`)
+
+**Pattern:**
+```python
+# Legacy (Flask-SQLAlchemy implicit query)
+items = Model.query.filter(Model.col == x).all()
+count = Model.query.filter_by(...).count()
+obj = Model.query.get(id)
+
+# Modern (SA 2.0 native)
+items = list(db.session.execute(select(Model).where(Model.col == x)).scalars().all())
+count = db.session.execute(select(func.count(Model.id)).where(...)).scalar_one()
+obj = db.session.get(Model, id)
+```
+
+**Lab base helper-уудын төрөл өөрчилсөн:**
+- `app/labs/base.py:sample_query()` → `Query` биш `Select` буцаана
+- `app/labs/petrography/routes.py:_pe_samples()` адил `Select`
+- Caller-ууд `db.session.execute(stmt.order_by(...).limit(...)).scalars().all()`
+- Count-д `stmt.with_only_columns(func.count(Sample.id)).order_by(None)`
+
+**⚠️ Зориудаар үлдсэн (5 occurrence):**
+- `app/services/analysis_workflow.py` дахь `AnalysisResult.query.filter_by(
+  ...).with_for_update().first()` + `Sample.query.filter(...)` —
+  `tests/test_services_analysis_workflow.py` module-level mock-той гүнзгий
+  холбоотой (26 unit test rewrite). Дараа integration test болгож шилжүүлбэл
+  засна.
+- `app/services/import_service.py` — Batch commit pattern зориудаар үлдсэн.
+
+### 🔜 Үлдсэн ажил
+
+- **`analysis_workflow.py`-ийн 5 query** — Test mock decoupling шаардлагатай.
+- **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
+  memory + partial-failure tolerance), `@transactional` applicable биш.
+- **Phase 5 polish** (AUDIT_SUMMARY_2026_05_14) — 47 nit + 53 low fixes:
+  stale comment cleanup, wildcard import тойрох, pagination tuning гэх мэт.
 
 ## Conventions
 
@@ -231,6 +274,13 @@ flask license generate --company X --expiry YYYY-MM-DD
   `app/utils/license_protection.py:_log_event`-ээс бичигдэнэ (commit `b94d34c`).
   Integration тест: `tests/unit/test_audit.py::TestFileLoggers`. `logs/`
   фолдер хуучин — `instance/logs/` бол active path.
+- **SA 2.0 query API:** Шинэ кодод `Model.query.filter(...)` бичих
+  ХОРИОТОЙ. `db.session.execute(select(Model).where(...)).scalars().all()`
+  pattern-аар бичнэ. `.first()` → `.scalars().first()` эсвэл
+  `.scalar_one_or_none()`, `.get(id)` → `db.session.get(Model, id)`,
+  `.count()` → `select(func.count(Model.id))` + `.scalar_one()`. Exception:
+  `analysis_workflow.py`-ийн 5 газар + `import_service.py` (mocking болон
+  batch commit-ийн улмаас).
 
 ## Шинэ session-д юу уншихыг зөвлөнө
 
