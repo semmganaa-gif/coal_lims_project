@@ -3,6 +3,10 @@ import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  // Flask нь bundle-ыг `/static/dist/` дор үйлчилнэ. Энэ base-гүй бол built
+  // CSS-д `url(/assets/font.woff2)` гэж бичигдээд 404 алдах.
+  base: '/static/dist/',
+
   plugins: [tailwindcss()],
 
   server: {

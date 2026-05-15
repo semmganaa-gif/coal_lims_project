@@ -147,3 +147,15 @@
 .htmx-request.htmx-indicator {
   opacity: 1;
 }
+
+/*
+ * ---- Bootstrap × Tailwind class collision: .collapse ----
+ * Tailwind v4 нь template-д `class="collapse"` олж байгаад `visibility:collapse`
+ * утилит автоматаар generate хийдэг. Bootstrap-ийн `.collapse` нь component
+ * (display:none ба JS toggle pattern) — visibility:collapse нь child element-
+ * үүдийг inherit-ээр invisible болгож navbar items-ийг алга болгож байсан.
+ * Bootstrap-ийн pattern-ыг хүндлэхийн тулд утилитыг буцаагаж reset хийнэ.
+ */
+.collapse {
+  visibility: visible;
+}
