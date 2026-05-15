@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Optional
 
+from sqlalchemy import func, select
+
 from app import db
 from app.models import AnalysisResult, Sample
 from app.repositories import AnalysisResultRepository
@@ -68,22 +70,27 @@ def query_samples_datatable(
         DataTableResult объект
     """
     length = min(length, 1000)
-    q = Sample.query.filter(Sample.lab_type == "coal")
+    stmt = select(Sample).where(Sample.lab_type == "coal")
 
     # Date range filter
-    q = _apply_date_filter(q, date_start, date_end)
+    stmt = _apply_date_filter(stmt, date_start, date_end)
 
     # Column filters
-    q = _apply_column_filters(q, column_search)
+    stmt = _apply_column_filters(stmt, column_search)
 
-    records_total = q.count()
+    # Count query (filter-тэй ижил)
+    count_stmt = (
+        select(func.count())
+        .select_from(stmt.subquery())
+    )
+    records_total = db.session.execute(count_stmt).scalar_one()
 
-    samples = (
-        q.order_by(Sample.received_date.desc())
+    samples_stmt = (
+        stmt.order_by(Sample.received_date.desc())
         .offset(start)
         .limit(length)
-        .all()
     )
+    samples = list(db.session.execute(samples_stmt).scalars().all())
 
     # Status map (нэг query-ээр бүх дээжүүдийн статус)
     sample_ids = [s.id for s in samples]
@@ -100,23 +107,23 @@ def query_samples_datatable(
     )
 
 
-def _apply_date_filter(q, date_start: Optional[str], date_end: Optional[str]):
-    """Date range filter."""
+def _apply_date_filter(stmt, date_start: Optional[str], date_end: Optional[str]):
+    """Date range filter (`select()` `Select` object).”"""
     if date_start:
         try:
-            q = q.filter(Sample.received_date >= datetime.fromisoformat(date_start))
+            stmt = stmt.where(Sample.received_date >= datetime.fromisoformat(date_start))
         except ValueError:
             pass
     if date_end:
         try:
-            q = q.filter(Sample.received_date <= datetime.fromisoformat(date_end))
+            stmt = stmt.where(Sample.received_date <= datetime.fromisoformat(date_end))
         except ValueError:
             pass
-    return q
+    return stmt
 
 
-def _apply_column_filters(q, column_search: dict[int, str]):
-    """Column-тус бүрийн filter."""
+def _apply_column_filters(stmt, column_search: dict[int, str]):
+    """Column-тус бүрийн filter (Select object)."""
     for idx, val in column_search.items():
         if not val:
             continue
@@ -124,7 +131,7 @@ def _apply_column_filters(q, column_search: dict[int, str]):
         # ID column (exact int match)
         if idx == 1:
             try:
-                q = q.filter(Sample.id == int(val))
+                stmt = stmt.where(Sample.id == int(val))
             except ValueError:
                 pass
             continue
@@ -132,7 +139,7 @@ def _apply_column_filters(q, column_search: dict[int, str]):
         # Weight column (exact float match)
         if idx == 11:
             try:
-                q = q.filter(Sample.weight == float(val))
+                stmt = stmt.where(Sample.weight == float(val))
             except ValueError:
                 pass
             continue
@@ -143,9 +150,9 @@ def _apply_column_filters(q, column_search: dict[int, str]):
             safe_val = escape_like_pattern(val)
             col = getattr(Sample, attr_name, None)
             if col is not None:
-                q = q.filter(col.ilike(f"%{safe_val}%"))
+                stmt = stmt.where(col.ilike(f"%{safe_val}%"))
 
-    return q
+    return stmt
 
 
 def _build_sample_row(s: Sample, status_map: dict[int, set[str]]) -> list:

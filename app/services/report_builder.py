@@ -34,7 +34,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import func, and_, or_, cast, String
+from sqlalchemy import func, and_, or_, cast, select, String
 from sqlalchemy.orm import joinedload
 
 from app.bootstrap.extensions import db
@@ -352,10 +352,12 @@ def save_report_template(name: str, config: dict, user_id: int,
     """Save report template to SystemSetting."""
     config["name"] = name
 
-    setting = SystemSetting.query.filter_by(
-        category="report_template",
-        key=name,
-    ).first()
+    setting = db.session.execute(
+        select(SystemSetting).where(
+            SystemSetting.category == "report_template",
+            SystemSetting.key == name,
+        )
+    ).scalar_one_or_none()
 
     if setting:
         setting.value = json.dumps(config, ensure_ascii=False)
@@ -378,11 +380,13 @@ def save_report_template(name: str, config: dict, user_id: int,
 
 def get_report_template(name: str) -> Optional[dict]:
     """Get saved report template."""
-    setting = SystemSetting.query.filter_by(
-        category="report_template",
-        key=name,
-        is_active=True,
-    ).first()
+    setting = db.session.execute(
+        select(SystemSetting).where(
+            SystemSetting.category == "report_template",
+            SystemSetting.key == name,
+            SystemSetting.is_active.is_(True),
+        )
+    ).scalar_one_or_none()
 
     if not setting:
         return None
@@ -395,10 +399,14 @@ def get_report_template(name: str) -> Optional[dict]:
 
 def list_report_templates() -> list[dict]:
     """List all saved report templates."""
-    settings = SystemSetting.query.filter_by(
-        category="report_template",
-        is_active=True,
-    ).order_by(SystemSetting.sort_order, SystemSetting.key).all()
+    settings = list(db.session.execute(
+        select(SystemSetting)
+        .where(
+            SystemSetting.category == "report_template",
+            SystemSetting.is_active.is_(True),
+        )
+        .order_by(SystemSetting.sort_order, SystemSetting.key)
+    ).scalars().all())
 
     result = []
     for s in settings:
@@ -423,10 +431,12 @@ def list_report_templates() -> list[dict]:
 @transactional()
 def delete_report_template(name: str) -> bool:
     """Soft-delete report template."""
-    setting = SystemSetting.query.filter_by(
-        category="report_template",
-        key=name,
-    ).first()
+    setting = db.session.execute(
+        select(SystemSetting).where(
+            SystemSetting.category == "report_template",
+            SystemSetting.key == name,
+        )
+    ).scalar_one_or_none()
 
     if setting:
         setting.is_active = False

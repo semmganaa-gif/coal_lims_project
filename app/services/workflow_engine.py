@@ -45,6 +45,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from flask_babel import lazy_gettext as _l
+from sqlalchemy import select
 
 from app.bootstrap.extensions import db
 from app.models.settings import SystemSetting
@@ -290,11 +291,12 @@ class WorkflowEngine:
 
     def _load_config(self) -> dict:
         """Load from SystemSetting, fallback to defaults."""
-        setting = SystemSetting.query.filter_by(
-            category="workflow",
-            key=self.workflow_name,
-            is_active=True,
-        ).first()
+        stmt = select(SystemSetting).where(
+            SystemSetting.category == "workflow",
+            SystemSetting.key == self.workflow_name,
+            SystemSetting.is_active.is_(True),
+        )
+        setting = db.session.execute(stmt).scalar_one_or_none()
 
         if setting:
             try:
@@ -502,10 +504,12 @@ def _hook_check_sample_complete(context: dict):
     sample_id = context.get('sample_id')
     if not sample_id:
         return
-    pending = AnalysisResult.query.filter(
+    from sqlalchemy import func
+    pending_stmt = select(func.count(AnalysisResult.id)).where(
         AnalysisResult.sample_id == sample_id,
         AnalysisResult.status != 'approved',
-    ).count()
+    )
+    pending = db.session.execute(pending_stmt).scalar_one()
     if pending == 0:
         from app.models import Sample
         sample = db.session.get(Sample, sample_id)
@@ -552,10 +556,11 @@ def save_workflow_config(workflow_name: str, config: dict,
             raise ValueError(f"Transition 'to' state '{t['to']}' олдсонгүй")
 
     # Upsert
-    setting = SystemSetting.query.filter_by(
-        category="workflow",
-        key=workflow_name,
-    ).first()
+    stmt = select(SystemSetting).where(
+        SystemSetting.category == "workflow",
+        SystemSetting.key == workflow_name,
+    )
+    setting = db.session.execute(stmt).scalar_one_or_none()
 
     if setting:
         setting.value = json.dumps(config, ensure_ascii=False)
@@ -578,10 +583,11 @@ def save_workflow_config(workflow_name: str, config: dict,
 @transactional()
 def reset_workflow_config(workflow_name: str) -> bool:
     """Reset workflow to default by deactivating custom config."""
-    setting = SystemSetting.query.filter_by(
-        category="workflow",
-        key=workflow_name,
-    ).first()
+    stmt = select(SystemSetting).where(
+        SystemSetting.category == "workflow",
+        SystemSetting.key == workflow_name,
+    )
+    setting = db.session.execute(stmt).scalar_one_or_none()
 
     if setting:
         setting.is_active = False
@@ -592,9 +598,12 @@ def list_workflows() -> list[dict]:
     """List all available workflows with status."""
     result = []
     for name, default_config in DEFAULT_WORKFLOWS.items():
-        custom = SystemSetting.query.filter_by(
-            category="workflow", key=name, is_active=True
-        ).first()
+        cust_stmt = select(SystemSetting).where(
+            SystemSetting.category == "workflow",
+            SystemSetting.key == name,
+            SystemSetting.is_active.is_(True),
+        )
+        custom = db.session.execute(cust_stmt).scalar_one_or_none()
 
         result.append({
             "name": name,

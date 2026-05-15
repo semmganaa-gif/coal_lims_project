@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from sqlalchemy import and_, func, case
+from sqlalchemy import and_, func, case, select
 
 from app import db
 from app.models import Sample, AnalysisResult, SystemSetting
@@ -43,9 +43,15 @@ SLA_CONFIG_CATEGORY = "sla_config"
 
 def get_sla_config_all() -> list[dict]:
     """DB-д хадгалагдсан бүх SLA тохиргоог буцаах."""
-    settings = SystemSetting.query.filter_by(
-        category=SLA_CONFIG_CATEGORY, is_active=True
-    ).order_by(SystemSetting.sort_order, SystemSetting.key).all()
+    stmt = (
+        select(SystemSetting)
+        .where(
+            SystemSetting.category == SLA_CONFIG_CATEGORY,
+            SystemSetting.is_active.is_(True),
+        )
+        .order_by(SystemSetting.sort_order, SystemSetting.key)
+    )
+    settings = list(db.session.execute(stmt).scalars().all())
 
     result = []
     for s in settings:
@@ -65,9 +71,11 @@ def set_sla_config(client_name: str, sample_type: str, hours: int,
                    description: str = "", user_id: int = None) -> SystemSetting:
     """SLA тохиргоо хадгалах (upsert)."""
     key = f"{client_name}:{sample_type}" if sample_type else client_name
-    setting = SystemSetting.query.filter_by(
-        category=SLA_CONFIG_CATEGORY, key=key
-    ).first()
+    stmt = select(SystemSetting).where(
+        SystemSetting.category == SLA_CONFIG_CATEGORY,
+        SystemSetting.key == key,
+    )
+    setting = db.session.execute(stmt).scalar_one_or_none()
 
     if setting:
         setting.value = str(hours)
@@ -90,9 +98,11 @@ def set_sla_config(client_name: str, sample_type: str, hours: int,
 @transactional()
 def delete_sla_config(config_id: int) -> bool:
     """SLA тохиргоо устгах."""
-    setting = SystemSetting.query.filter_by(
-        id=config_id, category=SLA_CONFIG_CATEGORY
-    ).first()
+    stmt = select(SystemSetting).where(
+        SystemSetting.id == config_id,
+        SystemSetting.category == SLA_CONFIG_CATEGORY,
+    )
+    setting = db.session.execute(stmt).scalar_one_or_none()
     if not setting:
         return False
     db.session.delete(setting)
@@ -141,11 +151,12 @@ def get_default_sla_hours(client_name: str, sample_type: str = None) -> int:
     """
     # 1) client+type тусгай тохиргоо
     if sample_type:
-        specific = SystemSetting.query.filter_by(
-            category=SLA_CONFIG_CATEGORY,
-            key=f"{client_name}:{sample_type}",
-            is_active=True,
-        ).first()
+        stmt = select(SystemSetting).where(
+            SystemSetting.category == SLA_CONFIG_CATEGORY,
+            SystemSetting.key == f"{client_name}:{sample_type}",
+            SystemSetting.is_active.is_(True),
+        )
+        specific = db.session.execute(stmt).scalar_one_or_none()
         if specific:
             try:
                 return int(specific.value)
@@ -153,11 +164,12 @@ def get_default_sla_hours(client_name: str, sample_type: str = None) -> int:
                 pass
 
     # 2) client default
-    client_default = SystemSetting.query.filter_by(
-        category=SLA_CONFIG_CATEGORY,
-        key=client_name,
-        is_active=True,
-    ).first()
+    stmt = select(SystemSetting).where(
+        SystemSetting.category == SLA_CONFIG_CATEGORY,
+        SystemSetting.key == client_name,
+        SystemSetting.is_active.is_(True),
+    )
+    client_default = db.session.execute(stmt).scalar_one_or_none()
     if client_default:
         try:
             return int(client_default.value)
@@ -233,28 +245,32 @@ def get_sla_summary(lab_type: str = "coal") -> SLASummary:
     first_of_month = now.date().replace(day=1)
 
     # Active (archived/completed биш) дээжүүд
-    active = Sample.query.filter(
+    active_filter = and_(
         Sample.lab_type == lab_type,
         Sample.status.notin_(["archived", "completed"]),
     )
 
-    # due_date тохируулсан дээжүүд
-    with_sla = active.filter(Sample.due_date.isnot(None))
+    def _count(*conds) -> int:
+        stmt = select(func.count(Sample.id)).where(active_filter, *conds)
+        return db.session.execute(stmt).scalar_one()
 
-    overdue = with_sla.filter(Sample.due_date < now).count()
-    due_soon = with_sla.filter(
-        and_(Sample.due_date >= now, Sample.due_date <= soon_threshold)
-    ).count()
-    on_track = with_sla.filter(Sample.due_date > soon_threshold).count()
-    no_sla = active.filter(Sample.due_date.is_(None)).count()
+    # due_date тохируулсан дээжүүдийн тоо
+    overdue = _count(Sample.due_date.isnot(None), Sample.due_date < now)
+    due_soon = _count(
+        Sample.due_date.isnot(None),
+        and_(Sample.due_date >= now, Sample.due_date <= soon_threshold),
+    )
+    on_track = _count(Sample.due_date.isnot(None), Sample.due_date > soon_threshold)
+    no_sla = _count(Sample.due_date.is_(None))
 
     # Энэ сарын дуусгасан дээжүүдийн turnaround
-    completed_this_month = Sample.query.filter(
+    completed_stmt = select(Sample).where(
         Sample.lab_type == lab_type,
         Sample.completed_at.isnot(None),
         Sample.completed_at >= first_of_month,
         Sample.received_date.isnot(None),
-    ).all()
+    )
+    completed_this_month = list(db.session.execute(completed_stmt).scalars().all())
 
     turnaround_hours = []
     completed_on_time = 0
@@ -298,9 +314,9 @@ def get_overdue_samples(lab_type: str = "coal", limit: int = 100) -> list[Overdu
     """
     now = _now_naive()
 
-    samples = (
-        Sample.query
-        .filter(
+    stmt = (
+        select(Sample)
+        .where(
             Sample.lab_type == lab_type,
             Sample.status.notin_(["archived", "completed"]),
             Sample.due_date.isnot(None),
@@ -308,16 +324,17 @@ def get_overdue_samples(lab_type: str = "coal", limit: int = 100) -> list[Overdu
         )
         .order_by(Sample.due_date.asc())  # Хамгийн удаан хэтэрсэн нь эхэнд
         .limit(limit)
-        .all()
     )
+    samples = list(db.session.execute(stmt).scalars().all())
 
     result = []
     for s in samples:
         # Pending шинжилгээний тоо
-        pending = AnalysisResult.query.filter(
+        pending_stmt = select(func.count(AnalysisResult.id)).where(
             AnalysisResult.sample_id == s.id,
             AnalysisResult.status.in_(["pending_review", "rejected"]),
-        ).count()
+        )
+        pending = db.session.execute(pending_stmt).scalar_one()
 
         overdue_hours = (now - s.due_date).total_seconds() / 3600
 
@@ -357,9 +374,9 @@ def get_due_soon_samples(
     now = _now_naive()
     threshold = now + timedelta(hours=hours)
 
-    samples = (
-        Sample.query
-        .filter(
+    stmt = (
+        select(Sample)
+        .where(
             Sample.lab_type == lab_type,
             Sample.status.notin_(["archived", "completed"]),
             Sample.due_date.isnot(None),
@@ -368,8 +385,8 @@ def get_due_soon_samples(
         )
         .order_by(Sample.due_date.asc())
         .limit(limit)
-        .all()
     )
+    samples = list(db.session.execute(stmt).scalars().all())
 
     return [
         {
@@ -395,9 +412,9 @@ def get_on_track_samples(
     now = _now_naive()
     threshold = now + timedelta(hours=24)
 
-    samples = (
-        Sample.query
-        .filter(
+    stmt = (
+        select(Sample)
+        .where(
             Sample.lab_type == lab_type,
             Sample.status.notin_(["archived", "completed"]),
             Sample.due_date.isnot(None),
@@ -405,8 +422,8 @@ def get_on_track_samples(
         )
         .order_by(Sample.due_date.asc())
         .limit(limit)
-        .all()
     )
+    samples = list(db.session.execute(stmt).scalars().all())
 
     return [
         {
@@ -433,12 +450,13 @@ def bulk_assign_sla(lab_type: str = "coal") -> int:
     Returns:
         Шинэчилсэн дээжний тоо
     """
-    samples = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.lab_type == lab_type,
         Sample.status.notin_(["archived", "completed"]),
         Sample.due_date.is_(None),
         Sample.received_date.isnot(None),
-    ).all()
+    )
+    samples = list(db.session.execute(stmt).scalars().all())
 
     count = 0
     for s in samples:

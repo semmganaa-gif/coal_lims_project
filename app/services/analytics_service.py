@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import and_, func, desc
+from sqlalchemy import and_, func, desc, select
 from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db
@@ -173,7 +173,9 @@ def detect_anomalies(samples: list, lookback_days: int = 90) -> list[Anomaly]:
     stats_cache = {}
 
     for sample in samples:
-        results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == sample.id)
+        ).scalars().all())
 
         for result in results:
             if result.final_result is None:
@@ -359,7 +361,9 @@ def calculate_quality_score(samples: list, anomalies: list = None) -> QualitySco
     total_results = 0
     approved_results = 0
     for s in samples:
-        results = AnalysisResult.query.filter_by(sample_id=s.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == s.id)
+        ).scalars().all())
         total_results += len(results)
         approved_results += sum(1 for r in results if r.status == "approved")
 
@@ -377,7 +381,9 @@ def calculate_quality_score(samples: list, anomalies: list = None) -> QualitySco
     # 3. TIMELINESS (20 оноо)
     on_time = 0
     for s in samples:
-        results = AnalysisResult.query.filter_by(sample_id=s.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == s.id)
+        ).scalars().all())
         if results:
             latest = max(r.created_at for r in results if r.created_at)
             if s.received_date:
@@ -513,7 +519,9 @@ def generate_insights(samples: list, anomalies: list = None,
     total = 0
     approved = 0
     for s in samples:
-        results = AnalysisResult.query.filter_by(sample_id=s.id).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(AnalysisResult.sample_id == s.id)
+        ).scalars().all())
         total += len(results)
         approved += sum(1 for r in results if r.status == "approved")
 
@@ -542,14 +550,14 @@ def get_full_analytics(hours_back: int = 2,
     now = now_local()
     start = now - timedelta(hours=hours_back)
 
-    query = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.received_date >= start,
         Sample.received_date <= now,
     )
     if client_name:
-        query = query.filter(Sample.client_name == client_name)
+        stmt = stmt.where(Sample.client_name == client_name)
 
-    samples = query.all()
+    samples = list(db.session.execute(stmt).scalars().all())
 
     # Anomalies
     anomalies = detect_anomalies(samples)
@@ -570,10 +578,12 @@ def get_full_analytics(hours_back: int = 2,
     shift_comp = _compare_shifts(samples)
 
     # Counts
-    analysis_count = sum(
-        AnalysisResult.query.filter_by(sample_id=s.id).count()
-        for s in samples
-    )
+    def _count_for_sample(s_id: int) -> int:
+        return db.session.execute(
+            select(func.count(AnalysisResult.id))
+            .where(AnalysisResult.sample_id == s_id)
+        ).scalar_one()
+    analysis_count = sum(_count_for_sample(s.id) for s in samples)
 
     return AnalyticsReport(
         timestamp=now.isoformat(),
@@ -701,9 +711,12 @@ def _compare_shifts(samples: list) -> dict:
         hour = s.received_date.hour
         is_day = 8 <= hour < 20
 
-        results = AnalysisResult.query.filter_by(
-            sample_id=s.id, status="approved"
-        ).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(
+                AnalysisResult.sample_id == s.id,
+                AnalysisResult.status == "approved",
+            )
+        ).scalars().all())
 
         for r in results:
             if r.final_result is None:

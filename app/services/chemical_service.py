@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_, select
 from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -85,13 +85,11 @@ def create_chemical_log(chemical_id: int, user_id: int, action: str,
 # Query / Filter Functions
 # =============================================================================
 
-def _apply_lab_filter(query, lab: str):
-    """Лабын шүүлтүүр нэмэх (shared helper)."""
+def _lab_conditions(lab: str) -> list:
+    """Лабын шүүлтүүрийн SQL conditions буцаах (select.where() дотор spread)."""
     if lab and lab != "all":
-        query = query.filter(
-            (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
-        )
-    return query
+        return [or_(Chemical.lab_type == lab, Chemical.lab_type == 'all')]
+    return []
 
 
 def get_chemical_list(lab: str = "all", category: str = "all",
@@ -101,30 +99,29 @@ def get_chemical_list(lab: str = "all", category: str = "all",
     Returns:
         List of chemical dicts (JSON-serializable).
     """
-    query = Chemical.query
-
-    query = _apply_lab_filter(query, lab)
+    stmt = select(Chemical).where(*_lab_conditions(lab))
 
     if category and category != "all":
-        query = query.filter(Chemical.category == category)
+        stmt = stmt.where(Chemical.category == category)
 
     if status and status != "all":
-        query = query.filter(Chemical.status == status)
+        stmt = stmt.where(Chemical.status == status)
 
     # View-specific filters
     if view == "expiring":
         warning_date = date.today() + timedelta(days=30)
-        query = query.filter(
+        stmt = stmt.where(
             Chemical.expiry_date <= warning_date,
             Chemical.status != 'disposed'
         )
     elif view == "low_stock":
-        query = query.filter(Chemical.status == 'low_stock')
+        stmt = stmt.where(Chemical.status == 'low_stock')
 
     if view != "disposed":
-        query = query.filter(Chemical.status != 'disposed')
+        stmt = stmt.where(Chemical.status != 'disposed')
 
-    chemicals_query = query.order_by(Chemical.name.asc()).all()
+    stmt = stmt.order_by(Chemical.name.asc())
+    chemicals_query = list(db.session.execute(stmt).scalars().all())
 
     return [_chemical_to_list_dict(c) for c in chemicals_query]
 
@@ -171,10 +168,14 @@ def _chemical_to_list_dict(c: Chemical) -> dict:
 
 def get_chemical_stats_summary() -> dict:
     """Нөөцийн дүн (list page sidebar)."""
+    def _count(*conds) -> int:
+        stmt = select(func.count(Chemical.id)).where(*conds)
+        return db.session.execute(stmt).scalar_one()
+
     return {
-        'total': Chemical.query.filter(Chemical.status != 'disposed').count(),
-        'low_stock': Chemical.query.filter(Chemical.status == 'low_stock').count(),
-        'expired': Chemical.query.filter(Chemical.status == 'expired').count(),
+        'total': _count(Chemical.status != 'disposed'),
+        'low_stock': _count(Chemical.status == 'low_stock'),
+        'expired': _count(Chemical.status == 'expired'),
     }
 
 
@@ -186,20 +187,19 @@ def get_chemical_api_list(lab: str = "all", category: str = "all",
     Returns:
         List of chemical dicts with expiry flags.
     """
-    query = Chemical.query
-
-    query = _apply_lab_filter(query, lab)
+    stmt = select(Chemical).where(*_lab_conditions(lab))
 
     if category and category != "all":
-        query = query.filter(Chemical.category == category)
+        stmt = stmt.where(Chemical.category == category)
 
     if status and status != "all":
-        query = query.filter(Chemical.status == status)
+        stmt = stmt.where(Chemical.status == status)
 
     if not include_disposed:
-        query = query.filter(Chemical.status != 'disposed')
+        stmt = stmt.where(Chemical.status != 'disposed')
 
-    chemicals = query.order_by(Chemical.name.asc()).limit(2000).all()
+    stmt = stmt.order_by(Chemical.name.asc()).limit(2000)
+    chemicals = list(db.session.execute(stmt).scalars().all())
     today = date.today()
     warning_date = today + timedelta(days=30)
 
@@ -238,9 +238,12 @@ def get_low_stock_chemicals(lab: str = "all") -> dict:
     Returns:
         {"count": int, "items": list[dict]}
     """
-    query = Chemical.query.filter(Chemical.status == 'low_stock')
-    query = _apply_lab_filter(query, lab)
-    chemicals = query.order_by(Chemical.name.asc()).all()
+    stmt = (
+        select(Chemical)
+        .where(Chemical.status == 'low_stock', *_lab_conditions(lab))
+        .order_by(Chemical.name.asc())
+    )
+    chemicals = list(db.session.execute(stmt).scalars().all())
 
     items = [{
         "id": c.id,
@@ -263,13 +266,17 @@ def get_expiring_chemicals(lab: str = "all", days: int = 30) -> dict:
     today = date.today()
     warning_date = today + timedelta(days=days)
 
-    query = Chemical.query.filter(
-        Chemical.expiry_date <= warning_date,
-        Chemical.expiry_date >= today,
-        Chemical.status != 'disposed'
+    stmt = (
+        select(Chemical)
+        .where(
+            Chemical.expiry_date <= warning_date,
+            Chemical.expiry_date >= today,
+            Chemical.status != 'disposed',
+            *_lab_conditions(lab),
+        )
+        .order_by(Chemical.expiry_date.asc())
     )
-    query = _apply_lab_filter(query, lab)
-    chemicals = query.order_by(Chemical.expiry_date.asc()).all()
+    chemicals = list(db.session.execute(stmt).scalars().all())
 
     items = [{
         "id": c.id,
@@ -297,14 +304,21 @@ def search_chemicals(q: str, lab: str = "all", limit: int = 20) -> list[dict]:
         return []
 
     safe_q = escape_like_pattern(q)
-    query = Chemical.query.filter(
-        Chemical.status != 'disposed',
-        (Chemical.name.ilike(f"%{safe_q}%") |
-         Chemical.formula.ilike(f"%{safe_q}%") |
-         Chemical.cas_number.ilike(f"%{safe_q}%"))
+    stmt = (
+        select(Chemical)
+        .where(
+            Chemical.status != 'disposed',
+            or_(
+                Chemical.name.ilike(f"%{safe_q}%"),
+                Chemical.formula.ilike(f"%{safe_q}%"),
+                Chemical.cas_number.ilike(f"%{safe_q}%"),
+            ),
+            *_lab_conditions(lab),
+        )
+        .order_by(Chemical.name.asc())
+        .limit(limit)
     )
-    query = _apply_lab_filter(query, lab)
-    chemicals = query.order_by(Chemical.name.asc()).limit(limit).all()
+    chemicals = list(db.session.execute(stmt).scalars().all())
 
     return [{
         "id": c.id,
@@ -406,20 +420,23 @@ def get_journal_rows(lab: str = "all", start_date: Optional[str] = None,
     Returns:
         List of row dicts for AG Grid.
     """
-    query = db.session.query(ChemicalUsage, Chemical).join(Chemical)
-
-    query = _apply_lab_filter(query, lab)
+    stmt = (
+        select(ChemicalUsage, Chemical)
+        .join(Chemical, ChemicalUsage.chemical_id == Chemical.id)
+        .where(*_lab_conditions(lab))
+    )
 
     if start_date:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        query = query.filter(ChemicalUsage.used_at >= start_dt)
+        stmt = stmt.where(ChemicalUsage.used_at >= start_dt)
 
     if end_date:
         end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         end_dt = end_dt.replace(hour=23, minute=59, second=59)
-        query = query.filter(ChemicalUsage.used_at <= end_dt)
+        stmt = stmt.where(ChemicalUsage.used_at <= end_dt)
 
-    usages = query.order_by(ChemicalUsage.used_at.desc()).limit(500).all()
+    stmt = stmt.order_by(ChemicalUsage.used_at.desc()).limit(500)
+    usages = list(db.session.execute(stmt).all())
 
     rows = []
     for usage, chemical in usages:
@@ -909,11 +926,11 @@ def get_expiring_soon_chemicals(lab_type: Optional[str] = None) -> list:
     Returns:
         list of Chemical objects
     """
-    q = Chemical.query.filter(
+    stmt = select(Chemical).where(
         Chemical.status.in_(['active', 'low_stock']),
         Chemical.expiry_date.isnot(None),
     )
     if lab_type:
-        q = q.filter(Chemical.lab_type.in_([lab_type, 'all']))
-    chemicals = q.all()
+        stmt = stmt.where(Chemical.lab_type.in_([lab_type, 'all']))
+    chemicals = list(db.session.execute(stmt).scalars().all())
     return [c for c in chemicals if c.is_expiring_soon()]

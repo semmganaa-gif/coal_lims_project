@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any, Optional
 
-from sqlalchemy import case, extract, func
+from sqlalchemy import case, extract, func, select
 
 from app import db
 from app.models import AnalysisResult, Sample
@@ -101,9 +101,12 @@ def get_dashboard_stats() -> DashboardStats:
     )
 
     # 5. Өнөөдрийн нэгдсэн статистик
-    today_samples = Sample.query.filter(
-        Sample.lab_type == "coal", func.date(Sample.received_date) == today
-    ).count()
+    today_samples = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type == "coal",
+            func.date(Sample.received_date) == today,
+        )
+    ).scalar_one()
 
     today_analyses = (
         db.session.query(func.count(AnalysisResult.id))
@@ -142,9 +145,12 @@ def _get_samples_by_day(today: date) -> list[dict]:
     result = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
-        count = Sample.query.filter(
-            Sample.lab_type == "coal", func.date(Sample.received_date) == day
-        ).count()
+        count = db.session.execute(
+            select(func.count(Sample.id)).where(
+                Sample.lab_type == "coal",
+                func.date(Sample.received_date) == day,
+            )
+        ).scalar_one()
         result.append({
             "date": day.strftime("%m/%d"),
             "day_name": day_names[day.weekday()],
@@ -223,25 +229,27 @@ def get_archive_tree(
     results_map: dict[int, dict] = {}
 
     if selected_client and selected_type:
-        query = db.session.query(Sample).filter(
+        stmt = select(Sample).where(
             Sample.status == "archived",
             Sample.lab_type == "coal",
             Sample.client_name == selected_client,
             Sample.sample_type == selected_type,
         )
         if selected_year:
-            query = query.filter(extract("year", Sample.received_date) == selected_year)
+            stmt = stmt.where(extract("year", Sample.received_date) == selected_year)
         if selected_month:
-            query = query.filter(extract("month", Sample.received_date) == selected_month)
+            stmt = stmt.where(extract("month", Sample.received_date) == selected_month)
 
-        samples = query.order_by(Sample.received_date.desc()).limit(500).all()
+        stmt = stmt.order_by(Sample.received_date.desc()).limit(500)
+        samples = list(db.session.execute(stmt).scalars().all())
 
         if samples:
             sample_ids = [s.id for s in samples]
-            all_results = AnalysisResult.query.filter(
+            results_stmt = select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(sample_ids),
                 AnalysisResult.status.in_(["approved", "pending_review"]),
-            ).all()
+            )
+            all_results = list(db.session.execute(results_stmt).scalars().all())
             for r in all_results:
                 results_map.setdefault(r.sample_id, {})[r.analysis_code] = {
                     "id": r.id,

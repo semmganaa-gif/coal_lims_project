@@ -19,6 +19,7 @@ from typing import Optional
 
 import sqlalchemy as sa
 from flask_babel import lazy_gettext as _l
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -468,9 +469,12 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
         if field_key.startswith('sla_hours[') and field_key.endswith(']'):
             sla_key = field_key[10:-1]  # extract "CHPP:2 hourly" from "sla_hours[CHPP:2 hourly]"
             val = (form_data.get(field_key) or '').strip()
-            existing = SystemSetting.query.filter_by(
-                category=SLA_CONFIG_CATEGORY, key=sla_key
-            ).first()
+            existing = db.session.execute(
+                select(SystemSetting).where(
+                    SystemSetting.category == SLA_CONFIG_CATEGORY,
+                    SystemSetting.key == sla_key,
+                )
+            ).scalar_one_or_none()
             if val:
                 try:
                     hours = int(val)

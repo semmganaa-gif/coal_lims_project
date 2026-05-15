@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from flask_babel import lazy_gettext as _l
 
@@ -837,37 +838,62 @@ def get_retention_context(lab_type: str = "coal", warning_days: int = 30) -> dic
     """
     today = date.today()
 
-    expired_samples = Sample.query.filter(
-        Sample.lab_type == lab_type,
-        Sample.retention_date < today,
-        Sample.disposal_date.is_(None),
-    ).order_by(Sample.retention_date.asc()).limit(200).all()
+    expired_samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.lab_type == lab_type,
+            Sample.retention_date < today,
+            Sample.disposal_date.is_(None),
+        )
+        .order_by(Sample.retention_date.asc())
+        .limit(200)
+    ).scalars().all())
 
-    upcoming_samples = Sample.query.filter(
-        Sample.lab_type == lab_type,
-        Sample.retention_date >= today,
-        Sample.retention_date <= today + timedelta(days=warning_days),
-        Sample.disposal_date.is_(None),
-    ).order_by(Sample.retention_date.asc()).limit(200).all()
+    upcoming_samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.lab_type == lab_type,
+            Sample.retention_date >= today,
+            Sample.retention_date <= today + timedelta(days=warning_days),
+            Sample.disposal_date.is_(None),
+        )
+        .order_by(Sample.retention_date.asc())
+        .limit(200)
+    ).scalars().all())
 
-    disposed_samples = Sample.query.filter(
-        Sample.lab_type == lab_type,
-        Sample.disposal_date >= today - timedelta(days=90),
-    ).order_by(Sample.disposal_date.desc()).limit(100).all()
+    disposed_samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.lab_type == lab_type,
+            Sample.disposal_date >= today - timedelta(days=90),
+        )
+        .order_by(Sample.disposal_date.desc())
+        .limit(100)
+    ).scalars().all())
 
-    no_retention_samples = Sample.query.filter(
-        Sample.lab_type == lab_type,
-        Sample.retention_date.is_(None),
-        Sample.disposal_date.is_(None),
-        Sample.return_sample.is_(False),
-    ).order_by(Sample.received_date.desc()).limit(100).all()
+    no_retention_samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.lab_type == lab_type,
+            Sample.retention_date.is_(None),
+            Sample.disposal_date.is_(None),
+            Sample.return_sample.is_(False),
+        )
+        .order_by(Sample.received_date.desc())
+        .limit(100)
+    ).scalars().all())
 
-    return_samples = Sample.query.filter(
-        Sample.lab_type == lab_type,
-        Sample.return_sample.is_(True),
-        Sample.disposal_date.is_(None),
-        Sample.status == "completed",
-    ).order_by(Sample.received_date.desc()).limit(100).all()
+    return_samples = list(db.session.execute(
+        select(Sample)
+        .where(
+            Sample.lab_type == lab_type,
+            Sample.return_sample.is_(True),
+            Sample.disposal_date.is_(None),
+            Sample.status == "completed",
+        )
+        .order_by(Sample.received_date.desc())
+        .limit(100)
+    ).scalars().all())
 
     return dict(
         expired_samples=expired_samples,

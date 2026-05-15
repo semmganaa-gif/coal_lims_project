@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 
 from flask_login import current_user
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
 from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
@@ -146,13 +146,14 @@ def get_eligible_samples(include_ready: bool = False, q_text: str = "") -> list[
             or_(Sample.mass_ready.is_(False), Sample.mass_ready.is_(None))
         )
 
-    query = Sample.query.filter(and_(*base_filters))
+    stmt = select(Sample).where(and_(*base_filters))
 
     if q_text:
         safe_text = escape_like_pattern(q_text)
-        query = query.filter(Sample.sample_code.ilike(f"%{safe_text}%"))
+        stmt = stmt.where(Sample.sample_code.ilike(f"%{safe_text}%"))
 
-    rows = query.order_by(Sample.received_date.desc()).limit(400).all()
+    stmt = stmt.order_by(Sample.received_date.desc()).limit(400)
+    rows = list(db.session.execute(stmt).scalars().all())
 
     return [
         {
@@ -178,9 +179,11 @@ def _save_mass_measurements_atomic(
     user_id: int | None,
 ) -> ServiceResult:
     """save_mass_measurements-ийн atomic core (Sample weight + mass_ready + audit)."""
+    samples_stmt = (
+        select(Sample).where(Sample.id.in_(sample_ids)).with_for_update()
+    )
     samples_map = {
-        s.id: s
-        for s in Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
+        s.id: s for s in db.session.execute(samples_stmt).scalars().all()
     }
     now_ts = now_local()
 
@@ -254,7 +257,8 @@ def update_weight(sample_id: int, weight_g: float, user_id: int | None = None) -
 @transactional()
 def _unready_samples_atomic(sample_ids: list[int]) -> ServiceResult:
     """unready_samples-ийн atomic core."""
-    rows = Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
+    stmt = select(Sample).where(Sample.id.in_(sample_ids)).with_for_update()
+    rows = list(db.session.execute(stmt).scalars().all())
     for s in rows:
         s.mass_ready = False
         s.mass_ready_at = None

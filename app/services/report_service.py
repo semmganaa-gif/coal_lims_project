@@ -11,7 +11,7 @@ import calendar
 from collections import OrderedDict, defaultdict
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -82,10 +82,12 @@ def calculate_weekly_performance(year, month):
     result = {}
 
     for week_num, week_start, week_end in weeks:
-        samples = M.Sample.query.filter(
-            func.date(M.Sample.received_date) >= week_start,
-            func.date(M.Sample.received_date) <= week_end
-        ).all()
+        samples = list(db.session.execute(
+            select(M.Sample).where(
+                func.date(M.Sample.received_date) >= week_start,
+                func.date(M.Sample.received_date) <= week_end,
+            )
+        ).scalars().all())
 
         counts = defaultdict(int)
         for s in samples:
@@ -378,10 +380,12 @@ def get_plan_statistics(from_year, from_month, to_year, to_month):
             plan_query = plan_query.filter(M.MonthlyPlan.month <= to_month)
         planned = plan_query.scalar() or 0
 
-        perf_count = M.Sample.query.filter(
-            M.Sample.received_date.between(year_start, year_end),
-            M.Sample.status != 'cancelled'
-        ).count()
+        perf_count = db.session.execute(
+            select(func.count(M.Sample.id)).where(
+                M.Sample.received_date.between(year_start, year_end),
+                M.Sample.status != 'cancelled',
+            )
+        ).scalar_one()
 
         pct = round((perf_count / planned * 100), 1) if planned > 0 else 0
         yearly_stats.append({
@@ -409,10 +413,12 @@ def get_plan_statistics(from_year, from_month, to_year, to_month):
                 func.sum(M.MonthlyPlan.planned_count)
             ).filter_by(year=year, month=month).scalar() or 0
 
-            perf_count = M.Sample.query.filter(
-                M.Sample.received_date.between(month_start, month_end),
-                M.Sample.status != 'cancelled'
-            ).count()
+            perf_count = db.session.execute(
+                select(func.count(M.Sample.id)).where(
+                    M.Sample.received_date.between(month_start, month_end),
+                    M.Sample.status != 'cancelled',
+                )
+            ).scalar_one()
 
             pct = round((perf_count / planned * 100), 1) if planned > 0 else 0
             monthly_stats.append({
@@ -450,10 +456,12 @@ def get_plan_statistics(from_year, from_month, to_year, to_month):
                     func.sum(M.MonthlyPlan.planned_count)
                 ).filter_by(year=year, month=month, week=week_num).scalar() or 0
 
-                perf_count = M.Sample.query.filter(
-                    M.Sample.received_date.between(start, end),
-                    M.Sample.status != 'cancelled'
-                ).count()
+                perf_count = db.session.execute(
+                    select(func.count(M.Sample.id)).where(
+                        M.Sample.received_date.between(start, end),
+                        M.Sample.status != 'cancelled',
+                    )
+                ).scalar_one()
 
                 pct = round((perf_count / planned * 100), 1) if planned > 0 else 0
                 weekly_stats.append({
@@ -482,11 +490,13 @@ def get_plan_statistics(from_year, from_month, to_year, to_month):
         )
         planned = plan_query.scalar() or 0
 
-        perf_count = M.Sample.query.filter(
-            M.Sample.received_date.between(range_start, range_end),
-            M.Sample.client_name == client,
-            M.Sample.status != 'cancelled'
-        ).count()
+        perf_count = db.session.execute(
+            select(func.count(M.Sample.id)).where(
+                M.Sample.received_date.between(range_start, range_end),
+                M.Sample.client_name == client,
+                M.Sample.status != 'cancelled',
+            )
+        ).scalar_one()
 
         pct = round((perf_count / planned * 100), 1) if planned > 0 else 0
         consignor_stats.append({
@@ -591,10 +601,12 @@ def build_chemist_report_data(year, date_from_str, date_to_str):
     )
     user_ids = [uid[0] for uid in user_ids_with_results]
 
-    chemists = (
-        User.query.filter(User.id.in_(user_ids)).order_by(User.full_name).all()
-        if user_ids else []
-    )
+    if user_ids:
+        chemists = list(db.session.execute(
+            select(User).where(User.id.in_(user_ids)).order_by(User.full_name)
+        ).scalars().all())
+    else:
+        chemists = []
 
     # 2) Шинжилгээний үр дүн
     results = (

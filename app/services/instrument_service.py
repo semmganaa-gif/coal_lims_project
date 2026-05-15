@@ -7,7 +7,7 @@ Instrument reading business logic — parse, store, review, approve.
 import hashlib
 
 from flask import current_app
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 
 from app.bootstrap.extensions import db
 from app.models.instrument import InstrumentReading
@@ -49,7 +49,9 @@ def parse_instrument_file(file_path: str, instrument_type: str,
     instrument_readings = []
     for rd in readings_data:
         # Try to find matching sample
-        sample = Sample.query.filter_by(sample_code=rd.sample_code).first()
+        sample = db.session.execute(
+            select(Sample).where(Sample.sample_code == rd.sample_code)
+        ).scalar_one_or_none()
 
         reading = InstrumentReading(
             instrument_name=instrument_name or rd.instrument_name,
@@ -103,10 +105,12 @@ def approve_reading(reading_id: int, user_id: int) -> InstrumentReading:
 
     # Link to AnalysisResult if sample exists
     if reading.sample_id and reading.analysis_code:
-        result = AnalysisResult.query.filter_by(
-            sample_id=reading.sample_id,
-            analysis_code=reading.analysis_code
-        ).first()
+        result = db.session.execute(
+            select(AnalysisResult).where(
+                AnalysisResult.sample_id == reading.sample_id,
+                AnalysisResult.analysis_code == reading.analysis_code,
+            )
+        ).scalar_one_or_none()
 
         if result:
             result.final_result = reading.parsed_value

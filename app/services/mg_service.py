@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from flask_babel import lazy_gettext as _l
 
@@ -69,18 +70,20 @@ def get_mg_summary() -> MgSummaryData:
         return MgSummaryData(samples=[], mg_data={})
 
     # Дээж мэдээлэл
-    samples = (
-        Sample.query.filter(Sample.id.in_(sample_ids))
+    samples_stmt = (
+        select(Sample)
+        .where(Sample.id.in_(sample_ids))
         .order_by(Sample.received_date.desc())
-        .all()
     )
+    samples = list(db.session.execute(samples_stmt).scalars().all())
 
     # Бүх MG кодын үр дүн
-    results = AnalysisResult.query.filter(
+    results_stmt = select(AnalysisResult).where(
         AnalysisResult.sample_id.in_(sample_ids),
         AnalysisResult.analysis_code.in_(MG_CODES),
         AnalysisResult.status.in_(["approved", "pending_review"]),
-    ).all()
+    )
+    results = list(db.session.execute(results_stmt).scalars().all())
 
     mg_data: dict[int, dict[str, Any]] = {}
     for r in results:
@@ -112,9 +115,11 @@ def _repeat_analyses_atomic(sample_ids: list[int], codes: list[str]) -> RepeatRe
         if not sample:
             continue
         for code in codes:
-            ar = AnalysisResult.query.filter_by(
-                sample_id=sid, analysis_code=code
-            ).first()
+            ar_stmt = select(AnalysisResult).where(
+                AnalysisResult.sample_id == sid,
+                AnalysisResult.analysis_code == code,
+            )
+            ar = db.session.execute(ar_stmt).scalar_one_or_none()
             if ar and ar.status in approveable:
                 ar.status = AnalysisResultStatus.REJECTED.value
                 ar.updated_at = now_local()

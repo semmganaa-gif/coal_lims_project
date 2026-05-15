@@ -100,34 +100,27 @@ class TestCreateChemicalLog:
             db.session.rollback()
 
 
-class TestApplyLabFilter:
-    """Test _apply_lab_filter helper."""
+class TestLabConditions:
+    """Test _lab_conditions helper (SQLAlchemy 2.0 — Select conditions буцаах)."""
 
-    def test_lab_all_no_filter(self, app):
-        from app.services.chemical_service import _apply_lab_filter
-        from app.models import Chemical
+    def test_lab_all_returns_empty(self, app):
+        from app.services.chemical_service import _lab_conditions
         with app.app_context():
-            query = Chemical.query
-            result = _apply_lab_filter(query, "all")
-            # Should return same query (no filter added)
-            assert result is query
+            assert _lab_conditions("all") == []
 
-    def test_lab_empty_no_filter(self, app):
-        from app.services.chemical_service import _apply_lab_filter
-        from app.models import Chemical
+    def test_lab_empty_returns_empty(self, app):
+        from app.services.chemical_service import _lab_conditions
         with app.app_context():
-            query = Chemical.query
-            result = _apply_lab_filter(query, "")
-            assert result is query
+            assert _lab_conditions("") == []
 
-    def test_lab_specific_adds_filter(self, app):
-        from app.services.chemical_service import _apply_lab_filter
-        from app.models import Chemical
+    def test_lab_specific_returns_condition(self, app):
+        from app.services.chemical_service import _lab_conditions
         with app.app_context():
-            query = Chemical.query
-            result = _apply_lab_filter(query, "coal")
-            # Should return a different query object (filter applied)
-            assert result is not query
+            conds = _lab_conditions("coal")
+            assert len(conds) == 1
+            # Condition нь or_() — SQL expression
+            from sqlalchemy.sql.elements import BooleanClauseList
+            assert isinstance(conds[0], BooleanClauseList)
 
 
 class TestGetChemicalList:
