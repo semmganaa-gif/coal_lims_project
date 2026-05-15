@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from markupsafe import escape as html_escape
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import Sample, AnalysisResult

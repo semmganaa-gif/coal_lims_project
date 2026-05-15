@@ -8,7 +8,7 @@
 from datetime import date, timedelta
 from flask import jsonify, request as flask_request
 from flask_login import login_required
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 
 from app import db
 from app.constants import SampleStatus

@@ -413,7 +413,7 @@ def send_hourly_report():
             sent_to += f" (CC: {', '.join(cc_list)})"
         flash(_l("Амжилттай илгээгдлээ! → %(to)s") % {"to": sent_to}, "success")
 
-    except (OSError, RuntimeError, ValueError) as e:
+    except (OSError, RuntimeError, ValueError):
         current_app.logger.exception("Error in send_hourly_report")
         flash(_l("Имэйл илгээхэд алдаа гарлаа."), "danger")
 

@@ -15,7 +15,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 
 from app import db
-from app.models import AnalysisType, AnalysisResult, Sample, Equipment
+from app.models import AnalysisResult, Sample, Equipment
 from app.repositories import AnalysisTypeRepository
 from app.utils.codes import norm_code
 from app.utils.security import escape_like_pattern

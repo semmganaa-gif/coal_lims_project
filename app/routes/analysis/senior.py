@@ -7,7 +7,7 @@ Senior analyst review dashboard routes:
   - /update_result_status/<int:result_id>/<new_status> - Approve/reject results
 """
 
-from flask import request, render_template, jsonify, current_app
+from flask import request, render_template, jsonify
 from flask_login import login_required, current_user
 
 from app import cache

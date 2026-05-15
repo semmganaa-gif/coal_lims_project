@@ -557,7 +557,7 @@ def register_sample():
             if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
                 return redirect(url_for('microbiology.register_sample'))
             return redirect(url_for('water.register_sample'))
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('register_sample error')
             flash(_l('Дээж бүртгэхэд алдаа гарлаа.'), 'danger')
@@ -1144,7 +1144,7 @@ def edit_sample(sample_id):
                 else:
                     flash('No changes were made.', 'info')
                 return redirect(url_for('water.register_sample'))
-            except (TypeError, SQLAlchemyError) as e:
+            except (TypeError, SQLAlchemyError):
                 db.session.rollback()
                 logger.exception('edit_sample error: sample_id=%s', sample_id)
                 flash(_l('Дээж засахад алдаа гарлаа.'), 'danger')
@@ -1224,7 +1224,7 @@ def delete_samples():
             # шаардлагагүй).
             db.session.delete(sample)
             deleted += 1
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             logger.exception('delete_samples error: sid=%s', sid)
             failed.append(f'ID={sid}')
 

@@ -4,7 +4,6 @@
 Chat REST API endpoints
 """
 
-import asyncio
 import os
 import uuid
 from flask import jsonify, request, current_app

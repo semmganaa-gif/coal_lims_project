@@ -27,8 +27,7 @@ from sqlalchemy.orm import joinedload
 from markupsafe import escape
 
 from app import db, limiter
-from app.models import AnalysisResult, Sample, AnalysisResultLog
-from app.repositories import AnalysisTypeRepository
+from app.models import AnalysisResult, Sample
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
 

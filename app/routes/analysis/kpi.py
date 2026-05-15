@@ -7,7 +7,6 @@ KPI болон ээлжийн гүйцэтгэлийн тайлантай хол
 
 from flask import request, render_template, jsonify
 from flask_login import login_required
-from sqlalchemy import func
 from datetime import datetime, time, timedelta
 from collections import defaultdict
 

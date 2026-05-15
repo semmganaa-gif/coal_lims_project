@@ -17,16 +17,13 @@ from flask import jsonify, request
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
 
-from app import db, limiter
-from app.models import Sample
+from app import limiter
 from app.services.sla_service import (
     get_sla_summary,
     get_overdue_samples,
     get_due_soon_samples,
     get_on_track_samples,
     bulk_assign_sla,
-    assign_sla,
-    get_default_sla_hours,
     get_sla_config_all,
     set_sla_config,
     delete_sla_config,

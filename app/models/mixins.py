@@ -6,8 +6,6 @@ Shared model mixins and constants.
 
 import hashlib
 
-from app import db
-
 # Float тооны харьцуулалтын хязгаар (epsilon)
 FLOAT_EPSILON = 1e-9
 

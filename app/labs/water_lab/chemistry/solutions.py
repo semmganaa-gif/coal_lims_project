@@ -161,7 +161,7 @@ def add_solution():
             flash(f"'{solution.solution_name}' registered successfully.", 'success')
             return redirect(url_for('water.solution_journal'))
 
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('add_solution error')
             flash(_l('Уусмал нэмэхэд алдаа гарлаа.'), 'danger')
@@ -226,7 +226,7 @@ def edit_solution(id):
             flash('Updated successfully.', 'success')
             return redirect(url_for('water.solution_journal'))
 
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('edit_solution error: id=%s', id)
             flash(_l('Уусмал засахад алдаа гарлаа.'), 'danger')
@@ -540,7 +540,7 @@ def prepare_from_recipe(id):
         flash(f"'{recipe.name}' ({target_volume}мл) амжилттай найруулагдлаа. Зарцуулсан: {consumed_str}", 'success')
         return redirect(url_for('water.recipe_detail', id=id))
 
-    except (ValueError, TypeError, SQLAlchemyError) as e:
+    except (ValueError, TypeError, SQLAlchemyError):
         db.session.rollback()
         logger.exception('prepare_from_recipe error: id=%s', id)
         flash(_l('Уусмал найруулахад алдаа гарлаа.'), 'danger')
@@ -588,7 +588,7 @@ def add_recipe():
             flash(f"'{recipe.name}' recipe created successfully.", 'success')
             return redirect(url_for('water.solution_recipes'))
 
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('add_recipe error')
             flash(_l('Жор нэмэхэд алдаа гарлаа.'), 'danger')
@@ -644,7 +644,7 @@ def edit_recipe(id):
             flash('Recipe updated successfully.', 'success')
             return redirect(url_for('water.solution_recipes'))
 
-        except (ValueError, TypeError, SQLAlchemyError) as e:
+        except (ValueError, TypeError, SQLAlchemyError):
             db.session.rollback()
             logger.exception('edit_recipe error: id=%s', id)
             flash(_l('Жор засахад алдаа гарлаа.'), 'danger')

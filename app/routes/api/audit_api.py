@@ -6,7 +6,6 @@
   - /audit_log/<analysis_code> - Audit log for specific analysis (шинэ загвар)
 """
 
-import asyncio
 import json
 
 from collections import defaultdict
@@ -19,7 +18,7 @@ from sqlalchemy.orm import joinedload
 
 from app import db
 from app.models import (
-    AnalysisResult, AnalysisResultLog, AnalysisType,
+    AnalysisResult, AnalysisResultLog,
     AuditLog, Sample, User,
 )
 from app.repositories import AnalysisTypeRepository

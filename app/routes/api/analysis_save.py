@@ -15,7 +15,6 @@ from app.schemas import AnalysisResultSchema
 from app.services.analysis_workflow import (
     BATCH_SAVE_CONFLICT,
     BATCH_SAVE_DB_ERROR,
-    BATCH_SAVE_OK,
     save_results_batch,
     update_result_status_api,
 )

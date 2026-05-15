@@ -11,14 +11,13 @@ import logging
 
 from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
 from flask_login import login_required, current_user
-from flask_babel import lazy_gettext as _l
 
 from sqlalchemy import select
 
 from app import db
 from app.constants import CHPP_CONFIG_GROUPS
 from app.forms import UserManagementForm, SimpleProfileForm
-from app.models import User, AnalysisProfile
+from app.models import User
 from app.repositories import (
     AnalysisTypeRepository, GbwStandardRepository,
     ControlStandardRepository, UserRepository,

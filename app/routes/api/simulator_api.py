@@ -8,7 +8,7 @@ CHPP Simulator руу мэдээлэл илгээх API endpoints:
 
 import logging
 import requests
-from flask import request, jsonify, current_app
+from flask import jsonify, current_app
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
 
