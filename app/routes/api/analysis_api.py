@@ -20,6 +20,7 @@ from sqlalchemy import or_, not_, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
+from app.constants import UserRole
 from app.models import Sample, AnalysisResult
 from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
@@ -132,7 +133,7 @@ def register_routes(bp):
                 )
             )
 
-            if current_user.role == "chemist":
+            if current_user.role == UserRole.CHEMIST.value:
                 rejected_query = rejected_query.filter(AnalysisResult.user_id == current_user.id)
 
             return rejected_query.order_by(AnalysisResult.updated_at.desc()).all()

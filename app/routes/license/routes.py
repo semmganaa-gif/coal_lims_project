@@ -48,7 +48,7 @@ def activate():
 def expired():
     """Лиценз дууссан хуудас"""
     license_obj = license_manager.get_current_license()
-    hardware_id = generate_short_hardware_id() if current_user.role == 'admin' else None
+    hardware_id = generate_short_hardware_id() if current_user.role == UserRole.ADMIN.value else None
     return render_template('license/expired.html', license=license_obj, hardware_id=hardware_id)
 
 
@@ -57,7 +57,7 @@ def expired():
 def error():
     """Лицензийн алдааны хуудас"""
     license_obj = license_manager.get_current_license()
-    hardware_id = generate_short_hardware_id() if current_user.role == 'admin' else None
+    hardware_id = generate_short_hardware_id() if current_user.role == UserRole.ADMIN.value else None
     return render_template('license/error.html', license=license_obj, hardware_id=hardware_id)
 
 

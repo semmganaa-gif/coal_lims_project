@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole, SampleStatus
 from app.repositories import SampleRepository
 from app.schemas import SampleSchema
 from app.utils.audit import log_audit
@@ -120,7 +121,7 @@ def register_routes(bp):
                 sample_id = int(sample_id_str)
                 sample_to_delete = SampleRepository.get_by_id(sample_id)
                 if sample_to_delete:
-                    if current_user.role == "senior" and sample_to_delete.status != "new":
+                    if current_user.role == UserRole.SENIOR.value and sample_to_delete.status != SampleStatus.NEW.value:
                         failed_samples.append(f"{sample_to_delete.sample_code} (Боловсруулалтанд орсон)")
                         continue
                     # Audit log before deletion
