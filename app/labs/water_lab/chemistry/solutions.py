@@ -8,7 +8,6 @@ from datetime import datetime, date
 from flask import render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db

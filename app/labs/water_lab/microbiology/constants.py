@@ -1,4 +1,4 @@
-# app/labs/microbiology/constants.py
+# app/labs/water_lab/microbiology/constants.py
 """Микробиологийн лабораторийн шинжилгээний параметрүүд.
 
 3 ажлын хуудас:

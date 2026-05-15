@@ -3,7 +3,6 @@
 
 import json as _json
 import logging
-import re
 from datetime import datetime as _dt, timedelta as _td
 
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for

@@ -3,15 +3,12 @@
 
 import json
 import logging
-import re
-import calendar
-from datetime import datetime, date, timedelta
-from collections import defaultdict, OrderedDict
+from datetime import datetime
 
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import extract, func, select
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db

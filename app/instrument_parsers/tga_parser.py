@@ -13,7 +13,6 @@ Expected CSV format (common TGA export):
 
 import csv
 import io
-import re
 
 from app.instrument_parsers.base import BaseParser, ParsedReading
 
