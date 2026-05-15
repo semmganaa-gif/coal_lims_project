@@ -133,6 +133,7 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
     if _include_results and samples:
         try:
             from app import db
+            from app.constants import AnalysisResultStatus
             from app.models import AnalysisResult
 
             sample_ids = [s.id for s in samples]
@@ -145,7 +146,7 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
                 )
                 .filter(
                     AnalysisResult.sample_id.in_(sample_ids),
-                    AnalysisResult.status.in_(["approved", "pending_review"]),
+                    AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
                 )
                 .all()
             )

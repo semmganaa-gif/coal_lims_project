@@ -22,7 +22,7 @@ from app.utils.decorators import analysis_role_required
 from app.utils.security import escape_like_pattern
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
-from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS, MAX_SAMPLE_QUERY_LIMIT
+from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS, MAX_SAMPLE_QUERY_LIMIT, AnalysisResultStatus
 from app.config.qc_config import (
     QC_PARAM_CODES,
     QC_TOLERANCE,
@@ -98,7 +98,7 @@ def _get_qc_stream_data(ids: list):
 
     results = db.session.query(AnalysisResult).filter(
         AnalysisResult.sample_id.in_(ids),
-        AnalysisResult.status.in_(["approved", "pending_review"]),
+        AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
         AnalysisResult.analysis_code.in_(query_codes),
     ).all()
     values_by_sample = {sid: {} for sid in ids}
@@ -266,7 +266,7 @@ def register_routes(bp):
         # Үр дүнгүүдийг татах
         results = db.session.query(AnalysisResult).filter(
             AnalysisResult.sample_id.in_(ids),
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             AnalysisResult.analysis_code.in_(query_codes),
         ).all()
 
@@ -370,7 +370,7 @@ def register_routes(bp):
         all_results = list(db.session.execute(
             select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.status.in_(["approved", "pending_review"]),
+                AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             )
         ).scalars().all())
 

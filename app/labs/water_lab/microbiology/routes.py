@@ -15,7 +15,7 @@ from sqlalchemy import extract, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.constants import UserRole, SampleStatus
+from app.constants import UserRole, SampleStatus, AnalysisResultStatus
 from app.models import Sample, AnalysisResult
 from app.labs.water_lab.microbiology.constants import (
     ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES,
@@ -340,7 +340,7 @@ def api_samples():
             .where(
                 AnalysisResult.sample_id.in_(sample_ids),
                 AnalysisResult.analysis_code == category,
-                AnalysisResult.status.in_(['approved', 'pending_review']),
+                AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             )
             .order_by(AnalysisResult.id.desc())
         ).scalars().all())
@@ -435,7 +435,7 @@ def save_results():
         select(AnalysisResult).where(
             AnalysisResult.sample_id == sample.id,
             AnalysisResult.analysis_code == analysis_code,
-            AnalysisResult.status.in_(['pending_review', 'rejected']),
+            AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
         )
     ).scalar_one_or_none()
 

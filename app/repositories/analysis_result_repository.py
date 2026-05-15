@@ -14,6 +14,7 @@ from typing import Optional
 from sqlalchemy import select
 
 from app import db
+from app.constants import AnalysisResultStatus
 from app.models import AnalysisResult
 
 
@@ -73,7 +74,7 @@ class AnalysisResultRepository:
         """Дээжний батлагдсан/pending үр дүнгүүд."""
         stmt = select(AnalysisResult).where(
             AnalysisResult.sample_id == sample_id,
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
         )
         return list(db.session.execute(stmt).scalars().all())
 
@@ -84,7 +85,7 @@ class AnalysisResultRepository:
             return []
         stmt = select(AnalysisResult).where(
             AnalysisResult.sample_id.in_(sample_ids),
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
         )
         return list(db.session.execute(stmt).scalars().all())
 
@@ -101,7 +102,7 @@ class AnalysisResultRepository:
     @staticmethod
     def get_pending_review() -> list[AnalysisResult]:
         """Хянагдаж буй үр дүнгүүд."""
-        stmt = select(AnalysisResult).where(AnalysisResult.status == "pending_review")
+        stmt = select(AnalysisResult).where(AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value)
         return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
@@ -171,7 +172,7 @@ class AnalysisResultRepository:
         """Батлагдсан үр дүнтэй дээжний ID-ууд."""
         stmt = (
             select(AnalysisResult.sample_id)
-            .where(AnalysisResult.status.in_(["approved", "pending_review"]))
+            .where(AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]))
             .distinct()
         )
         return list(db.session.execute(stmt).scalars().all())

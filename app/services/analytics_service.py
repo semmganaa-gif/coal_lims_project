@@ -23,6 +23,7 @@ from sqlalchemy import and_, func, desc, select
 from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db
+from app.constants import AnalysisResultStatus
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
 from app.utils.datetime import now_local
@@ -124,7 +125,7 @@ def get_historical_stats(analysis_code: str, days: int = 90,
     ).filter(
         AnalysisResult.analysis_code == analysis_code,
         AnalysisResult.final_result.isnot(None),
-        AnalysisResult.status == "approved",
+        AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
         Sample.received_date >= cutoff,
     )
 
@@ -273,7 +274,7 @@ def analyze_trends(analysis_code: str, days: int = 30,
     ).filter(
         AnalysisResult.analysis_code == analysis_code,
         AnalysisResult.final_result.isnot(None),
-        AnalysisResult.status == "approved",
+        AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
         Sample.received_date >= cutoff,
     )
 
@@ -714,7 +715,7 @@ def _compare_shifts(samples: list) -> dict:
         results = list(db.session.execute(
             select(AnalysisResult).where(
                 AnalysisResult.sample_id == s.id,
-                AnalysisResult.status == "approved",
+                AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
             )
         ).scalars().all())
 

@@ -57,6 +57,7 @@ def mark_completed_samples():
     Celery Beat: 10 минут бүр ажиллана.
     """
     from app import db
+    from app.constants import AnalysisResultStatus, SampleStatus
     from app.models import Sample, AnalysisResult
     from app.utils.datetime import now_local
     from sqlalchemy import func, select
@@ -65,7 +66,7 @@ def mark_completed_samples():
     candidates = list(db.session.execute(
         select(Sample).where(
             Sample.completed_at.is_(None),
-            Sample.status.notin_(["archived", "completed"]),
+            Sample.status.notin_([SampleStatus.ARCHIVED.value, SampleStatus.COMPLETED.value]),
         )
     ).scalars().all())
 
@@ -81,13 +82,13 @@ def mark_completed_samples():
         approved = db.session.execute(
             select(func.count(AnalysisResult.id)).where(
                 AnalysisResult.sample_id == s.id,
-                AnalysisResult.status == "approved",
+                AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
             )
         ).scalar_one()
 
         if approved == total:
             s.completed_at = now_local()
-            s.status = "completed"
+            s.status = SampleStatus.COMPLETED.value
             marked += 1
 
     if marked > 0:

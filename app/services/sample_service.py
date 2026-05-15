@@ -21,6 +21,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask_babel import lazy_gettext as _l
 
 from app import db
+from app.constants import SampleStatus, AnalysisResultStatus
 from app.models import Sample, AnalysisResult
 from app.utils.audit import log_audit
 from app.repositories import SampleRepository, AnalysisResultRepository
@@ -229,7 +230,7 @@ def get_samples_with_results(
         db.session.query(AnalysisResult.id)
         .filter(
             AnalysisResult.sample_id == Sample.id,
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             ~AnalysisResult.analysis_code.in_(WTL_MG_CODES),
         )
         .exists()
@@ -238,7 +239,7 @@ def get_samples_with_results(
     query = db.session.query(Sample).filter(exists_q, Sample.lab_type == 'coal')
 
     if exclude_archived:
-        query = query.filter(Sample.status != "archived")
+        query = query.filter(Sample.status != SampleStatus.ARCHIVED.value)
 
     samples = query.all()
 
@@ -889,7 +890,7 @@ def get_retention_context(lab_type: str = "coal", warning_days: int = 30) -> dic
             Sample.lab_type == lab_type,
             Sample.return_sample.is_(True),
             Sample.disposal_date.is_(None),
-            Sample.status == "completed",
+            Sample.status == SampleStatus.COMPLETED.value,
         )
         .order_by(Sample.received_date.desc())
         .limit(100)

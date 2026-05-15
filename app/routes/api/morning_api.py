@@ -100,7 +100,7 @@ def register_routes(bp):
         )
         today_in_progress = _count_samples(
             Sample.lab_type.in_(sample_types),
-            Sample.status.in_(['in_progress', 'analysis']),
+            Sample.status.in_([SampleStatus.IN_PROGRESS.value, SampleStatus.ANALYSIS.value]),
         )
         today_total = _count_samples(
             Sample.lab_type.in_(sample_types),

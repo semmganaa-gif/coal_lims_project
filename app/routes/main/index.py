@@ -78,9 +78,9 @@ def register_routes(bp):
         new_samples = _count(Sample.lab_type == 'coal', Sample.status == SampleStatus.NEW.value)
         in_progress = _count(
             Sample.lab_type == 'coal',
-            Sample.status.in_(['in_progress', 'analysis']),
+            Sample.status.in_([SampleStatus.IN_PROGRESS.value, SampleStatus.ANALYSIS.value]),
         )
-        completed = _count(Sample.lab_type == 'coal', Sample.status == 'completed')
+        completed = _count(Sample.lab_type == 'coal', Sample.status == SampleStatus.COMPLETED.value)
         return render_template(
             'coal_hub.html', title='Нүүрсний лаборатори',
             total_samples=total_samples, new_samples=new_samples,

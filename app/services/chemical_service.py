@@ -843,34 +843,35 @@ def invalidate_results_by_lot(
     # 3. Бүх нөлөөлсөн result ID-уудыг нэгтгэх
     usage_sample_ids = {u.sample_id for u in usages if u.sample_id}
 
-    raw_lot_results = (
-        AnalysisResult.query
-        .filter(AnalysisResult.raw_data.contains(f'"reagent_lot_id": {lot_id}'))
-        .all()
-    ) if usage_sample_ids else []
+    raw_lot_results = list(db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.raw_data.contains(f'"reagent_lot_id": {lot_id}')
+        )
+    ).scalars().all()) if usage_sample_ids else []
     raw_lot_result_ids = {r.id for r in raw_lot_results}
 
     all_result_ids = ws_result_ids | raw_lot_result_ids
 
+    _approveable_statuses = [
+        AnalysisResultStatus.APPROVED.value,
+        AnalysisResultStatus.PENDING_REVIEW.value,
+    ]
+
     # sample_id-аас AnalysisResult олох
     sample_results = []
     if usage_sample_ids:
-        sample_results = (
-            AnalysisResult.query
-            .filter(
+        sample_results = list(db.session.execute(
+            select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(list(usage_sample_ids)),
-                AnalysisResult.status.in_(['approved', 'pending_review']),
+                AnalysisResult.status.in_(_approveable_statuses),
             )
-            .all()
-        )
-    direct_results = (
-        AnalysisResult.query
-        .filter(
+        ).scalars().all())
+    direct_results = list(db.session.execute(
+        select(AnalysisResult).where(
             AnalysisResult.id.in_(list(all_result_ids)),
-            AnalysisResult.status.in_(['approved', 'pending_review']),
+            AnalysisResult.status.in_(_approveable_statuses),
         )
-        .all()
-    ) if all_result_ids else []
+    ).scalars().all()) if all_result_ids else []
 
     # Давхардал арилгах
     combined = {r.id: r for r in sample_results + direct_results}

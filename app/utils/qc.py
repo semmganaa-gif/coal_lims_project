@@ -10,6 +10,7 @@ QC dashboard болон composite QC шалгалтанд хэрэглэгдэх
 from datetime import datetime
 import re
 
+from app.constants import AnalysisResultStatus
 from app.models import AnalysisResult, Sample
 from app.config.qc_config import COMPOSITE_QC_LIMITS, STREAM_SUFFIX_RE
 
@@ -246,7 +247,7 @@ def sulfur_map_for(sample_ids):
         select(AnalysisResult).filter(
             AnalysisResult.sample_id.in_(sample_ids),
             AnalysisResult.analysis_code.in_(["TS", "St,ad"]),
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
         ).order_by(AnalysisResult.sample_id.asc(), AnalysisResult.id.desc())
     ).scalars().all()
 

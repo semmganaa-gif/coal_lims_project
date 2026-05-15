@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app import models as M
+from app.constants import AnalysisResultStatus
 from app.utils.datetime import now_local
 from app.utils.codes import norm_code
 from app.utils.shifts import get_shift_info
@@ -279,7 +280,7 @@ def _calculate_consumption(
         .join(Sample, Sample.id == AnalysisResult.sample_id)
         .filter(
             Sample.lab_type == 'coal',
-            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             AnalysisResult.created_at >= start_dt,
             AnalysisResult.created_at < end_dt,
         )

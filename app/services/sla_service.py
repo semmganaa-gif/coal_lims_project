@@ -14,6 +14,7 @@ from datetime import timedelta
 from sqlalchemy import and_, func, case, select
 
 from app import db
+from app.constants import AnalysisResultStatus
 from app.models import Sample, AnalysisResult, SystemSetting
 from app.utils.datetime import now_local
 from app.utils.transaction import transactional
@@ -332,7 +333,7 @@ def get_overdue_samples(lab_type: str = "coal", limit: int = 100) -> list[Overdu
         # Pending шинжилгээний тоо
         pending_stmt = select(func.count(AnalysisResult.id)).where(
             AnalysisResult.sample_id == s.id,
-            AnalysisResult.status.in_(["pending_review", "rejected"]),
+            AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
         )
         pending = db.session.execute(pending_stmt).scalar_one()
 

@@ -20,7 +20,7 @@ from sqlalchemy import or_, not_, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
-from app.constants import UserRole, AnalysisResultStatus
+from app.constants import UserRole, AnalysisResultStatus, SampleStatus
 from app.models import Sample, AnalysisResult
 from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
@@ -81,7 +81,7 @@ def register_routes(bp):
 
             stmt = select(Sample).where(
                 Sample.lab_type == 'coal',
-                Sample.status.in_(["new", "New"]),
+                Sample.status.in_([SampleStatus.NEW.value, "New"]),
                 or_(*like_clauses),
                 ~Sample.id.in_(existing_ids_subq),
             )
@@ -293,7 +293,7 @@ def register_routes(bp):
                     Sample.received_date >= cutoff_time,
                     Sample.client_name == 'CHPP',
                     Sample.sample_type.in_(['2 hourly', '4 hourly', '2 Hourly', '4 Hourly']),
-                    ~Sample.status.in_(['completed', 'reported', 'archived']),
+                    ~Sample.status.in_([SampleStatus.COMPLETED.value, 'reported', SampleStatus.ARCHIVED.value]),
                 )
             ).scalars().all())
 

@@ -17,7 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask_babel import lazy_gettext as _l
 
 from app import db
-from app.constants import AnalysisResultStatus, UserRole
+from app.constants import AnalysisResultStatus, SampleStatus, UserRole
 from app.models import AnalysisResult, Sample
 from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
@@ -59,8 +59,8 @@ def get_mg_summary() -> MgSummaryData:
         .join(Sample, Sample.id == AnalysisResult.sample_id)
         .filter(
             AnalysisResult.analysis_code.in_(MG_ONLY),
-            AnalysisResult.status.in_(["approved", "pending_review"]),
-            Sample.status != "archived",
+            AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
+            Sample.status != SampleStatus.ARCHIVED.value,
         )
         .distinct()
     )
@@ -81,7 +81,7 @@ def get_mg_summary() -> MgSummaryData:
     results_stmt = select(AnalysisResult).where(
         AnalysisResult.sample_id.in_(sample_ids),
         AnalysisResult.analysis_code.in_(MG_CODES),
-        AnalysisResult.status.in_(["approved", "pending_review"]),
+        AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
     )
     results = list(db.session.execute(results_stmt).scalars().all())
 

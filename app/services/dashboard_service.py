@@ -16,6 +16,7 @@ from typing import Any, Optional
 from sqlalchemy import case, extract, func, select
 
 from app import db
+from app.constants import AnalysisResultStatus, SampleStatus
 from app.models import AnalysisResult, Sample
 from app.repositories import AnalysisTypeRepository
 from app.utils.datetime import now_local
@@ -91,9 +92,9 @@ def get_dashboard_stats() -> DashboardStats:
     # 4. Энэ сарын approve/reject/pending харьцаа
     approval = (
         db.session.query(
-            func.sum(case((AnalysisResult.status == "approved", 1), else_=0)).label("approved"),
-            func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
-            func.sum(case((AnalysisResult.status == "pending_review", 1), else_=0)).label("pending"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.APPROVED.value, 1), else_=0)).label("approved"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.REJECTED.value, 1), else_=0)).label("rejected"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value, 1), else_=0)).label("pending"),
         )
         .join(Sample, AnalysisResult.sample_id == Sample.id)
         .filter(Sample.lab_type == "coal", AnalysisResult.updated_at >= first_of_month)
@@ -118,7 +119,7 @@ def get_dashboard_stats() -> DashboardStats:
     pending_review = (
         db.session.query(func.count(AnalysisResult.id))
         .join(Sample, AnalysisResult.sample_id == Sample.id)
-        .filter(Sample.lab_type == "coal", AnalysisResult.status == "pending_review")
+        .filter(Sample.lab_type == "coal", AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value)
         .scalar()
     )
 
@@ -191,7 +192,7 @@ def get_archive_tree(
             extract("month", Sample.received_date).label("month"),
             func.count(Sample.id).label("count"),
         )
-        .filter(Sample.status == "archived", Sample.lab_type == "coal")
+        .filter(Sample.status == SampleStatus.ARCHIVED.value, Sample.lab_type == "coal")
         .group_by(
             Sample.client_name,
             Sample.sample_type,
@@ -230,7 +231,7 @@ def get_archive_tree(
 
     if selected_client and selected_type:
         stmt = select(Sample).where(
-            Sample.status == "archived",
+            Sample.status == SampleStatus.ARCHIVED.value,
             Sample.lab_type == "coal",
             Sample.client_name == selected_client,
             Sample.sample_type == selected_type,
@@ -247,7 +248,7 @@ def get_archive_tree(
             sample_ids = [s.id for s in samples]
             results_stmt = select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.status.in_(["approved", "pending_review"]),
+                AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
             )
             all_results = list(db.session.execute(results_stmt).scalars().all())
             for r in all_results:

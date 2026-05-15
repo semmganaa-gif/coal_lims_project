@@ -11,7 +11,7 @@ from datetime import datetime
 
 from flask import render_template, jsonify, request, Response
 from flask_login import login_required, current_user
-from app.constants import UserRole
+from app.constants import UserRole, AnalysisResultStatus
 from app.utils.decorators import role_required
 
 from sqlalchemy import select
@@ -84,7 +84,11 @@ def _get_qc_results(sample_ids: list, analysis_code: str = None):
     # rejected ч гэсэн түүхэнд бүртгэгдэх ёстой
     stmt = select(AnalysisResult).where(
         AnalysisResult.sample_id.in_(sample_ids),
-        AnalysisResult.status.in_(['approved', 'pending_review', 'rejected']),
+        AnalysisResult.status.in_([
+            AnalysisResultStatus.APPROVED.value,
+            AnalysisResultStatus.PENDING_REVIEW.value,
+            AnalysisResultStatus.REJECTED.value,
+        ]),
         AnalysisResult.final_result.isnot(None),
     )
     if analysis_code:

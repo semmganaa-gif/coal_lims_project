@@ -48,6 +48,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy import select
 
 from app.bootstrap.extensions import db
+from app.constants import AnalysisResultStatus, SampleStatus
 from app.models.settings import SystemSetting
 from app.utils.transaction import transactional
 
@@ -507,14 +508,14 @@ def _hook_check_sample_complete(context: dict):
     from sqlalchemy import func
     pending_stmt = select(func.count(AnalysisResult.id)).where(
         AnalysisResult.sample_id == sample_id,
-        AnalysisResult.status != 'approved',
+        AnalysisResult.status != AnalysisResultStatus.APPROVED.value,
     )
     pending = db.session.execute(pending_stmt).scalar_one()
     if pending == 0:
         from app.models import Sample
         sample = db.session.get(Sample, sample_id)
-        if sample and sample.status not in ('completed', 'archived'):
-            sample.status = 'completed'
+        if sample and sample.status not in (SampleStatus.COMPLETED.value, SampleStatus.ARCHIVED.value):
+            sample.status = SampleStatus.COMPLETED.value
             from app.services.sla_service import mark_completed
             mark_completed(sample)
             logger.info(f"Sample #{sample_id} auto-completed (all results approved)")

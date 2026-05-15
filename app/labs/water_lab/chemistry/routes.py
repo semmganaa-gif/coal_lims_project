@@ -215,7 +215,7 @@ def _build_multi_workspace(codes, template, title, analysis_code,
         .filter(
             AnalysisResult.user_id == current_user.id,
             AnalysisResult.analysis_code.in_(codes),
-            AnalysisResult.status.in_(['pending_review', 'rejected']),
+            AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
         )
     )
     if date_cutoff:
@@ -245,7 +245,7 @@ def _build_multi_workspace(codes, template, title, analysis_code,
             select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(sample_ids),
                 AnalysisResult.analysis_code.in_(codes),
-                AnalysisResult.status.in_(['pending_review', 'rejected', 'approved']),
+                AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value, AnalysisResultStatus.APPROVED.value]),
             )
         ).scalars().all())
         for r in results:
@@ -690,7 +690,7 @@ def workspace(code):
             select(AnalysisResult).where(
                 AnalysisResult.sample_id.in_(sample_ids),
                 AnalysisResult.analysis_code == code_upper,
-                AnalysisResult.status.in_(['pending_review', 'rejected']),
+                AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
             )
         ).scalars().all())
         for r in results:
@@ -883,7 +883,7 @@ def eligible_samples(code):
 
     stmt = select(Sample).where(
         Sample.lab_type.in_(['water_chemistry']),
-        Sample.status.in_(['new', 'in_progress']),
+        Sample.status.in_([SampleStatus.NEW.value, SampleStatus.IN_PROGRESS.value]),
     )
 
     # Огнооны шүүлтүүр (workspace-тэй sync)
@@ -1006,7 +1006,7 @@ def save_results():
         .where(
             AnalysisResult.sample_id == sample_id,
             AnalysisResult.analysis_code == analysis_code,
-            AnalysisResult.status.in_(['pending_review', 'rejected']),
+            AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
         )
         .with_for_update()
     ).scalar_one_or_none()
