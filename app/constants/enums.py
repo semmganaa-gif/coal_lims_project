@@ -23,7 +23,6 @@ CheckConstraint, Marshmallow schema validation, business logic — бүгд эн
 from __future__ import annotations
 
 from enum import Enum
-from typing import ClassVar
 
 
 class _StrEnum(str, Enum):

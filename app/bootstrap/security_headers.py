@@ -3,7 +3,7 @@
 
 import secrets
 
-from flask import g, request
+from flask import g
 
 
 def init_security_headers(app):

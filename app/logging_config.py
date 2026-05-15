@@ -6,7 +6,6 @@ Structured logging тохиргоо
 
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 
 
 def setup_logging(app):

@@ -346,8 +346,6 @@ def register_commands(app):
     @license.command("info")
     def license_info():
         """Одоогийн лицензийн мэдээлэл харах."""
-        from app.models import SystemLicense
-
         lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("Идэвхтэй лиценз олдсонгүй.")
@@ -376,7 +374,6 @@ def register_commands(app):
             flask license extend --expiry "2028-06-30"
         """
         from datetime import datetime, timedelta
-        from app.models import SystemLicense
 
         if not days and not expiry:
             click.echo("Алдаа: --days эсвэл --expiry-н аль нэгийг заана уу.")
@@ -425,8 +422,6 @@ def register_commands(app):
             flask license allow-hardware <full-or-short-hwid>
         """
         import json as _json
-        from app.models import SystemLicense
-
         lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
@@ -468,8 +463,6 @@ def register_commands(app):
     @license.command("clear-tamper")
     def clear_tamper():
         """tampering_detected flag-ыг арилгах (false alarm-ыг солих)."""
-        from app.models import SystemLicense
-
         lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
