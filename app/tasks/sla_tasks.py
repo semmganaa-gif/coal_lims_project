@@ -59,24 +59,31 @@ def mark_completed_samples():
     from app import db
     from app.models import Sample, AnalysisResult
     from app.utils.datetime import now_local
-    from sqlalchemy import func, and_
+    from sqlalchemy import func, select
 
     # completed_at байхгүй, status='new'/'in_progress' дээжүүд
-    candidates = Sample.query.filter(
-        Sample.completed_at.is_(None),
-        Sample.status.notin_(["archived", "completed"]),
-    ).all()
+    candidates = list(db.session.execute(
+        select(Sample).where(
+            Sample.completed_at.is_(None),
+            Sample.status.notin_(["archived", "completed"]),
+        )
+    ).scalars().all())
 
     marked = 0
     for s in candidates:
         # Бүх result approved эсэх шалгах
-        total = AnalysisResult.query.filter_by(sample_id=s.id).count()
+        total = db.session.execute(
+            select(func.count(AnalysisResult.id)).where(AnalysisResult.sample_id == s.id)
+        ).scalar_one()
         if total == 0:
             continue
 
-        approved = AnalysisResult.query.filter_by(
-            sample_id=s.id, status="approved"
-        ).count()
+        approved = db.session.execute(
+            select(func.count(AnalysisResult.id)).where(
+                AnalysisResult.sample_id == s.id,
+                AnalysisResult.status == "approved",
+            )
+        ).scalar_one()
 
         if approved == total:
             s.completed_at = now_local()

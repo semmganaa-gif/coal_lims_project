@@ -34,8 +34,12 @@ class PatternProfileForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
+            from sqlalchemy import select
+            from app import db
             from app.models import AnalysisType
-            items = AnalysisType.query.order_by(AnalysisType.order_num).all()
+            items = list(db.session.execute(
+                select(AnalysisType).order_by(AnalysisType.order_num)
+            ).scalars().all())
             self.analyses.choices = [
                 (a.code, f"{a.order_num:02d} — {a.name} ({a.code})") for a in items
             ]

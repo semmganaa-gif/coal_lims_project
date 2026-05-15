@@ -64,6 +64,8 @@ def send_sla_overdue_alert(self, lab_type="coal"):
     Manager/admin хэрэглэгчдэд overdue жагсаалт илгээнэ.
     """
     try:
+        from sqlalchemy import select
+        from app import db
         from app.models import User
         from app.services.sla_service import get_overdue_samples, get_sla_summary
         from app.utils.notifications import send_notification
@@ -75,10 +77,12 @@ def send_sla_overdue_alert(self, lab_type="coal"):
         overdue = get_overdue_samples(lab_type, limit=20)
 
         # Manager/admin имэйл хаягууд
-        managers = User.query.filter(
-            User.role.in_(["manager", "admin"]),
-            User.email.isnot(None),
-        ).all()
+        managers = list(db.session.execute(
+            select(User).where(
+                User.role.in_(["manager", "admin"]),
+                User.email.isnot(None),
+            )
+        ).scalars().all())
         recipients = [u.email for u in managers if u.email]
 
         if not recipients:

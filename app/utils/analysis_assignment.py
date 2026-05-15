@@ -2,7 +2,9 @@
 import re
 import json
 import logging
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
+from app import db
 from app.models import AnalysisProfile, SystemSetting
 
 # Default Gi shift config (fallback)
@@ -16,9 +18,12 @@ DEFAULT_GI_SHIFT_CONFIG = {
 def get_gi_shift_config():
     """DB-ээс Gi ээлжийн тохиргоог унших, байхгүй бол default."""
     try:
-        setting = SystemSetting.query.filter_by(
-            category='gi_shift', key='config'
-        ).first()
+        setting = db.session.execute(
+            select(SystemSetting).where(
+                SystemSetting.category == 'gi_shift',
+                SystemSetting.key == 'config',
+            )
+        ).scalar_one_or_none()
         if setting and setting.value:
             return json.loads(setting.value)
     except (json.JSONDecodeError, TypeError, OSError, SQLAlchemyError) as e:
@@ -67,11 +72,13 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
     # =========================================================
     # АЛХАМ 1: ЭНГИЙН МАТРИЦ ДҮРЭМ (Simple Profile)
     # =========================================================
-    simple_profile = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-        AnalysisProfile.client_name == client_name,
-        AnalysisProfile.sample_type == sample_type
-    ).first()
+    simple_profile = db.session.execute(
+        select(AnalysisProfile).where(
+            (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
+            AnalysisProfile.client_name == client_name,
+            AnalysisProfile.sample_type == sample_type,
+        )
+    ).scalars().first()
 
     if simple_profile:
         assigned_analyses.update(simple_profile.get_analyses())
@@ -80,12 +87,14 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
     # АЛХАМ 2: ТУСГАЙ PATTERN ДҮРМҮҮД (Regex Profile)
     # =========================================================
     # ✅ ЗАСВАР: Зөвхөн тухайн client_name, sample_type-д хамаарах pattern профайлуудыг авах
-    pattern_profiles = AnalysisProfile.query.filter(
-        AnalysisProfile.pattern.isnot(None),
-        AnalysisProfile.pattern != '',
-        AnalysisProfile.client_name == client_name,
-        AnalysisProfile.sample_type == sample_type
-    ).order_by(AnalysisProfile.priority.asc()).all()
+    pattern_profiles = list(db.session.execute(
+        select(AnalysisProfile).where(
+            AnalysisProfile.pattern.isnot(None),
+            AnalysisProfile.pattern != '',
+            AnalysisProfile.client_name == client_name,
+            AnalysisProfile.sample_type == sample_type,
+        ).order_by(AnalysisProfile.priority.asc())
+    ).scalars().all())
 
     # Дээжний нэр болон төлөвийг бэлдэх
     sample_code_str = str(sample_code or "").strip()
