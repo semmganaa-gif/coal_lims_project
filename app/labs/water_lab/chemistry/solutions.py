@@ -183,8 +183,6 @@ def add_solution():
 @lab_required('water_chemistry')
 def edit_solution(id):
     """Уусмал засварлах."""
-    from app.models import Chemical
-
     solution = SolutionPreparationRepository.get_by_id_or_404(id)
 
     if request.method == 'POST':
@@ -414,7 +412,7 @@ def recipe_detail(id):
 @lab_required('water_chemistry')
 def prepare_from_recipe(id):
     """Жороор уусмал найруулах - химийн бодис автоматаар хасагдана."""
-    from app.models import SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
+    from app.models import SolutionPreparation, ChemicalUsage, ChemicalLog
 
     recipe = SolutionRecipeRepository.get_by_id_or_404(id)
 
@@ -554,7 +552,7 @@ def prepare_from_recipe(id):
 @lab_required('water_chemistry')
 def add_recipe():
     """Шинэ уусмалын жор нэмэх."""
-    from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
+    from app.models import SolutionRecipe, SolutionRecipeIngredient
 
     if request.method == 'POST':
         try:
@@ -612,7 +610,7 @@ def add_recipe():
 @lab_required('water_chemistry')
 def edit_recipe(id):
     """Уусмалын жор засварлах."""
-    from app.models import SolutionRecipeIngredient, Chemical
+    from app.models import SolutionRecipeIngredient
 
     recipe = SolutionRecipeRepository.get_by_id_or_404(id)
 
