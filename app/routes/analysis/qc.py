@@ -22,7 +22,7 @@ from app.utils.decorators import analysis_role_required
 from app.utils.security import escape_like_pattern
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
-from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS
+from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS, MAX_SAMPLE_QUERY_LIMIT
 from app.config.qc_config import (
     QC_PARAM_CODES,
     QC_TOLERANCE,
@@ -254,7 +254,7 @@ def register_routes(bp):
             select(Sample)
             .where(Sample.id.in_(ids))
             .order_by(Sample.sample_code.asc())
-            .limit(5000)
+            .limit(MAX_SAMPLE_QUERY_LIMIT)
         ).scalars().all())
         if not samples:
             flash(_l("Дээж олдсонгүй."), "warning")
@@ -359,7 +359,7 @@ def register_routes(bp):
 
         # ✅ Pagination limit нэмсэн
         samples = list(db.session.execute(
-            select(Sample).where(Sample.id.in_(ids)).limit(5000)
+            select(Sample).where(Sample.id.in_(ids)).limit(MAX_SAMPLE_QUERY_LIMIT)
         ).scalars().all())
         if not samples:
             flash(_l("Дээж олдсонгүй."), "warning")

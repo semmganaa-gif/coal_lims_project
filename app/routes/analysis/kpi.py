@@ -16,7 +16,7 @@ from app.models import Sample, AnalysisResultLog, User
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
 from app.forms import KPIReportFilterForm
-from app.constants import ERROR_REASON_KEYS
+from app.constants import ERROR_REASON_KEYS, MAX_SAMPLE_QUERY_LIMIT
 from app.utils.shifts import get_shift_info
 from app.utils.settings import get_error_reason_labels
 
@@ -139,7 +139,7 @@ def register_routes(bp):
             ).distinct().subquery()
             q = q.filter(Sample.id.in_(db.session.query(user_sample_ids)))
 
-        samples = q.order_by(Sample.received_date.desc()).limit(5000).all()
+        samples = q.order_by(Sample.received_date.desc()).limit(MAX_SAMPLE_QUERY_LIMIT).all()
 
         # Counters
         counters = defaultdict(int)
