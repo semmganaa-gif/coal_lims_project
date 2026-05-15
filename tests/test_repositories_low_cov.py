@@ -14,7 +14,7 @@ Tests for repository files with low coverage:
 """
 
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -152,7 +152,7 @@ class TestChatMessageRepository:
         """Already-read messages should not be updated again."""
         with app.app_context():
             u = _get_user()
-            m = ChatMessage(sender_id=u.id, receiver_id=u.id, message="already read", read_at=datetime.utcnow())
+            m = ChatMessage(sender_id=u.id, receiver_id=u.id, message="already read", read_at=datetime.now(timezone.utc))
             _db.session.add(m)
             _db.session.commit()
 
@@ -534,7 +534,7 @@ class TestAuditLogRepository:
     def test_get_by_date_range_all_filters(self, app):
         with app.app_context():
             u = _get_user()
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             unique_action = _unique("dr")
             log = AuditLog(action=unique_action, user_id=u.id, timestamp=now)
             _db.session.add(log)
@@ -551,14 +551,14 @@ class TestAuditLogRepository:
     def test_get_by_date_range_start_only(self, app):
         with app.app_context():
             results = AuditLogRepository.get_by_date_range(
-                start_date=datetime.utcnow() - timedelta(days=1)
+                start_date=datetime.now(timezone.utc) - timedelta(days=1)
             )
             assert isinstance(results, list)
 
     def test_get_by_date_range_end_only(self, app):
         with app.app_context():
             results = AuditLogRepository.get_by_date_range(
-                end_date=datetime.utcnow() + timedelta(days=1)
+                end_date=datetime.now(timezone.utc) + timedelta(days=1)
             )
             assert isinstance(results, list)
 
@@ -793,7 +793,7 @@ class TestUsageLogRepository:
     def test_save_and_get_by_id(self, app):
         with app.app_context():
             eq = self._make_equipment()
-            log = UsageLog(equipment_id=eq.id, start_time=datetime.utcnow())
+            log = UsageLog(equipment_id=eq.id, start_time=datetime.now(timezone.utc))
             saved = UsageLogRepository.save(log, commit=True)
             assert saved.id is not None
 
@@ -808,7 +808,7 @@ class TestUsageLogRepository:
     def test_get_by_equipment(self, app):
         with app.app_context():
             eq = self._make_equipment()
-            log = UsageLog(equipment_id=eq.id, start_time=datetime.utcnow())
+            log = UsageLog(equipment_id=eq.id, start_time=datetime.now(timezone.utc))
             _db.session.add(log)
             _db.session.commit()
 
@@ -821,7 +821,7 @@ class TestUsageLogRepository:
             eq = self._make_equipment()
             assert UsageLogRepository.has_records(eq.id) is False
 
-            log = UsageLog(equipment_id=eq.id, start_time=datetime.utcnow())
+            log = UsageLog(equipment_id=eq.id, start_time=datetime.now(timezone.utc))
             _db.session.add(log)
             _db.session.commit()
 
