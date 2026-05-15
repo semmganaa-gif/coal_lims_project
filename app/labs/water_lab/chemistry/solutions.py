@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
 from app.repositories import (
     ChemicalRepository,
     SolutionRecipeRepository,
@@ -253,7 +254,7 @@ def delete_solution(id):
     from app.models import Chemical, ChemicalLog
     from app.utils.database import safe_commit
 
-    if current_user.role not in ('senior', 'admin'):
+    if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
         flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_journal'))
 
@@ -668,7 +669,7 @@ def edit_recipe(id):
 @lab_required('water_chemistry')
 def delete_recipe(id):
     """Уусмалын жор устгах."""
-    if current_user.role not in ('senior', 'admin'):
+    if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
         flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_recipes'))
 

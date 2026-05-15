@@ -166,7 +166,7 @@ def register_routes(bp):
     @limiter.limit("100 per minute")
     async def unassign_sample():
         """Дээжийг тухайн шинжилгээнээс хасах."""
-        if current_user.role not in ("senior", "admin"):
+        if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             return jsonify({"success": False, "message": _("Ахлах эсвэл админ эрх шаардлагатай")}), 403
 
         data = request.get_json(silent=True)

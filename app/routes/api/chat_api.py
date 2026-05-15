@@ -12,6 +12,7 @@ from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
+from app.constants import UserRole
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
 from app.repositories.chat_repository import ChatMessageRepository
 from sqlalchemy import or_, and_, func, select
@@ -87,7 +88,7 @@ def register_routes(bp):
         """Чат контакт жагсаалт"""
         contacts = []
 
-        if current_user.role in ('chemist', 'prep'):
+        if current_user.role in (UserRole.CHEMIST.value, UserRole.PREP.value):
             users = list(db.session.execute(
                 select(User).where(
                     User.role.in_(['senior', 'admin']),

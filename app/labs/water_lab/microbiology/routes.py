@@ -15,6 +15,7 @@ from sqlalchemy import extract, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
 from app.models import Sample, AnalysisResult
 from app.labs.water_lab.microbiology.constants import (
     ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES,
@@ -75,7 +76,7 @@ def edit_sample(sample_id):
         flash('Sample not found.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
-    can_edit = current_user.role in ('admin', 'senior', 'chemist')
+    can_edit = current_user.role in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value)
     if not can_edit:
         flash('You do not have permission to edit samples.', 'warning')
         return redirect(url_for('microbiology.register_sample'))
@@ -140,7 +141,7 @@ def delete_samples():
         flash('Please select samples to delete!', 'warning')
         return redirect(url_for('microbiology.register_sample'))
 
-    if current_user.role not in ('admin', 'senior', 'chemist'):
+    if current_user.role not in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value):
         flash('You do not have permission to delete samples.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
@@ -154,7 +155,7 @@ def delete_samples():
             if not sample:
                 failed.append(f'ID={sid} (Олдсонгүй)')
                 continue
-            if current_user.role in ('senior', 'chemist') and sample.status != 'new':
+            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != 'new':
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
 

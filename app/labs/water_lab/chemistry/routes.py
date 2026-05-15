@@ -13,6 +13,7 @@ from sqlalchemy import or_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
 from app.models import Sample, AnalysisResult, Equipment
 from app.repositories import WaterWorksheetRepository, WorksheetRowRepository
 from app.labs.water_lab.chemistry.constants import (
@@ -1105,7 +1106,7 @@ def edit_sample(sample_id):
         flash('Sample not found.', 'danger')
         return redirect(url_for('water.register_sample'))
 
-    can_edit = current_user.role in ('admin', 'senior', 'chemist')
+    can_edit = current_user.role in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value)
     if not can_edit:
         flash('You do not have permission to edit samples.', 'warning')
         return redirect(url_for('water.register_sample'))
@@ -1170,7 +1171,7 @@ def delete_samples():
         flash('Please select samples to delete!', 'warning')
         return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
-    if current_user.role not in ('admin', 'senior', 'chemist'):
+    if current_user.role not in (UserRole.ADMIN.value, UserRole.SENIOR.value, UserRole.CHEMIST.value):
         flash('You do not have permission to delete samples.', 'danger')
         return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
@@ -1184,7 +1185,7 @@ def delete_samples():
             if not sample:
                 failed.append(f'ID={sid} (Олдсонгүй)')
                 continue
-            if current_user.role in ('senior', 'chemist') and sample.status != 'new':
+            if current_user.role in (UserRole.SENIOR.value, UserRole.CHEMIST.value) and sample.status != 'new':
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
 
@@ -1370,7 +1371,7 @@ def worksheet_detail(ws_id):
 def worksheet_submit(ws_id):
     """Ажлын хуудсыг хянуулахаар илгээх."""
     ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
-    if ws.analyst_id != current_user.id and current_user.role not in ('senior', 'manager', 'admin'):
+    if ws.analyst_id != current_user.id and current_user.role not in (UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value):
         flash(_l('Зөвхөн боловсруулсан химич илгээх боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     if ws.status != 'open':
@@ -1392,7 +1393,7 @@ def worksheet_submit(ws_id):
 def worksheet_approve(ws_id):
     """Ажлын хуудас батлах (senior / manager / admin)."""
     from app.utils.datetime import now_local
-    if current_user.role not in ('senior', 'manager', 'admin'):
+    if current_user.role not in (UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value):
         flash(_l('Зөвхөн ахлах химич/менежер батлах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
@@ -1418,7 +1419,7 @@ def worksheet_approve(ws_id):
 def worksheet_reject(ws_id):
     """Ажлын хуудас буцаах."""
     from app.utils.datetime import now_local
-    if current_user.role not in ('senior', 'manager', 'admin'):
+    if current_user.role not in (UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value):
         flash(_l('Зөвхөн ахлах химич/менежер буцаах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
     ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)

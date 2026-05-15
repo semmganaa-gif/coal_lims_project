@@ -18,6 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import socketio, db
+from app.constants import UserRole
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.repositories import UserRepository, SampleRepository
 from app.repositories.chat_repository import (
@@ -251,7 +252,7 @@ def handle_broadcast(data):
     if not current_user.is_authenticated:
         return
 
-    if current_user.role not in ('senior', 'admin'):
+    if current_user.role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
         emit('error', {'message': 'Зөвхөн ахлах болон админ зарлал илгээх эрхтэй'})
         return
 
