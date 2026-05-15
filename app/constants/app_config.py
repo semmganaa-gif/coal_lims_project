@@ -9,6 +9,14 @@ MAX_ANALYSIS_RESULTS = 200
 MAX_SAMPLE_QUERY_LIMIT = 5000
 MAX_IMPORT_BATCH_SIZE = 1000
 
+# Dashboard / recent-activity жагсаалтын хязгаар
+# (analysis_workflow pending review, analytics дээж жагсаалт, chemical
+#  usage, dashboard recent samples гэх мэт)
+DASHBOARD_RECENT_LIMIT = 500
+
+# Chemical inventory жагсаалтын дээд хязгаар (мастер хүснэгт)
+CHEMICAL_LIST_LIMIT = 2000
+
 # Дээжний жингийн хязгаарлалт (грамм)
 MIN_SAMPLE_WEIGHT = 0.001
 MAX_SAMPLE_WEIGHT = 10000

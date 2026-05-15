@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
 from app import db, cache
-from app.constants import AnalysisResultStatus
+from app.constants import AnalysisResultStatus, DASHBOARD_RECENT_LIMIT
 from app.config.analysis_schema import get_analysis_schema
 from app.models import (
     AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType,
@@ -148,7 +148,7 @@ def build_pending_results(start_date=None, end_date=None, sample_name=None):
         safe_name = escape_like_pattern(sample_name)
         q = q.filter(Sample.sample_code.ilike(f"%{safe_name}%"))
 
-    results_to_review = q.order_by(AnalysisResult.updated_at.desc()).limit(500).all()
+    results_to_review = q.order_by(AnalysisResult.updated_at.desc()).limit(DASHBOARD_RECENT_LIMIT).all()
 
     processed_results = []
     for result, sample, user, analysis_type in results_to_review:

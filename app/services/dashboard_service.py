@@ -16,7 +16,7 @@ from typing import Any, Optional
 from sqlalchemy import case, extract, func, select
 
 from app import db
-from app.constants import AnalysisResultStatus, SampleStatus
+from app.constants import AnalysisResultStatus, SampleStatus, DASHBOARD_RECENT_LIMIT
 from app.models import AnalysisResult, Sample
 from app.repositories import AnalysisTypeRepository
 from app.utils.datetime import now_local
@@ -241,7 +241,7 @@ def get_archive_tree(
         if selected_month:
             stmt = stmt.where(extract("month", Sample.received_date) == selected_month)
 
-        stmt = stmt.order_by(Sample.received_date.desc()).limit(500)
+        stmt = stmt.order_by(Sample.received_date.desc()).limit(DASHBOARD_RECENT_LIMIT)
         samples = list(db.session.execute(stmt).scalars().all())
 
         if samples:

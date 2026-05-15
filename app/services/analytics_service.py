@@ -23,7 +23,7 @@ from sqlalchemy import and_, func, desc, select
 from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db
-from app.constants import AnalysisResultStatus
+from app.constants import AnalysisResultStatus, DASHBOARD_RECENT_LIMIT
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
 from app.utils.datetime import now_local
@@ -132,7 +132,7 @@ def get_historical_stats(analysis_code: str, days: int = 90,
     if client_name:
         query = query.filter(Sample.client_name == client_name)
 
-    rows = query.order_by(desc(Sample.received_date)).limit(500).all()
+    rows = query.order_by(desc(Sample.received_date)).limit(DASHBOARD_RECENT_LIMIT).all()
     values = [float(r[0]) for r in rows if r[0] is not None]
 
     if len(values) < 3:

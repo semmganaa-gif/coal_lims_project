@@ -23,7 +23,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.constants import AnalysisResultStatus
+from app.constants import AnalysisResultStatus, CHEMICAL_LIST_LIMIT, DASHBOARD_RECENT_LIMIT
 from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.repositories import ChemicalUsageRepository
 from app.utils.security import escape_like_pattern
@@ -198,7 +198,7 @@ def get_chemical_api_list(lab: str = "all", category: str = "all",
     if not include_disposed:
         stmt = stmt.where(Chemical.status != 'disposed')
 
-    stmt = stmt.order_by(Chemical.name.asc()).limit(2000)
+    stmt = stmt.order_by(Chemical.name.asc()).limit(CHEMICAL_LIST_LIMIT)
     chemicals = list(db.session.execute(stmt).scalars().all())
     today = date.today()
     warning_date = today + timedelta(days=30)
@@ -435,7 +435,7 @@ def get_journal_rows(lab: str = "all", start_date: Optional[str] = None,
         end_dt = end_dt.replace(hour=23, minute=59, second=59)
         stmt = stmt.where(ChemicalUsage.used_at <= end_dt)
 
-    stmt = stmt.order_by(ChemicalUsage.used_at.desc()).limit(500)
+    stmt = stmt.order_by(ChemicalUsage.used_at.desc()).limit(DASHBOARD_RECENT_LIMIT)
     usages = list(db.session.execute(stmt).all())
 
     rows = []
