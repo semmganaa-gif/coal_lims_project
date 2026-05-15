@@ -5,6 +5,8 @@ import json
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from markupsafe import escape as html_escape
+from sqlalchemy import select
+
 from app import db
 from app.models import Sample, AnalysisResult
 from app.repositories import SampleRepository
@@ -27,8 +29,7 @@ def _pe_samples(statuses):
     2. analyses_to_perform дотор 'PE' код байвал (шинжилгээний тохиргоогоор PE чек хийгдсэн)
     """
     from sqlalchemy import or_
-    from sqlalchemy.exc import SQLAlchemyError
-    return Sample.query.filter(
+    return select(Sample).where(
         Sample.status.in_(statuses),
         or_(
             Sample.lab_type == 'petrography',
@@ -44,10 +45,16 @@ def _pe_samples(statuses):
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
     all_statuses = ['new', 'in_progress', 'analysis', 'completed']
-    pending_pe = _pe_samples(['new', 'in_progress', 'analysis']).count()
-    total_petro = _pe_samples(all_statuses).count()
-    in_progress = _pe_samples(['in_progress', 'analysis']).count()
-    completed = _pe_samples(['completed']).count()
+    from sqlalchemy import func
+
+    def _count(statuses):
+        stmt = _pe_samples(statuses).with_only_columns(func.count(Sample.id)).order_by(None)
+        return db.session.execute(stmt).scalar_one()
+
+    pending_pe = _count(['new', 'in_progress', 'analysis'])
+    total_petro = _count(all_statuses)
+    in_progress = _count(['in_progress', 'analysis'])
+    completed = _count(['completed'])
     return render_template(
         'labs/petrography/petro_hub.html',
         title='Петрограф лаборатори',
@@ -102,9 +109,11 @@ def eligible_samples(code):
     Нүүрсний лаб-аас sample_type='PE' гэж бүртгэгдсэн дээжүүд.
     """
     # ✅ Pagination limit нэмсэн
-    samples = _pe_samples(
-        ['new', 'in_progress', 'analysis']
-    ).order_by(Sample.received_date.desc()).limit(500).all()
+    samples = list(db.session.execute(
+        _pe_samples(['new', 'in_progress', 'analysis'])
+        .order_by(Sample.received_date.desc())
+        .limit(500)
+    ).scalars().all())
     result = []
     for s in samples:
         result.append({
@@ -169,9 +178,11 @@ def save_results():
 @lab_required('petrography')
 def petro_data():
     """Петрограф дээжийн жагсаалт (PE төрлийн дээжүүд)."""
-    samples = _pe_samples(
-        ['new', 'in_progress', 'analysis', 'completed']
-    ).order_by(Sample.received_date.desc()).limit(200).all()
+    samples = list(db.session.execute(
+        _pe_samples(['new', 'in_progress', 'analysis', 'completed'])
+        .order_by(Sample.received_date.desc())
+        .limit(200)
+    ).scalars().all())
 
     result = []
     for s in samples:

@@ -10,6 +10,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -87,17 +88,17 @@ def equipment_journal_special(journal_type):
         return redirect(url_for("equipment.equipment_journal"))
 
     if journal_type == 'balances_register':
-        items = Equipment.query.filter_by(category='balance')
+        stmt = select(Equipment).where(Equipment.category == 'balance')
     elif journal_type == 'out_of_service':
-        items = Equipment.query.filter_by(status='retired')
+        stmt = select(Equipment).where(Equipment.status == 'retired')
     elif journal_type == 'new_equipment':
-        items = Equipment.query.filter(
+        stmt = select(Equipment).where(
             Equipment.commissioned_info.isnot(None),
-            Equipment.commissioned_info != ''
+            Equipment.commissioned_info != '',
         )
     else:
-        items = Equipment.query.filter_by(register_type=journal_type)
-    items = items.order_by(Equipment.id.asc()).all()
+        stmt = select(Equipment).where(Equipment.register_type == journal_type)
+    items = list(db.session.execute(stmt.order_by(Equipment.id.asc())).scalars().all())
     items_data = []
     for item in items:
         row = {

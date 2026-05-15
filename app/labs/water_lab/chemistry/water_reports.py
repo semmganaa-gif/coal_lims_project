@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from flask import render_template, jsonify, request
 from flask_login import login_required
-from sqlalchemy import extract, func, case
+from sqlalchemy import extract, func, case, select
 
 from app import db
 from app.models import Sample, AnalysisResult
@@ -47,36 +47,36 @@ def water_dashboard():
     active_chem_codes = _active_chem_codes()
 
     # -- 1) Дээж тоо: сар + жил нэг query (conditional count) --
-    _s_base = Sample.query.filter(
-        Sample.lab_type.in_(_WATER_LAB_TYPES),
-        Sample.received_date >= year_start.date(),
-        Sample.received_date < year_end.date()
-    )
-    row = _s_base.with_entities(
-        func.count().label('year_cnt'),
-        func.count(case(
-            (Sample.received_date >= month_start.date(), Sample.id),
-            else_=None
-        )).label('month_cnt')
+    row = db.session.execute(
+        select(
+            func.count().label('year_cnt'),
+            func.count(case(
+                (Sample.received_date >= month_start.date(), Sample.id),
+                else_=None,
+            )).label('month_cnt'),
+        ).where(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            Sample.received_date >= year_start.date(),
+            Sample.received_date < year_end.date(),
+        )
     ).first()
     samples_year = row.year_cnt if row else 0
     samples_month = row.month_cnt if row else 0
 
     # -- 2) Шинжилгээ тоо: сар + жил нэг query --
-    _a_base = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_WATER_LAB_TYPES),
-        AnalysisResult.analysis_code.in_(active_chem_codes),
-        AnalysisResult.created_at >= year_start,
-        AnalysisResult.created_at < year_end
-    )
-    row2 = _a_base.with_entities(
-        func.count().label('year_cnt'),
-        func.count(case(
-            (AnalysisResult.created_at >= month_start, AnalysisResult.id),
-            else_=None
-        )).label('month_cnt')
+    row2 = db.session.execute(
+        select(
+            func.count().label('year_cnt'),
+            func.count(case(
+                (AnalysisResult.created_at >= month_start, AnalysisResult.id),
+                else_=None,
+            )).label('month_cnt'),
+        ).join(Sample, Sample.id == AnalysisResult.sample_id).where(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(active_chem_codes),
+            AnalysisResult.created_at >= year_start,
+            AnalysisResult.created_at < year_end,
+        )
     ).first()
     analyses_year = row2.year_cnt if row2 else 0
     analyses_month = row2.month_cnt if row2 else 0
@@ -94,14 +94,16 @@ def water_dashboard():
     # Pass/Fail тоолох (pH, MNS limit шалгалт)
     pass_count = 0
     fail_count = 0
-    ph_results = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_WATER_LAB_TYPES),
-        AnalysisResult.analysis_code == 'PH',
-        AnalysisResult.created_at >= year_start,
-        AnalysisResult.created_at < year_end
-    ).all()
+    ph_results = list(db.session.execute(
+        select(AnalysisResult)
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .where(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            AnalysisResult.analysis_code == 'PH',
+            AnalysisResult.created_at >= year_start,
+            AnalysisResult.created_at < year_end,
+        )
+    ).scalars().all())
 
     for ar in ph_results:
         try:

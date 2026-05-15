@@ -8,7 +8,7 @@ from datetime import datetime
 
 from flask import render_template
 from flask_login import login_required
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from app import db
 from app.utils.datetime import now_local
@@ -41,17 +41,21 @@ def dashboard():
     # ========== KPI-ууд ==========
 
     # 1. Дээжний тоо
-    samples_month = Sample.query.filter(
-        Sample.lab_type == 'coal',
-        Sample.received_date >= month_start.date(),
-        Sample.received_date < month_end.date()
-    ).count()
+    samples_month = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type == 'coal',
+            Sample.received_date >= month_start.date(),
+            Sample.received_date < month_end.date(),
+        )
+    ).scalar_one()
 
-    samples_year = Sample.query.filter(
-        Sample.lab_type == 'coal',
-        Sample.received_date >= year_start.date(),
-        Sample.received_date < year_end.date()
-    ).count()
+    samples_year = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type == 'coal',
+            Sample.received_date >= year_start.date(),
+            Sample.received_date < year_end.date(),
+        )
+    ).scalar_one()
 
     # 2. Шинжилгээний тоо
     work_actions = [

@@ -14,6 +14,7 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 from markupsafe import escape as _esc
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import socketio, db
@@ -303,14 +304,13 @@ def handle_mark_read(data):
                 }, room=get_user_room(msg.sender_id))
 
         elif sender_id:
-            unread_ids = [
-                row.id for row in
-                ChatMessage.query.filter(
+            unread_ids = list(db.session.execute(
+                select(ChatMessage.id).where(
                     ChatMessage.sender_id == sender_id,
                     ChatMessage.receiver_id == current_user.id,
-                    ChatMessage.read_at.is_(None)
-                ).with_entities(ChatMessage.id).all()
-            ]
+                    ChatMessage.read_at.is_(None),
+                )
+            ).scalars().all())
             count = ChatMessageRepository.mark_as_read(unread_ids, commit=True) if unread_ids else 0
 
             emit('messages_read', {
@@ -355,7 +355,9 @@ def handle_get_online_users():
     if not user_ids:
         emit('online_users_list', {'users': []})
         return
-    users = User.query.filter(User.id.in_(user_ids)).all()
+    users = list(db.session.execute(
+        select(User).where(User.id.in_(user_ids))
+    ).scalars().all())
     online_list = [
         {'user_id': u.id, 'username': u.username, 'role': u.role}
         for u in users

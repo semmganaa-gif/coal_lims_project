@@ -14,6 +14,9 @@ from flask_login import login_required, current_user
 from app.constants import UserRole
 from app.utils.decorators import role_required
 
+from sqlalchemy import select
+
+from app import db
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
 from app.repositories import ControlStandardRepository, GbwStandardRepository
 from app.monitoring import track_qc_check
@@ -64,25 +67,31 @@ def _get_mad_for_sample(sample_id: int):
 
 def _get_qc_samples():
     """CM болон GBW дээжүүдийг олох (sample_type яг таарах)"""
-    return Sample.query.filter(
-        Sample.lab_type == 'coal',
-        Sample.sample_type.in_(['CM', 'GBW'])
-    ).order_by(Sample.id.desc()).all()
+    stmt = (
+        select(Sample)
+        .where(
+            Sample.lab_type == 'coal',
+            Sample.sample_type.in_(['CM', 'GBW']),
+        )
+        .order_by(Sample.id.desc())
+    )
+    return list(db.session.execute(stmt).scalars().all())
 
 
 def _get_qc_results(sample_ids: list, analysis_code: str = None):
     """QC дээжүүдийн шинжилгээний үр дүнг авах"""
     # QC chart-д бүх үр дүнг (approved, pending_review, rejected) оруулна
     # rejected ч гэсэн түүхэнд бүртгэгдэх ёстой
-    query = AnalysisResult.query.filter(
+    stmt = select(AnalysisResult).where(
         AnalysisResult.sample_id.in_(sample_ids),
         AnalysisResult.status.in_(['approved', 'pending_review', 'rejected']),
-        AnalysisResult.final_result.isnot(None)
+        AnalysisResult.final_result.isnot(None),
     )
     if analysis_code:
-        query = query.filter(AnalysisResult.analysis_code == analysis_code)
+        stmt = stmt.where(AnalysisResult.analysis_code == analysis_code)
 
-    return query.order_by(AnalysisResult.updated_at.desc()).all()
+    stmt = stmt.order_by(AnalysisResult.updated_at.desc())
+    return list(db.session.execute(stmt).scalars().all())
 
 
 def _extract_standard_name(sample_code: str, sample_type: str = None) -> str:

@@ -4,6 +4,7 @@
 
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
@@ -88,9 +89,11 @@ def api_notifications():
     from app.models import Chemical
 
     today = date.today()
-    chemicals = Chemical.query.filter(
-        Chemical.status.in_(['active', 'low_stock', 'expired']),
-    ).all()
+    chemicals = list(db.session.execute(
+        select(Chemical).where(
+            Chemical.status.in_(['active', 'low_stock', 'expired']),
+        )
+    ).scalars().all())
 
     expired = []
     expiring = []

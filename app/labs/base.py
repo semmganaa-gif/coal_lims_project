@@ -7,6 +7,8 @@ BaseLab abstract class.
 
 from abc import ABC, abstractmethod
 
+from sqlalchemy import func, select
+
 
 class BaseLab(ABC):
     """Лабораторийн суурь класс."""
@@ -45,20 +47,28 @@ class BaseLab(ABC):
         return None
 
     def sample_query(self, statuses=None):
-        """Энэ лабын дээжийн query."""
+        """Энэ лабын дээжийн `select()` statement (SQLAlchemy 2.0)."""
         from app.models import Sample
-        q = Sample.query.filter(Sample.lab_type == self.key)
+        stmt = select(Sample).where(Sample.lab_type == self.key)
         if statuses:
-            q = q.filter(Sample.status.in_(statuses))
-        return q
+            stmt = stmt.where(Sample.status.in_(statuses))
+        return stmt
 
     def sample_stats(self):
         """Dashboard-д хэрэглэх тоон мэдээлэл."""
+        from app import db
         from app.models import Sample
-        base = Sample.query.filter(Sample.lab_type == self.key)
+
+        def _count(*conds):
+            return db.session.execute(
+                select(func.count(Sample.id)).where(
+                    Sample.lab_type == self.key, *conds
+                )
+            ).scalar_one()
+
         return {
-            'total': base.count(),
-            'new': base.filter(Sample.status == 'new').count(),
-            'in_progress': base.filter(Sample.status.in_(['in_progress', 'analysis'])).count(),
-            'completed': base.filter(Sample.status == 'completed').count(),
+            'total': _count(),
+            'new': _count(Sample.status == 'new'),
+            'in_progress': _count(Sample.status.in_(['in_progress', 'analysis'])),
+            'completed': _count(Sample.status == 'completed'),
         }

@@ -12,6 +12,8 @@ from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
 
+from sqlalchemy import select
+
 from app import db
 from app.models import Sample, AnalysisResult
 from app.utils.security import escape_like_pattern
@@ -41,10 +43,12 @@ def _get_simulator_url():
 
 def _get_approved_results(sample_id):
     """Дээжний approved шинжилгээний үр дүнг dict-ээр буцаах."""
-    results = AnalysisResult.query.filter_by(
-        sample_id=sample_id,
-        status="approved",
-    ).all()
+    results = list(db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.sample_id == sample_id,
+            AnalysisResult.status == "approved",
+        )
+    ).scalars().all())
     return {r.analysis_code: r.final_result for r in results if r.final_result is not None}
 
 
@@ -161,10 +165,12 @@ def register_routes(bp):
         - composite → нэгдсэн/эхлэл дээжний чанар
         """
         safe_lab = escape_like_pattern(lab_number)
-        samples = Sample.query.filter(
-            Sample.client_name == "WTL",
-            Sample.sample_code.like(f"{safe_lab}%", escape='\\'),
-        ).all()
+        samples = list(db.session.execute(
+            select(Sample).where(
+                Sample.client_name == "WTL",
+                Sample.sample_code.like(f"{safe_lab}%", escape='\\'),
+            )
+        ).scalars().all())
 
         if not samples:
             return jsonify({"error": _("WTL дээж олдсонгүй: %(lab)s") % {"lab": lab_number}}), 404

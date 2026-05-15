@@ -13,6 +13,8 @@ from flask import render_template, flash, redirect, url_for, request, abort, Blu
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
+from sqlalchemy import select
+
 from app import db
 from app.constants import CHPP_CONFIG_GROUPS
 from app.forms import UserManagementForm, SimpleProfileForm
@@ -76,12 +78,16 @@ def manage_users():
                 # Schema validation failed — multiple error messages, re-render form
                 for msg in message.split('\n'):
                     flash(msg, 'danger')
-                users = User.query.order_by(User.id).all()
+                users = list(db.session.execute(
+                    select(User).order_by(User.id)
+                ).scalars().all())
                 return render_template('manage_users.html', title='Хэрэглэгчийн удирдлага', users=users, form=form)
             elif 'Нууц үг' in message:
                 # Password policy failed — re-render form
                 flash(message, 'danger')
-                users = User.query.order_by(User.id).all()
+                users = list(db.session.execute(
+                    select(User).order_by(User.id)
+                ).scalars().all())
                 return render_template('manage_users.html', title='Хэрэглэгчийн удирдлага', users=users, form=form)
             elif 'аль хэдийн' in message:
                 # Duplicate username
@@ -93,7 +99,9 @@ def manage_users():
             flash(message, 'success')
         return redirect(url_for('admin.manage_users'))
 
-    users = User.query.order_by(User.id).all()
+    users = list(db.session.execute(
+        select(User).order_by(User.id)
+    ).scalars().all())
     return render_template('manage_users.html', title='Хэрэглэгчийн удирдлага', users=users, form=form)
 
 

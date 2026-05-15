@@ -12,6 +12,7 @@ from flask import render_template, flash, redirect, url_for, request, abort, cur
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -62,9 +63,11 @@ def register_routes(bp):
             if not new_code:
                 flash(_l("Дээжний код хоосон байж болохгүй."), "danger")
             # Case-insensitive duplicate check
-            elif code_changed and Sample.query.filter(
-                db.func.upper(Sample.sample_code) == new_code.upper(),
-                Sample.id != sample_id
+            elif code_changed and db.session.execute(
+                select(Sample.id).where(
+                    func.upper(Sample.sample_code) == new_code.upper(),
+                    Sample.id != sample_id,
+                ).limit(1)
             ).first():
                 flash(
                     _l('АЛДАА: "%(code)s" кодтой дээж аль хэдийн бүртгэгдсэн байна.') % {'code': new_code},
@@ -286,11 +289,13 @@ def register_routes(bp):
             return redirect(url_for("main.sample_disposal"))
 
         # Find coal samples without retention date
-        samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.retention_date.is_(None),
-            Sample.disposal_date.is_(None)
-        ).all()
+        samples = list(db.session.execute(
+            select(Sample).where(
+                Sample.lab_type == 'coal',
+                Sample.retention_date.is_(None),
+                Sample.disposal_date.is_(None),
+            )
+        ).scalars().all())
 
         if not samples:
             flash(_l("Хадгалах хугацаагүй дээж олдсонгүй."), "info")

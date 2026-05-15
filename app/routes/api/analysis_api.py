@@ -16,7 +16,7 @@ import json
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
-from sqlalchemy import or_, not_
+from sqlalchemy import or_, not_, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
@@ -78,7 +78,7 @@ def register_routes(bp):
 
             like_clauses = [text_lc.like(f'%"{t}"%') for t in terms]
 
-            q = Sample.query.filter(
+            stmt = select(Sample).where(
                 Sample.lab_type == 'coal',
                 Sample.status.in_(["new", "New"]),
                 or_(*like_clauses),
@@ -86,10 +86,11 @@ def register_routes(bp):
             )
 
             if _requires_mass_gate(base_code):
-                q = q.filter(or_(not_(_has_m_task_sql()), Sample.mass_ready.is_(True)))
+                stmt = stmt.where(or_(not_(_has_m_task_sql()), Sample.mass_ready.is_(True)))
 
             from app.constants import MAX_ANALYSIS_RESULTS
-            return q.order_by(Sample.received_date.desc(), Sample.id.desc()).limit(MAX_ANALYSIS_RESULTS).all()
+            stmt = stmt.order_by(Sample.received_date.desc(), Sample.id.desc()).limit(MAX_ANALYSIS_RESULTS)
+            return list(db.session.execute(stmt).scalars().all())
 
         rows = await asyncio.to_thread(_query_eligible)
         from app.constants import CHPP_2H_SAMPLES_ORDER
@@ -286,12 +287,14 @@ def register_routes(bp):
     async def check_ready_samples():
         try:
             cutoff_time = now_local() - timedelta(hours=12)
-            pending_samples = Sample.query.filter(
-                Sample.received_date >= cutoff_time,
-                Sample.client_name == 'CHPP',
-                Sample.sample_type.in_(['2 hourly', '4 hourly', '2 Hourly', '4 Hourly']),
-                ~Sample.status.in_(['completed', 'reported', 'archived'])
-            ).all()
+            pending_samples = list(db.session.execute(
+                select(Sample).where(
+                    Sample.received_date >= cutoff_time,
+                    Sample.client_name == 'CHPP',
+                    Sample.sample_type.in_(['2 hourly', '4 hourly', '2 Hourly', '4 Hourly']),
+                    ~Sample.status.in_(['completed', 'reported', 'archived']),
+                )
+            ).scalars().all())
 
             ready_count = 0
             ready_samples_list = []

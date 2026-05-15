@@ -15,6 +15,8 @@ from flask_mail import Message
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font
 
+from sqlalchemy import select
+
 from app import db, mail
 from app.constants import UserRole
 from app.utils.decorators import role_required
@@ -194,12 +196,14 @@ def send_hourly_report():
         # =========================================================================
         # 4. ХЭСЭГ 1: 2 HOURLY ДЭЭЖҮҮД (FIXED POSITIONING)
         # =========================================================================
-        samples_2h = Sample.query.filter(
-            Sample.received_date >= start_time,
-            Sample.received_date <= end_time,
-            Sample.client_name == 'CHPP',
-            Sample.sample_type.in_(['2 hourly', '2 Hourly'])
-        ).all()
+        samples_2h = list(db.session.execute(
+            select(Sample).where(
+                Sample.received_date >= start_time,
+                Sample.received_date <= end_time,
+                Sample.client_name == 'CHPP',
+                Sample.sample_type.in_(['2 hourly', '2 Hourly']),
+            )
+        ).scalars().all())
 
         row_is_partial = {20: True, 33: True, 46: True, 59: False, 72: False}
 
@@ -262,12 +266,14 @@ def send_hourly_report():
         # =========================================================================
         # 5. ХЭСЭГ 2: 4 HOURLY
         # =========================================================================
-        samples_4h = Sample.query.filter(
-            Sample.received_date >= start_time,
-            Sample.received_date <= end_time,
-            Sample.client_name == 'CHPP',
-            Sample.sample_type.in_(['4 hourly', '4 Hourly'])
-        ).all()
+        samples_4h = list(db.session.execute(
+            select(Sample).where(
+                Sample.received_date >= start_time,
+                Sample.received_date <= end_time,
+                Sample.client_name == 'CHPP',
+                Sample.sample_type.in_(['4 hourly', '4 Hourly']),
+            )
+        ).scalars().all())
 
         for s in samples_4h:
             hour = s.received_date.hour

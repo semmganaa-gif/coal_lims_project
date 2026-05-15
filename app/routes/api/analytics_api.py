@@ -9,7 +9,9 @@ and intelligent insights for the LIMS dashboard.
 
 from flask import request
 from flask_login import login_required
+from sqlalchemy import select
 
+from app import db
 from app.routes.api.helpers import api_success, api_error
 
 
@@ -72,14 +74,14 @@ def register_routes(bp):
         now = now_local()
         start = now - timedelta(hours=min(hours, 48))
 
-        query = Sample.query.filter(
+        stmt = select(Sample).where(
             Sample.received_date >= start,
             Sample.received_date <= now,
         )
         if client:
-            query = query.filter(Sample.client_name == client)
+            stmt = stmt.where(Sample.client_name == client)
 
-        samples = query.all()
+        samples = list(db.session.execute(stmt).scalars().all())
 
         try:
             anomalies = detect_anomalies(samples)
@@ -159,14 +161,14 @@ def register_routes(bp):
         now = now_local()
         start = now - timedelta(hours=min(hours, 48))
 
-        query = Sample.query.filter(
+        stmt = select(Sample).where(
             Sample.received_date >= start,
             Sample.received_date <= now,
         )
         if client:
-            query = query.filter(Sample.client_name == client)
+            stmt = stmt.where(Sample.client_name == client)
 
-        samples = query.all()
+        samples = list(db.session.execute(stmt).scalars().all())
 
         try:
             qs = calculate_quality_score(samples)

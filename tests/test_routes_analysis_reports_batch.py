@@ -889,9 +889,8 @@ class TestReportsDashboard:
     """Tests for GET /reports/dashboard"""
 
     def _setup_mocks(self, mock_sample, mock_db, mock_now, dt, top_users_raw=None, scalar_val=0, sample_count=0):
-        """Common setup for dashboard mocks."""
+        """Common setup for dashboard mocks (SQLAlchemy 2.0 native API)."""
         mock_now.return_value = dt
-        mock_sample.query.filter.return_value.count.return_value = sample_count
 
         # Create column mocks that support comparison operators
         col_mock = MagicMock()
@@ -903,6 +902,16 @@ class TestReportsDashboard:
         mock_sample.received_date = col_mock
         mock_sample.id = MagicMock()
 
+        # db.session.execute(...).scalar_one() — Sample count queries
+        # db.session.execute(...).scalar() — scalar query (sub query helpers)
+        # db.session.execute(...).all() — group_by + limit + all (top_users_raw)
+        exec_result = MagicMock()
+        exec_result.scalar_one.return_value = sample_count
+        exec_result.scalar.return_value = scalar_val
+        exec_result.all.return_value = top_users_raw or []
+        mock_db.session.execute.return_value = exec_result
+
+        # Legacy chains (analyses_month/year + top_users use db.session.query)
         mock_chain = MagicMock()
         mock_chain.scalar.return_value = scalar_val
         mock_chain.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (

@@ -22,6 +22,7 @@ from flask import (
 )
 from flask_babel import gettext as _, lazy_gettext as _l
 from flask_login import login_required, current_user
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
 
@@ -248,26 +249,28 @@ def register_routes(bp):
         limit = min(int(request.args.get("limit", 1000)), 5000)
         include_results = request.args.get("include_results", "false").lower() in ("1", "true", "yes")
 
-        query = Sample.query.filter(Sample.lab_type == "coal")
+        stmt = select(Sample).where(Sample.lab_type == "coal")
         if client:
-            query = query.filter(Sample.client_name == client)
+            stmt = stmt.where(Sample.client_name == client)
         if sample_type:
-            query = query.filter(Sample.sample_type == sample_type)
+            stmt = stmt.where(Sample.sample_type == sample_type)
         if start_date:
             try:
                 sd = datetime.strptime(start_date, "%Y-%m-%d")
-                query = query.filter(Sample.received_date >= sd)
+                stmt = stmt.where(Sample.received_date >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
                 ed = datetime.strptime(end_date, "%Y-%m-%d")
                 ed = datetime.combine(ed, datetime.max.time())
-                query = query.filter(Sample.received_date <= ed)
+                stmt = stmt.where(Sample.received_date <= ed)
             except ValueError:
                 pass
 
-        samples = query.order_by(Sample.received_date.desc()).limit(limit).all()
+        samples = list(db.session.execute(
+            stmt.order_by(Sample.received_date.desc()).limit(limit)
+        ).scalars().all())
         excel_data = create_sample_export(samples, _include_results=include_results)
         filename = f"samples_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
         return send_excel_response(excel_data, filename)
@@ -283,26 +286,28 @@ def register_routes(bp):
         end_date = request.args.get("end_date")
         limit = min(int(request.args.get("limit", 1000)), 5000)
 
-        query = AnalysisResult.query.options(
+        stmt = select(AnalysisResult).options(
             jl(AnalysisResult.sample), jl(AnalysisResult.user)
         )
         if status:
-            query = query.filter(AnalysisResult.status == status)
+            stmt = stmt.where(AnalysisResult.status == status)
         if start_date:
             try:
                 sd = datetime.strptime(start_date, "%Y-%m-%d")
-                query = query.filter(AnalysisResult.created_at >= sd)
+                stmt = stmt.where(AnalysisResult.created_at >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
                 ed = datetime.strptime(end_date, "%Y-%m-%d")
                 ed = datetime.combine(ed, datetime.max.time())
-                query = query.filter(AnalysisResult.created_at <= ed)
+                stmt = stmt.where(AnalysisResult.created_at <= ed)
             except ValueError:
                 pass
 
-        results = query.order_by(AnalysisResult.created_at.desc()).limit(limit).all()
+        results = list(db.session.execute(
+            stmt.order_by(AnalysisResult.created_at.desc()).limit(limit)
+        ).scalars().all())
         excel_data = create_analysis_export(results)
         filename = f"analysis_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
         return send_excel_response(excel_data, filename)
@@ -313,7 +318,9 @@ def register_routes(bp):
     @bp.route("/sample_count", methods=["GET"])
     @login_required
     async def htmx_sample_count():
-        count = Sample.query.filter(Sample.lab_type == "coal").count()
+        count = db.session.execute(
+            select(func.count(Sample.id)).where(Sample.lab_type == "coal")
+        ).scalar_one()
         return f'<strong class="text-primary">{count}</strong> samples'
 
     @bp.route("/search_samples", methods=["GET"])
@@ -348,9 +355,11 @@ def register_routes(bp):
     @bp.route("/sample_analysis_results/<int:sample_id>")
     @login_required
     async def sample_analysis_results(sample_id):
-        results = AnalysisResult.query.filter_by(
-            sample_id=sample_id
-        ).order_by(AnalysisResult.analysis_code).all()
+        results = list(db.session.execute(
+            select(AnalysisResult)
+            .where(AnalysisResult.sample_id == sample_id)
+            .order_by(AnalysisResult.analysis_code)
+        ).scalars().all())
 
         return jsonify({
             "success": True,

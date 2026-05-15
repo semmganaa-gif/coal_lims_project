@@ -1,6 +1,8 @@
 # app/labs/water_lab/chemistry/__init__.py
 """Усны хими лаборатори (Chemistry Lab)."""
 
+from sqlalchemy import func, select
+
 from app.labs.base import BaseLab
 
 
@@ -31,18 +33,26 @@ class ChemistryLab(BaseLab):
     def sample_query(self, statuses=None):
         """Усны хими дээжүүдийг шүүнэ."""
         from app.models import Sample
-        q = Sample.query.filter(Sample.lab_type.in_(['water_chemistry']))
+        stmt = select(Sample).where(Sample.lab_type.in_(['water_chemistry']))
         if statuses:
-            q = q.filter(Sample.status.in_(statuses))
-        return q
+            stmt = stmt.where(Sample.status.in_(statuses))
+        return stmt
 
     def sample_stats(self):
         """Усны хими дээжийн тоон мэдээлэл."""
+        from app import db
         from app.models import Sample
-        base = Sample.query.filter(Sample.lab_type.in_(['water_chemistry']))
+
+        def _count(*conds):
+            return db.session.execute(
+                select(func.count(Sample.id)).where(
+                    Sample.lab_type.in_(['water_chemistry']), *conds
+                )
+            ).scalar_one()
+
         return {
-            'total': base.count(),
-            'new': base.filter(Sample.status == 'new').count(),
-            'in_progress': base.filter(Sample.status.in_(['in_progress', 'analysis'])).count(),
-            'completed': base.filter(Sample.status == 'completed').count(),
+            'total': _count(),
+            'new': _count(Sample.status == 'new'),
+            'in_progress': _count(Sample.status.in_(['in_progress', 'analysis'])),
+            'completed': _count(Sample.status == 'completed'),
         }

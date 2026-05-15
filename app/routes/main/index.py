@@ -8,6 +8,9 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
+from sqlalchemy import func, select
+
+from app import db
 from app.models import Sample
 from app.forms import AddSampleForm
 
@@ -66,16 +69,17 @@ def register_routes(bp):
     @bp.route("/coal/hub")
     @login_required
     def coal_hub():
-        total_samples = Sample.query.filter_by(lab_type='coal').count()
-        new_samples = Sample.query.filter(
-            Sample.lab_type == 'coal', Sample.status == 'new'
-        ).count()
-        in_progress = Sample.query.filter(
-            Sample.lab_type == 'coal', Sample.status.in_(['in_progress', 'analysis'])
-        ).count()
-        completed = Sample.query.filter(
-            Sample.lab_type == 'coal', Sample.status == 'completed'
-        ).count()
+        def _count(*conds):
+            return db.session.execute(
+                select(func.count(Sample.id)).where(*conds)
+            ).scalar_one()
+        total_samples = _count(Sample.lab_type == 'coal')
+        new_samples = _count(Sample.lab_type == 'coal', Sample.status == 'new')
+        in_progress = _count(
+            Sample.lab_type == 'coal',
+            Sample.status.in_(['in_progress', 'analysis']),
+        )
+        completed = _count(Sample.lab_type == 'coal', Sample.status == 'completed')
         return render_template(
             'coal_hub.html', title='Нүүрсний лаборатори',
             total_samples=total_samples, new_samples=new_samples,

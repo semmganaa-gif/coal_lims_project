@@ -9,7 +9,7 @@ from datetime import date
 from flask import render_template, flash, redirect, url_for, request, jsonify, abort
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, select
 
 from app import db
 from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult
@@ -49,9 +49,11 @@ def register_routes(bp):
         """Санал гомдлын дашбоард - Excel бүртгэлийн загвараар."""
         year = request.args.get('year', date.today().year, type=int)
 
-        complaints = CustomerComplaint.query.filter(
-            extract('year', CustomerComplaint.complaint_date) == year
-        ).order_by(CustomerComplaint.complaint_date.desc()).all()
+        complaints = list(db.session.execute(
+            select(CustomerComplaint)
+            .where(extract('year', CustomerComplaint.complaint_date) == year)
+            .order_by(CustomerComplaint.complaint_date.desc())
+        ).scalars().all())
 
         total = len(complaints)
 
@@ -202,11 +204,13 @@ def register_routes(bp):
                     if v.get('analysis_result_id')
                 ]
                 if result_ids:
-                    results = AnalysisResult.query.filter(
-                        AnalysisResult.id.in_(result_ids),
-                        AnalysisResult.sample_id == int(sample_id),
-                        AnalysisResult.status == 'approved'
-                    ).all()
+                    results = list(db.session.execute(
+                        select(AnalysisResult).where(
+                            AnalysisResult.id.in_(result_ids),
+                            AnalysisResult.sample_id == int(sample_id),
+                            AnalysisResult.status == 'approved',
+                        )
+                    ).scalars().all())
 
                     from app.models import Sample
                     sample_obj = db.session.get(Sample, int(sample_id))
@@ -260,9 +264,11 @@ def register_routes(bp):
         # Холбогдох дээжийн шинжилгээний үр дүн
         analysis_results = []
         if complaint.related_sample_id:
-            analysis_results = AnalysisResult.query.filter_by(
-                sample_id=complaint.related_sample_id
-            ).order_by(AnalysisResult.analysis_code).all()
+            analysis_results = list(db.session.execute(
+                select(AnalysisResult)
+                .where(AnalysisResult.sample_id == complaint.related_sample_id)
+                .order_by(AnalysisResult.analysis_code)
+            ).scalars().all())
 
         # Дахин шинжилгээний мэдээлэл
         reanalysis_codes = complaint.get_reanalysis_codes()
