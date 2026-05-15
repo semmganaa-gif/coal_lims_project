@@ -61,7 +61,14 @@ class AnalysisResultLog(HashableMixin, db.Model):
     # Монгол цаг
     timestamp = db.Column(db.DateTime, index=True, default=now_mn, nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    # SET NULL: User устсан ч audit history үлдэнэ (ISO 17025 immutable trail).
+    # Архивлагдсан user тэмдэглэгээ original_user_id-д хэвээр хадгалагдана.
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="select"))
 
     # SET NULL: Sample устахад log үлдэнэ
@@ -80,8 +87,14 @@ class AnalysisResultLog(HashableMixin, db.Model):
     )
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
 
-    # Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй)
-    original_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, index=True)
+    # Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй).
+    # SET NULL: User устсан ч анхны бүртгэлийн контекст үлдэнэ.
+    original_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     original_user = db.relationship("User", foreign_keys=[original_user_id])
 
     # Анхны хадгалсан цаг (хэзээ ч өөрчлөгдөхгүй)

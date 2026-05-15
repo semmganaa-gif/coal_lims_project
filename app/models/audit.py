@@ -30,7 +30,12 @@ class AuditLog(HashableMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, nullable=False, default=now_mn, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
+    # SET NULL: User устсан ч audit history үлдэнэ (ISO 17025 immutable trail).
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL"),
+        index=True,
+    )
     action = db.Column(db.String(50), nullable=False, index=True)  # login, logout, delete_sample, etc
     resource_type = db.Column(db.String(50), index=True)  # Sample, User, Equipment, AnalysisResult
     resource_id = db.Column(db.Integer)
