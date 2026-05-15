@@ -159,3 +159,14 @@
 .collapse {
   visibility: visible;
 }
+
+/*
+ * ---- Alpine.js x-cloak (FOUC хамгаалалт) ----
+ * Alpine-ийн idiomatic паттерн. Alpine init дуустал `[x-cloak]` элемент хаагдсан
+ * байх ёстой; Alpine attribute-ийг init үед устгана. Энэ rule байхгүй бол
+ * x-show="false" элементүүд анх parsing үед түр харагдаад дараа нь нуугдана
+ * (Flash of Unstyled Content). Mobile drawer гэх мэт overlay-д заавал хэрэгтэй.
+ */
+[x-cloak] {
+  display: none !important;
+}

@@ -1,104 +1,105 @@
 {# ================================================================
  MOBILE OFF-CANVAS DRAWER COMPONENT
- Alpine.js + Tailwind CSS
+ ----------------------------------------------------------------
+ Alpine.js (drawerOpen state) + Tailwind v4 (no prefix) загвар.
+ Эцэг хуудаснаас `x-data="{ drawerOpen: false }"` тогтоосон байх ёстой.
+ Backdrop дээр дарвал, ESC дарвал, эсвэл footer "Logout" дээр дарвал хаагдана.
  ================================================================ #}
 
-{# Backdrop #}
-<div x-show="drawerOpen"
- x-transition:enter="tw-transition tw-ease-out tw-duration-300"
- x-transition:enter-start="tw-opacity-0"
- x-transition:enter-end="tw-opacity-100"
- x-transition:leave="tw-transition tw-ease-in tw-duration-200"
- x-transition:leave-start="tw-opacity-100"
- x-transition:leave-end="tw-opacity-0"
+{# ---- Backdrop ---- #}
+<div x-cloak x-show="drawerOpen"
+ x-transition:enter="transition ease-out duration-300"
+ x-transition:enter-start="opacity-0"
+ x-transition:enter-end="opacity-100"
+ x-transition:leave="transition ease-in duration-200"
+ x-transition:leave-start="opacity-100"
+ x-transition:leave-end="opacity-0"
  @click="drawerOpen = false"
- 
->
-</div>
+ class="fixed inset-0 bg-black/50 z-40 md:hidden"
+></div>
 
-{# Drawer Panel #}
-<aside x-show="drawerOpen"
- x-transition:enter="tw-transition tw-ease-out tw-duration-300"
- x-transition:enter-start="tw--translate-x-full"
- x-transition:enter-end="tw-translate-x-0"
- x-transition:leave="tw-transition tw-ease-in tw-duration-200"
- x-transition:leave-start="tw-translate-x-0"
- x-transition:leave-end="tw--translate-x-full"
+{# ---- Drawer Panel ---- #}
+<aside x-cloak x-show="drawerOpen"
+ x-transition:enter="transition ease-out duration-300"
+ x-transition:enter-start="-translate-x-full"
+ x-transition:enter-end="translate-x-0"
+ x-transition:leave="transition ease-in duration-200"
+ x-transition:leave-start="translate-x-0"
+ x-transition:leave-end="-translate-x-full"
  @keydown.escape.window="drawerOpen = false"
- 
+ class="fixed top-0 left-0 h-full w-72 max-w-[85vw] bg-white shadow-xl z-50 md:hidden flex flex-col"
 >
 
- {# ---- DRAWER HEADER ---- #}
- <div>
- <div>
+ {# ---- HEADER ---- #}
+ <div class="flex items-center justify-between p-3 border-b border-slate-200">
+ <div class="flex items-center gap-2">
  <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}"
  alt="ER Lab"
-
+ class="h-9 w-auto"
  data-error-action="hide-self">
  <div>
- <span>LIMS</span>
- <div>Corelink</div>
+ <span class="text-sm font-bold text-slate-900">LIMS</span>
+ <div class="text-2xs text-slate-500">Corelink</div>
  </div>
  </div>
  <button @click="drawerOpen = false"
- class="hover: hover:"
+ class="p-2 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
  aria-label="Close">
  <i class="bi bi-x-lg"></i>
  </button>
  </div>
 
- {# ---- DRAWER BODY ---- #}
- <div>
+ {# ---- BODY (scrollable) ---- #}
+ <div class="flex-1 overflow-y-auto p-3 space-y-3">
  {% block drawer_content %}
- {# Sidebar content will be injected here #}
 
  {# Quick Reference Card #}
- <div x-data="{ expanded: true }">
+ <div x-data="{ expanded: true }" class="border border-slate-200 rounded-lg">
  <button @click="expanded = !expanded"
->
- <span><i class="bi bi-info-circle"></i>{{ _("Quick Reference") }}</span>
+ class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+ <span class="flex items-center gap-2"><i class="bi bi-info-circle text-info-2"></i>{{ _("Quick Reference") }}</span>
  <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
  </button>
  <div x-show="expanded" x-collapse>
- <div id="drawer-quick-ref">
+ <div id="drawer-quick-ref" class="px-3 py-2 text-xs-3 text-slate-600">
  {# Content loaded dynamically or via include #}
  </div>
  </div>
  </div>
 
  {# Timer Panel Card #}
- <div x-data="{ expanded: true }">
+ <div x-data="{ expanded: true }" class="border border-slate-200 rounded-lg">
  <button @click="expanded = !expanded"
->
- <span><i class="bi bi-stopwatch"></i>{{ _("Timer") }}</span>
+ class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+ <span class="flex items-center gap-2"><i class="bi bi-stopwatch text-warn"></i>{{ _("Timer") }}</span>
  <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
  </button>
  <div x-show="expanded" x-collapse>
- <div id="drawer-timer-panel">
+ <div id="drawer-timer-panel" class="px-3 py-2 text-xs-3 text-slate-600">
  {# Timer content loaded dynamically or via include #}
  </div>
  </div>
  </div>
 
  {# Navigation Links #}
- <div>
- <div>
+ <div class="border border-slate-200 rounded-lg">
+ <div class="px-3 py-2 text-3xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 flex items-center gap-2">
  <i class="bi bi-grid"></i>{{ _("Analysis") }}
  </div>
- <nav>
+ <nav class="flex flex-col py-1">
  <a href="{{ url_for('analysis.analysis_hub') }}"
- class="hover:">
- <i class="bi bi-house"></i>
+ class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+ <i class="bi bi-house text-info-2"></i>
  <span>{{ _("Analysis Hub") }}</span>
  </a>
  <a href="{{ url_for('main.index') }}"
- class="hover:">
- <i class="bi bi-box"></i>
+ class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+ <i class="bi bi-box text-accent"></i>
  <span>{{ _("Samples") }}</span>
  </a>
  <a href="{{ url_for('quality.complaints_list') }}"
- class="hover:">
- <i class="bi bi-check-circle"></i>
+ class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+ <i class="bi bi-check-circle text-pass"></i>
  <span>{{ _("Quality") }}</span>
  </a>
  </nav>
@@ -107,19 +108,19 @@
  {% endblock %}
  </div>
 
- {# ---- DRAWER FOOTER ---- #}
- <div>
- <div>
- <div>
+ {# ---- FOOTER ---- #}
+ <div class="border-t border-slate-200 p-3 space-y-2">
+ <div class="flex items-center justify-between text-xs-3">
+ <div class="flex items-center gap-2 text-slate-700">
  <i class="bi bi-person-circle"></i>
  {{ current_user.name if current_user.is_authenticated else _('Guest') }}
  </div>
  <a href="{{ url_for('main.logout') }}"
- class="hover:">
+ class="flex items-center gap-1 text-fail hover:text-fail-rose">
  <i class="bi bi-box-arrow-right"></i> {{ _("Logout") }}
  </a>
  </div>
- <div>
+ <div class="text-3xs text-slate-400 text-center">
  CORELINK LIMS v1.0
  </div>
  </div>
