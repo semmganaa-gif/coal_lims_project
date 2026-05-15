@@ -9,7 +9,7 @@ from datetime import datetime as _dt, timedelta as _td
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import or_
+from sqlalchemy import or_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -67,10 +67,12 @@ def _build_water_rows(samples, include_lab_type=False):
 
     # ── Бүх үр дүн (хими + микро) нэг query ──
     all_codes = active_chem_codes + ['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']
-    results = AnalysisResult.query.filter(
-        AnalysisResult.sample_id.in_(sample_ids),
-        AnalysisResult.analysis_code.in_(all_codes),
-    ).all()
+    results = list(db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.analysis_code.in_(all_codes),
+        )
+    ).scalars().all())
 
     # sample_id → { code → value } (хими)
     # sample_id → { micro fields } (микро water + air + swab)
@@ -224,7 +226,9 @@ def _build_multi_workspace(codes, template, title, analysis_code,
 
     # B: Шинэ сонгосон
     if new_ids:
-        new_samples = Sample.query.filter(Sample.id.in_(new_ids)).all()
+        new_samples = list(db.session.execute(
+            select(Sample).where(Sample.id.in_(new_ids))
+        ).scalars().all())
         smap = {s.id: s for s in new_samples}
         for sid in new_ids:
             if sid not in seen and sid in smap:
@@ -236,11 +240,13 @@ def _build_multi_workspace(codes, template, title, analysis_code,
     rejected_samples_info = {}
     if samples_to_analyze:
         sample_ids = [s.id for s in samples_to_analyze]
-        results = AnalysisResult.query.filter(
-            AnalysisResult.sample_id.in_(sample_ids),
-            AnalysisResult.analysis_code.in_(codes),
-            AnalysisResult.status.in_(['pending_review', 'rejected', 'approved'])
-        ).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(
+                AnalysisResult.sample_id.in_(sample_ids),
+                AnalysisResult.analysis_code.in_(codes),
+                AnalysisResult.status.in_(['pending_review', 'rejected', 'approved']),
+            )
+        ).scalars().all())
         for r in results:
             raw = r.raw_data
             if isinstance(raw, str):
@@ -371,9 +377,11 @@ def water_hub():
 @lab_required('water_chemistry')
 def water_analysis_hub():
     """Усны шинжилгээний төв (картууд)."""
-    sample_count = Sample.query.filter(
-        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
-    ).count()
+    sample_count = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type.in_(['water_chemistry', 'microbiology']),
+        )
+    ).scalar_one()
     return render_template(
         'labs/water/chemistry/water_analysis_hub.html',
         title='Усны шинжилгээний төв',
@@ -421,10 +429,12 @@ def water_archive():
             flash(result.message, 'success' if result.success else 'danger')
         return redirect(url_for('water.water_archive'))
 
-    archived_count = Sample.query.filter(
-        Sample.lab_type.in_(['water_chemistry', 'microbiology']),
-        Sample.status == 'archived'
-    ).count()
+    archived_count = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type.in_(['water_chemistry', 'microbiology']),
+            Sample.status == 'archived',
+        )
+    ).scalar_one()
 
     return render_template(
         'labs/water/chemistry/water_archive.html',
@@ -440,25 +450,27 @@ def archive_data():
     """Архивлагдсан усны дээжүүд + шинжилгээний үр дүн."""
     lab_type_filter = request.args.get('lab_type', 'all')
 
-    q = Sample.query.filter(Sample.status == 'archived')
+    stmt = select(Sample).where(Sample.status == 'archived')
 
     if lab_type_filter == 'water_chemistry':
-        q = q.filter(Sample.lab_type == 'water_chemistry')
+        stmt = stmt.where(Sample.lab_type == 'water_chemistry')
     elif lab_type_filter == 'microbiology':
-        q = q.filter(Sample.lab_type == 'microbiology')
+        stmt = stmt.where(Sample.lab_type == 'microbiology')
     else:
-        q = q.filter(Sample.lab_type.in_(['water_chemistry', 'microbiology']))
+        stmt = stmt.where(Sample.lab_type.in_(['water_chemistry', 'microbiology']))
 
-    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
+    stmt = stmt.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500)
+    samples = list(db.session.execute(stmt).scalars().all())
 
-    from sqlalchemy import func, case
-    count_row = db.session.query(
+    from sqlalchemy import case
+    count_stmt = select(
         func.count(case((Sample.lab_type == 'water_chemistry', Sample.id))).label('water'),
         func.count(case((Sample.lab_type == 'microbiology', Sample.id))).label('micro'),
-    ).filter(
+    ).where(
         Sample.lab_type.in_(['water_chemistry', 'microbiology']),
-        Sample.status == 'archived'
-    ).first()
+        Sample.status == 'archived',
+    )
+    count_row = db.session.execute(count_stmt).first()
     water_count = count_row.water if count_row else 0
     micro_count = count_row.micro if count_row else 0
     total_archived = water_count + micro_count
@@ -493,15 +505,16 @@ def summary_data():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    q = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.lab_type == 'water_chemistry',
-        Sample.status != 'archived'
+        Sample.status != 'archived',
     )
     if date_from:
-        q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
+        stmt = stmt.where(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
     if date_to:
-        q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
-    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300).all()
+        stmt = stmt.where(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
+    stmt = stmt.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300)
+    samples = list(db.session.execute(stmt).scalars().all())
     if not samples:
         return jsonify({'rows': [], 'chem_params': []})
 
@@ -658,7 +671,9 @@ def workspace(code):
 
     # B: Шинэ сонгосон
     if new_ids:
-        new_samples = Sample.query.filter(Sample.id.in_(new_ids)).all()
+        new_samples = list(db.session.execute(
+            select(Sample).where(Sample.id.in_(new_ids))
+        ).scalars().all())
         smap = {s.id: s for s in new_samples}
         for sid in new_ids:
             if sid not in seen and sid not in approved_ids and sid in smap:
@@ -670,11 +685,13 @@ def workspace(code):
     rejected_samples_info = {}
     if samples_to_analyze:
         sample_ids = [s.id for s in samples_to_analyze]
-        results = AnalysisResult.query.filter(
-            AnalysisResult.sample_id.in_(sample_ids),
-            AnalysisResult.analysis_code == code_upper,
-            AnalysisResult.status.in_(['pending_review', 'rejected'])
-        ).all()
+        results = list(db.session.execute(
+            select(AnalysisResult).where(
+                AnalysisResult.sample_id.in_(sample_ids),
+                AnalysisResult.analysis_code == code_upper,
+                AnalysisResult.status.in_(['pending_review', 'rejected']),
+            )
+        ).scalars().all())
         for r in results:
             raw = r.raw_data
             if isinstance(raw, str):
@@ -863,9 +880,9 @@ def eligible_samples(code):
     """Боломжит дээж (усны химийн шинжилгээнд)."""
     from datetime import datetime as _dt, timedelta as _td
 
-    q = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.lab_type.in_(['water_chemistry']),
-        Sample.status.in_(['new', 'in_progress'])
+        Sample.status.in_(['new', 'in_progress']),
     )
 
     # Огнооны шүүлтүүр (workspace-тэй sync)
@@ -876,9 +893,10 @@ def eligible_samples(code):
         filter_days = 7
     if filter_days > 0:
         cutoff = (_dt.now() - _td(days=filter_days)).date()
-        q = q.filter(Sample.received_date >= cutoff)
+        stmt = stmt.where(Sample.received_date >= cutoff)
 
-    samples = q.order_by(Sample.chem_lab_id.asc()).all()
+    stmt = stmt.order_by(Sample.chem_lab_id.asc())
+    samples = list(db.session.execute(stmt).scalars().all())
     # WATER_UNITS дахь дарааллаар эрэмбэлэх индекс
     order_map = {name: idx for idx, name in enumerate(ALL_WATER_SAMPLE_NAMES)}
     result = []
@@ -982,12 +1000,15 @@ def save_results():
     )
 
     # ✅ C-2 fix: Давхардал шалгах — UPSERT логик (with_for_update lock)
-    ar = AnalysisResult.query.filter_by(
-        sample_id=sample_id,
-        analysis_code=analysis_code,
-    ).filter(
-        AnalysisResult.status.in_(['pending_review', 'rejected'])
-    ).with_for_update().first()
+    ar = db.session.execute(
+        select(AnalysisResult)
+        .where(
+            AnalysisResult.sample_id == sample_id,
+            AnalysisResult.analysis_code == analysis_code,
+            AnalysisResult.status.in_(['pending_review', 'rejected']),
+        )
+        .with_for_update()
+    ).scalar_one_or_none()
 
     if ar:
         # Одоо байгаа pending/rejected үр дүнг шинэчлэх
@@ -997,11 +1018,15 @@ def save_results():
         ar.status = 'pending_review'
     else:
         # Approved үр дүн байгаа эсэх шалгах
-        approved = AnalysisResult.query.filter_by(
-            sample_id=sample_id,
-            analysis_code=analysis_code,
-            status='approved'
-        ).with_for_update().first()
+        approved = db.session.execute(
+            select(AnalysisResult)
+            .where(
+                AnalysisResult.sample_id == sample_id,
+                AnalysisResult.analysis_code == analysis_code,
+                AnalysisResult.status == 'approved',
+            )
+            .with_for_update()
+        ).scalar_one_or_none()
         if approved:
             return jsonify({'success': False, 'message': 'This analysis is already approved. Use retest to re-enter.'}), 409
 
@@ -1027,16 +1052,17 @@ def save_results():
 def water_data():
     """Усны дээжийн жагсаалт (ус + микробиологи)."""
     from datetime import datetime as _dt
-    q = Sample.query.filter(
-        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
+    stmt = select(Sample).where(
+        Sample.lab_type.in_(['water_chemistry', 'microbiology']),
     )
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     if date_from:
-        q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
+        stmt = stmt.where(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
     if date_to:
-        q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
-    samples = q.order_by(Sample.id.asc()).limit(MAX_QUERY_LIMIT).all()
+        stmt = stmt.where(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
+    stmt = stmt.order_by(Sample.id.asc()).limit(MAX_QUERY_LIMIT)
+    samples = list(db.session.execute(stmt).scalars().all())
 
     result = []
     for idx, s in enumerate(reversed(samples), 1):
@@ -1100,8 +1126,10 @@ def edit_sample(sample_id):
 
         if not new_code:
             flash('Sample code cannot be empty.', 'danger')
-        elif code_changed and Sample.query.filter(
-            Sample.sample_code == new_code, Sample.id != sample_id
+        elif code_changed and db.session.execute(
+            select(Sample.id).where(
+                Sample.sample_code == new_code, Sample.id != sample_id,
+            ).limit(1)
         ).first():
             flash(f'"{new_code}" sample already registered.', 'danger')
         else:
@@ -1161,9 +1189,12 @@ def delete_samples():
                 continue
 
             # ✅ C-3 fix: Approved үр дүнтэй дээжийг хамгаалах
-            approved_count = AnalysisResult.query.filter_by(
-                sample_id=sample.id, status='approved'
-            ).count()
+            approved_count = db.session.execute(
+                select(func.count(AnalysisResult.id)).where(
+                    AnalysisResult.sample_id == sample.id,
+                    AnalysisResult.status == 'approved',
+                )
+            ).scalar_one()
             if approved_count > 0 and current_user.role != 'admin':
                 failed.append(f'{sample.sample_code} (Батлагдсан үр дүнтэй)')
                 continue
@@ -1293,9 +1324,11 @@ def worksheet_new():
     reagents = []
     try:
         from app.models.chemicals import Chemical as _Chem
-        reagents = _Chem.query.filter(
-            _Chem.status.in_(['active', 'low_stock'])
-        ).order_by(_Chem.name).all()
+        reagents = list(db.session.execute(
+            select(_Chem)
+            .where(_Chem.status.in_(['active', 'low_stock']))
+            .order_by(_Chem.name)
+        ).scalars().all())
     except Exception:
         pass
 
@@ -1317,9 +1350,11 @@ def worksheet_detail(ws_id):
     reagents = []
     try:
         from app.models.chemicals import Chemical as _Chem
-        reagents = _Chem.query.filter(
-            _Chem.status.in_(['active', 'low_stock'])
-        ).order_by(_Chem.name).all()
+        reagents = list(db.session.execute(
+            select(_Chem)
+            .where(_Chem.status.in_(['active', 'low_stock']))
+            .order_by(_Chem.name)
+        ).scalars().all())
     except Exception:
         pass
     return render_template(

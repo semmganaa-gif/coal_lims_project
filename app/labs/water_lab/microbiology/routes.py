@@ -11,7 +11,7 @@ from collections import defaultdict, OrderedDict
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
@@ -96,8 +96,10 @@ def edit_sample(sample_id):
 
         if not new_code:
             flash('Sample code cannot be empty.', 'danger')
-        elif code_changed and Sample.query.filter(
-            Sample.sample_code == new_code, Sample.id != sample_id
+        elif code_changed and db.session.execute(
+            select(Sample.id).where(
+                Sample.sample_code == new_code, Sample.id != sample_id,
+            ).limit(1)
         ).first():
             flash(f'"{new_code}" sample already registered.', 'danger')
         else:
@@ -299,8 +301,8 @@ def api_samples():
 
     category = request.args.get('category')
 
-    query = Sample.query.filter(
-        Sample.lab_type.in_(['microbiology'])
+    stmt = select(Sample).where(
+        Sample.lab_type.in_(['microbiology']),
     )
 
     # Category-д хамааралтай analysis код бүхий дээжийг шүүх
@@ -309,15 +311,18 @@ def api_samples():
         # analyses_to_perform JSON массив — exact match: '"CFU"' гэж хайна
         like_clauses = [Sample.analyses_to_perform.contains(f'"{c}"') for c in codes]
         from sqlalchemy import or_
-        query = query.filter(or_(*like_clauses))
+        stmt = stmt.where(or_(*like_clauses))
 
         # Аль хэдийн үр дүн хадгалсан дээжийг хасах
-        saved_ids = db.session.query(AnalysisResult.sample_id).filter_by(
-            analysis_code=category
-        ).subquery()
-        query = query.filter(~Sample.id.in_(saved_ids))
+        saved_ids_subq = (
+            select(AnalysisResult.sample_id)
+            .where(AnalysisResult.analysis_code == category)
+            .subquery()
+        )
+        stmt = stmt.where(~Sample.id.in_(select(saved_ids_subq)))
 
-    samples = query.order_by(Sample.id.desc()).limit(200).all()
+    stmt = stmt.order_by(Sample.id.desc()).limit(200)
+    samples = list(db.session.execute(stmt).scalars().all())
 
     # Previous result per sample (last approved/pending result for this category)
     _prev_key_map = {
@@ -329,16 +334,15 @@ def api_samples():
     if category in _prev_key_map and samples:
         result_key = _prev_key_map[category]
         sample_ids = [s.id for s in samples]
-        prev_ars = (
-            AnalysisResult.query
-            .filter(
+        prev_ars = list(db.session.execute(
+            select(AnalysisResult)
+            .where(
                 AnalysisResult.sample_id.in_(sample_ids),
                 AnalysisResult.analysis_code == category,
                 AnalysisResult.status.in_(['approved', 'pending_review']),
             )
             .order_by(AnalysisResult.id.desc())
-            .all()
-        )
+        ).scalars().all())
         seen = set()
         for ar in prev_ars:
             if ar.sample_id not in seen:
@@ -368,16 +372,17 @@ def api_samples():
 @lab_required('microbiology')
 def micro_grid_data():
     """Микробиологийн дээжний жагсаалт (grid-д зориулсан)."""
-    q = Sample.query.filter(
-        Sample.lab_type.in_(['microbiology'])
+    stmt = select(Sample).where(
+        Sample.lab_type.in_(['microbiology']),
     )
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     if date_from:
-        q = q.filter(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+        stmt = stmt.where(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
     if date_to:
-        q = q.filter(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
-    samples = q.order_by(Sample.id.desc()).limit(500).all()
+        stmt = stmt.where(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+    stmt = stmt.order_by(Sample.id.desc()).limit(500)
+    samples = list(db.session.execute(stmt).scalars().all())
 
     result = []
     for idx, s in enumerate(reversed(samples), 1):
@@ -425,12 +430,13 @@ def save_results():
     raw = json.dumps(data.get('results', {}), ensure_ascii=False)
 
     # UPSERT: pending/rejected байвал шинэчлэх
-    ar = AnalysisResult.query.filter_by(
-        sample_id=sample.id,
-        analysis_code=analysis_code,
-    ).filter(
-        AnalysisResult.status.in_(['pending_review', 'rejected'])
-    ).first()
+    ar = db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.sample_id == sample.id,
+            AnalysisResult.analysis_code == analysis_code,
+            AnalysisResult.status.in_(['pending_review', 'rejected']),
+        )
+    ).scalar_one_or_none()
 
     if ar:
         ar.raw_data = raw
@@ -479,7 +485,9 @@ def save_batch():
             continue
 
         # CC-4: Lock parent sample row to serialize concurrent saves
-        sample = Sample.query.filter_by(sample_code=sample_code).with_for_update().first()
+        sample = db.session.execute(
+            select(Sample).where(Sample.sample_code == sample_code).with_for_update()
+        ).scalar_one_or_none()
         if not sample:
             errors.append(f'Sample not found. {sample_code}')
             continue
@@ -495,10 +503,14 @@ def save_batch():
 
         try:
             with db.session.begin_nested():
-                existing = AnalysisResult.query.filter_by(
-                    sample_id=sample.id,
-                    analysis_code=analysis_code,
-                ).with_for_update().first()
+                existing = db.session.execute(
+                    select(AnalysisResult)
+                    .where(
+                        AnalysisResult.sample_id == sample.id,
+                        AnalysisResult.analysis_code == analysis_code,
+                    )
+                    .with_for_update()
+                ).scalar_one_or_none()
 
                 if existing:
                     existing.raw_data = raw
@@ -533,12 +545,13 @@ def load_batch():
     category = request.args.get('category', 'MICRO_WATER')
     date_str = request.args.get('date')
 
-    query = AnalysisResult.query.filter_by(analysis_code=category)
+    stmt = select(AnalysisResult).where(AnalysisResult.analysis_code == category)
 
     if date_str:
-        query = query.filter(AnalysisResult.raw_data.contains(date_str))
+        stmt = stmt.where(AnalysisResult.raw_data.contains(date_str))
 
-    results = query.order_by(AnalysisResult.id.desc()).limit(200).all()
+    stmt = stmt.order_by(AnalysisResult.id.desc()).limit(200)
+    results = list(db.session.execute(stmt).scalars().all())
 
     rows = []
     for ar in results:
@@ -619,30 +632,33 @@ def micro_summary_data():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    q = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.lab_type == 'microbiology',
         Sample.status != 'archived',
     )
     if date_from:
         try:
-            q = q.filter(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+            stmt = stmt.where(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
         except ValueError:
             pass
     if date_to:
         try:
-            q = q.filter(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+            stmt = stmt.where(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
         except ValueError:
             pass
 
-    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300).all()
+    stmt = stmt.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300)
+    samples = list(db.session.execute(stmt).scalars().all())
     if not samples:
         return jsonify({'rows': []})
 
     sample_ids = [s.id for s in samples]
-    all_results = AnalysisResult.query.filter(
-        AnalysisResult.sample_id.in_(sample_ids),
-        AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
-    ).all()
+    all_results = list(db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
+        )
+    ).scalars().all())
     results_by_code = {(ar.sample_id, ar.analysis_code): ar for ar in all_results}
 
     rows = [_build_micro_row(s, results_by_code, idx) for idx, s in enumerate(samples, 1)]
@@ -664,10 +680,12 @@ def micro_archive():
             flash(result.message, 'success' if result.success else 'danger')
         return redirect(url_for('microbiology.micro_archive'))
 
-    archived_count = Sample.query.filter(
-        Sample.lab_type == 'microbiology',
-        Sample.status == 'archived',
-    ).count()
+    archived_count = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type == 'microbiology',
+            Sample.status == 'archived',
+        )
+    ).scalar_one()
     return render_template(
         'labs/water/microbiology/micro_archive.html',
         title='Микробиологийн архив',
@@ -680,7 +698,7 @@ def micro_archive():
 @lab_required('microbiology')
 def micro_archive_data():
     """Архивлагдсан микробиологийн дээж."""
-    q = Sample.query.filter(
+    stmt = select(Sample).where(
         Sample.lab_type == 'microbiology',
         Sample.status == 'archived',
     )
@@ -688,28 +706,34 @@ def micro_archive_data():
     date_to = request.args.get('date_to')
     if date_from:
         try:
-            q = q.filter(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+            stmt = stmt.where(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
         except ValueError:
             pass
     if date_to:
         try:
-            q = q.filter(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+            stmt = stmt.where(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
         except ValueError:
             pass
 
-    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
-    total = Sample.query.filter(
-        Sample.lab_type == 'microbiology', Sample.status == 'archived'
-    ).count()
+    stmt = stmt.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500)
+    samples = list(db.session.execute(stmt).scalars().all())
+    total = db.session.execute(
+        select(func.count(Sample.id)).where(
+            Sample.lab_type == 'microbiology',
+            Sample.status == 'archived',
+        )
+    ).scalar_one()
 
     if not samples:
         return jsonify({'rows': [], 'total_count': total})
 
     sample_ids = [s.id for s in samples]
-    all_results = AnalysisResult.query.filter(
-        AnalysisResult.sample_id.in_(sample_ids),
-        AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
-    ).all()
+    all_results = list(db.session.execute(
+        select(AnalysisResult).where(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
+        )
+    ).scalars().all())
     results_by_code = {(ar.sample_id, ar.analysis_code): ar for ar in all_results}
 
     rows = [_build_micro_row(s, results_by_code, idx) for idx, s in enumerate(samples, 1)]

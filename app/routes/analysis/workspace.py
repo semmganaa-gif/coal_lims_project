@@ -10,7 +10,7 @@ import json
 
 from flask import request, render_template, current_app, redirect, url_for
 from flask_login import login_required, current_user
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 
@@ -85,7 +85,9 @@ def register_routes(bp):
 
         batch_b = []
         if new_ids_list:
-            new_samples_db = Sample.query.filter(Sample.id.in_(new_ids_list)).all()
+            new_samples_db = list(db.session.execute(
+                select(Sample).where(Sample.id.in_(new_ids_list))
+            ).scalars().all())
             new_samples_map = {s.id: s for s in new_samples_db}
             for sid in new_ids_list:
                 if sid not in seen_ids and sid not in approved_ids:
@@ -99,7 +101,9 @@ def register_routes(bp):
         if not samples_to_analyze and new_ids_list:
             valid_ids = [sid for sid in new_ids_list if sid not in approved_ids]
             if valid_ids:
-                fallback_samples = Sample.query.filter(Sample.id.in_(valid_ids)).all()
+                fallback_samples = list(db.session.execute(
+                    select(Sample).where(Sample.id.in_(valid_ids))
+                ).scalars().all())
                 fallback_map = {s.id: s for s in fallback_samples}
                 samples_to_analyze = [fallback_map[sid] for sid in valid_ids if sid in fallback_map]
 
@@ -107,11 +111,13 @@ def register_routes(bp):
         mg_results_map = {code: {} for code in WTL_MG_CODES}
         if samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
-            all_results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code.in_(WTL_MG_CODES),
-                AnalysisResult.status.in_(["approved", "pending_review", "rejected"])
-            ).all()
+            all_results = list(db.session.execute(
+                select(AnalysisResult).where(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.analysis_code.in_(WTL_MG_CODES),
+                    AnalysisResult.status.in_(["approved", "pending_review", "rejected"]),
+                )
+            ).scalars().all())
             for r in all_results:
                 raw = r.raw_data
                 if isinstance(raw, str):
@@ -137,11 +143,13 @@ def register_routes(bp):
         rejected_samples_info = {}
         if samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
-            rejected_results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code.in_(WTL_MG_CODES),
-                AnalysisResult.status == "rejected"
-            ).all()
+            rejected_results = list(db.session.execute(
+                select(AnalysisResult).where(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.analysis_code.in_(WTL_MG_CODES),
+                    AnalysisResult.status == "rejected",
+                )
+            ).scalars().all())
             for r in rejected_results:
                 reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
@@ -152,15 +160,12 @@ def register_routes(bp):
 
         related_equipments = []
         try:
-            related_equipments = (
-                Equipment.query
-                .filter(
-                    or_(Equipment.status.is_(None), Equipment.status != 'retired')
-                )
+            related_equipments = list(db.session.execute(
+                select(Equipment)
+                .where(or_(Equipment.status.is_(None), Equipment.status != 'retired'))
                 .order_by(Equipment.name.asc())
                 .limit(50)
-                .all()
-            )
+            ).scalars().all())
         except OperationalError as e:
             current_app.logger.warning("Failed to load equipment: %s", e)
 
@@ -274,7 +279,9 @@ def register_routes(bp):
         # B. Шинэ нэмсэн дээжүүд (Багц B)
         batch_b = []
         if new_ids_list:
-            new_samples_db = Sample.query.filter(Sample.id.in_(new_ids_list)).all()
+            new_samples_db = list(db.session.execute(
+                select(Sample).where(Sample.id.in_(new_ids_list))
+            ).scalars().all())
             new_samples_map = {s.id: s for s in new_samples_db}
 
             for sid in new_ids_list:
@@ -297,7 +304,9 @@ def register_routes(bp):
             # ✅ approved_ids шалгах - батлагдсан дээжийг нэмэхгүй
             missing_ids = [sid for sid in new_ids_list if sid not in loaded_ids and sid not in approved_ids]
             if missing_ids:
-                fallback_samples = Sample.query.filter(Sample.id.in_(missing_ids)).all()
+                fallback_samples = list(db.session.execute(
+                    select(Sample).where(Sample.id.in_(missing_ids))
+                ).scalars().all())
                 fallback_map = {s.id: s for s in fallback_samples}
                 ordered_extra = [fallback_map[sid] for sid in missing_ids if sid in fallback_map]
                 samples_to_analyze.extend(ordered_extra)
@@ -307,7 +316,9 @@ def register_routes(bp):
         if not samples_to_analyze and new_ids_list:
             valid_ids = [sid for sid in new_ids_list if sid not in approved_ids]
             if valid_ids:
-                fallback_samples = Sample.query.filter(Sample.id.in_(valid_ids)).all()
+                fallback_samples = list(db.session.execute(
+                    select(Sample).where(Sample.id.in_(valid_ids))
+                ).scalars().all())
                 fallback_map = {s.id: s for s in fallback_samples}
                 samples_to_analyze = [fallback_map[sid] for sid in valid_ids if sid in fallback_map]
 
@@ -321,11 +332,13 @@ def register_routes(bp):
         mad_results_map = {}
         if analysis_type.code in ("Vad", "TRD") and samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
-            approved_mad_results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code == "Mad",
-                AnalysisResult.status == "approved"
-            ).all()
+            approved_mad_results = list(db.session.execute(
+                select(AnalysisResult).where(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.analysis_code == "Mad",
+                    AnalysisResult.status == "approved",
+                )
+            ).scalars().all())
             mad_results_map = {r.sample_id: r.final_result for r in approved_mad_results}
 
         sulfur_by_sample = {}
@@ -336,11 +349,13 @@ def register_routes(bp):
         rejected_samples_info = {}
         if samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
-            rejected_results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code == analysis_type.code,
-                AnalysisResult.status == "rejected"
-            ).all()
+            rejected_results = list(db.session.execute(
+                select(AnalysisResult).where(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.analysis_code == analysis_type.code,
+                    AnalysisResult.status == "rejected",
+                )
+            ).scalars().all())
             for r in rejected_results:
                 reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
@@ -352,11 +367,13 @@ def register_routes(bp):
         existing_results_map = {}
         if samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
-            existing_results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code == analysis_type.code,
-                AnalysisResult.status.in_(["pending_review", "rejected"])
-            ).all()
+            existing_results = list(db.session.execute(
+                select(AnalysisResult).where(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.analysis_code == analysis_type.code,
+                    AnalysisResult.status.in_(["pending_review", "rejected"]),
+                )
+            ).scalars().all())
             for r in existing_results:
                 raw = r.raw_data
                 if isinstance(raw, str):
@@ -393,11 +410,13 @@ def register_routes(bp):
                 paired_targets = {"CRI", "CSR"}
 
             if paired_targets:
-                paired_results = AnalysisResult.query.filter(
-                    AnalysisResult.sample_id.in_(sample_ids),
-                    AnalysisResult.analysis_code.in_(paired_targets),
-                    AnalysisResult.status.in_(["pending_review", "rejected"])
-                ).all()
+                paired_results = list(db.session.execute(
+                    select(AnalysisResult).where(
+                        AnalysisResult.sample_id.in_(sample_ids),
+                        AnalysisResult.analysis_code.in_(paired_targets),
+                        AnalysisResult.status.in_(["pending_review", "rejected"]),
+                    )
+                ).scalars().all())
                 for r in paired_results:
                     raw = r.raw_data
                     if isinstance(raw, str):
@@ -459,10 +478,12 @@ def register_routes(bp):
             if samples_to_analyze:
                 s_ids = [s.id for s in samples_to_analyze if s.id not in gi_retest_modes]
                 if s_ids:
-                    prev_gi = AnalysisResult.query.filter(
-                        AnalysisResult.sample_id.in_(s_ids),
-                        AnalysisResult.analysis_code == "Gi"
-                    ).all()
+                    prev_gi = list(db.session.execute(
+                        select(AnalysisResult).where(
+                            AnalysisResult.sample_id.in_(s_ids),
+                            AnalysisResult.analysis_code == "Gi",
+                        )
+                    ).scalars().all())
                     for r in prev_gi:
                         rd = r.get_raw_data() if hasattr(r, 'get_raw_data') else {}
                         if rd.get("retest_mode") == "3_3" or rd.get("is_low_avg") is True:
@@ -471,15 +492,14 @@ def register_routes(bp):
         related_equipments = []
         try:
             safe_code = escape_like_pattern(base_code)
-            related_equipments = (
-                Equipment.query
-                .filter(
+            related_equipments = list(db.session.execute(
+                select(Equipment)
+                .where(
                     Equipment.related_analysis.ilike(f"%{safe_code}%"),
-                    or_(Equipment.status.is_(None), Equipment.status != 'retired')
+                    or_(Equipment.status.is_(None), Equipment.status != 'retired'),
                 )
                 .order_by(Equipment.name.asc())
-                .all()
-            )
+            ).scalars().all())
         except OperationalError:
             related_equipments = []
 
