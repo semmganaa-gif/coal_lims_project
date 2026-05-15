@@ -121,9 +121,9 @@ flask license clear-tamper                   # tampering flag арилгах
 flask license generate --company X --expiry YYYY-MM-DD
 ```
 
-## Архитектурын төлөв (2026-05-15 байдлаар)
+## Архитектурын төлөв (2026-05-15 эцсийн байдлаар)
 
-### ✅ ДУУССАН — Sprint 1, 2, 3, 4, 5 + Phase 4 (SA 2.0) + test cleanup
+### ✅ ДУУССАН — Sprint 1-5 + Phase 0-4 audit + Phase 5 polish + Theme A/C/G
 
 **Sprint 1 (Security/CSP):** S1.1a-e, S1.3, S1.4 (өмнө хийсэн)
 
@@ -227,13 +227,81 @@ obj = db.session.get(Model, id)
   засна.
 - `app/services/import_service.py` — Batch commit pattern зориудаар үлдсэн.
 
+### ✅ Phase 5 — Polish (2026-05-15 AM)
+
+- **Theme A — Enum drift:** ~100 газар (5 commit). UserRole, SampleStatus,
+  AnalysisResultStatus enum-аар бүх hard-coded role/status literal-ыг сольсон.
+- **Constants wildcard → explicit:** 7 sub-module-ын `import *` → 52 explicit
+  нэр (`app/constants/__init__.py`).
+- **Magic numbers:** `MAX_SAMPLE_QUERY_LIMIT`, `DASHBOARD_RECENT_LIMIT = 500`,
+  `CHEMICAL_LIST_LIMIT = 2000` константууд нэмж 8 газрын magic утгыг
+  орлуулсан.
+- **Equipment pagination:** `per_page=500 → 50`.
+- **Pyflakes F401/F841/F541:** ~150 газрын ашиглаагүй import/variable/
+  empty f-string цэвэрлэсэн.
+- **Stale TODO + module header:** Sprint 1.1b stale TODO арилгасан,
+  microbiology/constants.py header засагдсан.
+- **2 NameError bug олж зассан:** `add_solution` дотор `Chemical` хэрэглэгддэг
+  ч import-д байгаагүй; `petrography/routes.py` дотор `SQLAlchemyError`
+  handler-д import дутуу.
+- **pytest 0 warning:** datetime.utcnow() deprecation цэгцэлсэн +
+  pytest-asyncio config-ыг засаж warning-ыг арилгасан.
+
+### ✅ Phase 0-2 — Audit critical/mid-severity fixes (2026-05-15 PM)
+
+Audit `AUDIT_SUMMARY_2026_05_14.md`-ийн бүх 13 H-severity bug verify
+хийсэн (бүгд өмнөх sessions-д засагдсан байсан):
+
+| Bug | Status |
+|-----|--------|
+| H1 audit.log path config | ✅ |
+| H2 'hyanalt' Latin Cyrillic mix | ✅ |
+| H3 HashableMixin × 5 model | ✅ |
+| H4 MaintenanceLog.action_date | ✅ |
+| H5 sample_repository disposal_date | ✅ |
+| H6 workflow_engine role names | ✅ |
+| H8/H9 admin_required dedup | ✅ |
+| H10 WaterLaboratory dead class | ✅ |
+| H11 petrography 'prepared' status | ✅ |
+| H12 ALLOWED_LABS Enum | ✅ |
+| H13 hardware_fingerprint cross-platform | ✅ |
+
+**Phase 2 — ISO 17025 mid-severity:**
+- **39 FK ondelete=SET NULL** (2 Alembic migration applied):
+  - Audit FK-ууд: AuditLog.user_id, AnalysisResultLog.user_id + original_user_id
+    (migration `2df88ac7f1d1`)
+  - Operational user FK 36 ширхэг: chemicals, equipment, instrument, planning,
+    quality_records, reports, solutions, spare_parts, bottles
+    (migration `69695d8ac4e9`)
+
+### ✅ Phase 3 Theme C — Decorator cleanup (2026-05-15 PM)
+
+12 inline role check → `@role_required(...)` decorator. 27 → 13 газар
+(52% reduction). Үлдсэн 13 нь contextual cases (in-loop ownership,
+SocketIO event, template variable, query filter).
+
+### ✅ Phase 3 Theme G — Timezone (substantial)
+
+- Production-ын `datetime.now()`-уудыг `now_local()`-ээр сольсон (өмнөх).
+- Test файлуудын 23 `datetime.utcnow()` (Python 3.12 deprecated) →
+  `datetime.now()` (5 файл).
+- ZoneInfo unavailable үед UTC+8 fallback тогтоосон (`app/utils/datetime.py`).
+
 ### 🔜 Үлдсэн ажил
 
-- **`analysis_workflow.py`-ийн 5 query** — Test mock decoupling шаардлагатай.
+- **`analysis_workflow.py`-ийн 5 legacy query** — Test mock decoupling шаардлагатай.
 - **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
   memory + partial-failure tolerance), `@transactional` applicable биш.
-- **Phase 5 polish** (AUDIT_SUMMARY_2026_05_14) — 47 nit + 53 low fixes:
-  stale comment cleanup, wildcard import тойрох, pagination tuning гэх мэт.
+- **Chat/UserOnlineStatus FK ondelete** — Phase 2 Models M2-ийн үлдсэн FK
+  (CASCADE for message records, CASCADE for presence PK).
+- **`db.DateTime(timezone=True)` migration** — Theme G full closure. Schema-
+  level migration with backfill. Production-ын `license_protection.py:27-29`-н
+  `now_mn() = now_local().replace(tzinfo=None)` strip pattern-ыг устгахад
+  хэрэгтэй.
+- **Phase 3 Theme D — i18n** — Service/Routes-аас Mongolian text-уудыг
+  `lazy_gettext` (`_l()`)-ээр wrap + Babel translation catalog шинэчлэх.
+- **Browser regression testing** — Phase 5 enum + Theme C refactor-ийн дараа
+  real-world UI workflow шалгах.
 
 ## Conventions
 
