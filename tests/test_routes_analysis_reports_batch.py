@@ -77,6 +77,12 @@ def senior_app(senior_user):
     def load_user(uid):
         return senior_user
 
+    # Babel — `_role_denied_response()` нь `flash(_(...))` дуудна (analyst-role
+    # хэрэглэгчийн route-уудад permission деny хийгдэх үед). Babel-гүй бол
+    # `KeyError: 'babel'` гарна.
+    from flask_babel import Babel
+    Babel(app)
+
     mock_cache = MagicMock()
     mock_cache.cached = lambda **kw: lambda f: f
 
@@ -153,6 +159,10 @@ def dashboard_app(senior_user):
     @lm.user_loader
     def load_user(uid):
         return senior_user
+
+    # Babel — `_role_denied_response()` `flash(_(...))` дуудна.
+    from flask_babel import Babel
+    Babel(flask_app)
 
     # Import the blueprint (module-level singleton)
     from app.routes.reports.routes import reports_bp

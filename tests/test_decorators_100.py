@@ -1,442 +1,342 @@
 # -*- coding: utf-8 -*-
 """
-decorators.py модулийн 100% coverage тестүүд
+decorators.py модулийн 100% coverage тестүүд.
+
+Real Flask test client + LoginManager-ээр бодит зан төлвийг шалгана. Mock-аар
+дотоод дуудлагыг шалгахын оронд route-ийн ажиглагдаж буй output-ыг (status,
+redirect, JSON) шалгана — тиймээс decorator-ын дотоод implementation өөрчлөгдөх
+үед тэст эвдрэхгүй (root-cause stability).
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from flask import Flask
+from flask_babel import Babel
+from flask_login import LoginManager
 
 
+def _make_app(role: str | None = None, authenticated: bool = True):
+    """Decorator-той route бүхий жижиг Flask app үүсгэх.
+
+    Args:
+        role: Hэвтэрсэн хэрэглэгчийн role (None бол anonymous).
+        authenticated: Authenticated эсэх.
+    """
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SECRET_KEY"] = "test"
+    app.config["WTF_CSRF_ENABLED"] = False
+    Babel(app)
+
+    lm = LoginManager(app)
+
+    user = MagicMock()
+    user.is_authenticated = authenticated
+    user.is_active = authenticated
+    user.is_anonymous = not authenticated
+    user.get_id = lambda: "1" if authenticated else None
+    user.role = role
+    user.id = 5
+
+    @lm.user_loader
+    def load_user(_uid):
+        return user
+
+    # Login user via session by patching current_user globally for this request
+    @app.before_request
+    def _login_user():
+        from flask_login import login_user
+        if authenticated:
+            login_user(user)
+
+    @app.route('/login')
+    def login_page():
+        return "login page", 200
+
+    @app.route('/')
+    def home():
+        return "home", 200
+
+    return app, user
+
+
+# ─────────────────────────────────────────────────────────────
+# Import sanity
+# ─────────────────────────────────────────────────────────────
 class TestDecoratorsImport:
-    """Модуль импорт тест"""
-
     def test_import_module(self):
         from app.utils import decorators
         assert decorators is not None
 
     def test_import_role_required(self):
         from app.utils.decorators import role_required
-        assert role_required is not None
         assert callable(role_required)
 
     def test_import_admin_required(self):
         from app.utils.decorators import admin_required
-        assert admin_required is not None
         assert callable(admin_required)
 
     def test_import_role_or_owner_required(self):
         from app.utils.decorators import role_or_owner_required
-        assert role_or_owner_required is not None
         assert callable(role_or_owner_required)
 
     def test_import_analysis_role_required(self):
         from app.utils.decorators import analysis_role_required
-        assert analysis_role_required is not None
         assert callable(analysis_role_required)
 
+    def test_import_role_denied_response_helper(self):
+        from app.utils.decorators import _role_denied_response
+        assert callable(_role_denied_response)
 
+
+# ─────────────────────────────────────────────────────────────
+# role_required
+# ─────────────────────────────────────────────────────────────
 class TestRoleRequired:
-    """role_required декораторын тест"""
-
-    def test_decorator_returns_callable(self):
+    def test_authorized_role_passes(self):
         from app.utils.decorators import role_required
 
-        decorator = role_required('admin', 'senior')
-        assert callable(decorator)
+        app, _ = _make_app(role='admin')
 
-    @patch('app.utils.decorators.redirect')
-    @patch('app.utils.decorators.url_for')
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthenticated_user(self, mock_user, mock_flash, mock_abort, mock_url_for, mock_redirect):
-        from app.utils.decorators import role_required
-
-        mock_user.is_authenticated = False
-        mock_url_for.return_value = '/login'
-        mock_redirect.return_value = 'redirect_response'
-
-        @role_required('admin')
-        def test_view():
-            return "success"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            mock_flash.assert_called()
-            assert "log in" in mock_flash.call_args[0][0].lower()
-            mock_redirect.assert_called()
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_authorized_user(self, mock_user, mock_flash, mock_abort):
-        from app.utils.decorators import role_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'admin'
-
+        @app.route('/protected')
         @role_required('admin', 'senior')
-        def test_view():
-            return "success"
+        def view():
+            return "OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "success"
+        client = app.test_client()
+        resp = client.get('/protected')
+        assert resp.status_code == 200
+        assert resp.data == b"OK"
 
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthorized_user(self, mock_user, mock_flash, mock_abort):
+    def test_unauthorized_role_ui_redirects(self):
+        """UI route (non-/api/) — flash + redirect."""
         from app.utils.decorators import role_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
+        app, _ = _make_app(role='chemist')
 
+        @app.route('/protected')
         @role_required('admin', 'senior')
-        def test_view():
-            return "success"
+        def view():
+            return "OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            test_view()
-            mock_abort.assert_called_with(403)
+        client = app.test_client()
+        resp = client.get('/protected')
+        assert resp.status_code == 302  # redirect
+
+    def test_unauthorized_role_api_returns_json_403(self):
+        """API route (/api/ prefix) — JSON 403."""
+        from app.utils.decorators import role_required
+
+        app, _ = _make_app(role='chemist')
+
+        @app.route('/api/protected')
+        @role_required('admin', 'senior')
+        def view():
+            return "OK", 200
+
+        client = app.test_client()
+        resp = client.get('/api/protected')
+        assert resp.status_code == 403
+        assert resp.is_json
+        assert resp.json["error"] == "Permission denied"
 
 
+# ─────────────────────────────────────────────────────────────
+# admin_required
+# ─────────────────────────────────────────────────────────────
 class TestAdminRequired:
-    """admin_required декораторын тест"""
-
-    @patch('app.utils.decorators.redirect')
-    @patch('app.utils.decorators.url_for')
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthenticated_user(self, mock_user, mock_flash, mock_abort, mock_url_for, mock_redirect):
+    def test_admin_passes(self):
         from app.utils.decorators import admin_required
 
-        mock_user.is_authenticated = False
-        mock_url_for.return_value = '/login'
-        mock_redirect.return_value = 'redirect_response'
+        app, _ = _make_app(role='admin')
 
+        @app.route('/admin-only')
         @admin_required
-        def test_view():
-            return "success"
+        def view():
+            return "ADMIN OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            mock_flash.assert_called()
-            assert "log in" in mock_flash.call_args[0][0].lower()
-            mock_redirect.assert_called()
+        client = app.test_client()
+        resp = client.get('/admin-only')
+        assert resp.status_code == 200
 
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_admin_user(self, mock_user, mock_flash, mock_abort):
+    def test_non_admin_ui_redirects(self):
         from app.utils.decorators import admin_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'admin'
+        app, _ = _make_app(role='chemist')
 
+        @app.route('/admin-only')
         @admin_required
-        def test_view():
-            return "admin success"
+        def view():
+            return "ADMIN OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "admin success"
+        client = app.test_client()
+        resp = client.get('/admin-only')
+        assert resp.status_code == 302
 
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_non_admin_user(self, mock_user, mock_flash, mock_abort):
+    def test_non_admin_api_returns_403_json(self):
         from app.utils.decorators import admin_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
+        app, _ = _make_app(role='chemist')
 
+        @app.route('/api/admin-only')
         @admin_required
-        def test_view():
-            return "success"
+        def view():
+            return "ADMIN OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            test_view()
-            mock_abort.assert_called_with(403)
-            assert "admin" in mock_flash.call_args[0][0].lower()
+        client = app.test_client()
+        resp = client.get('/api/admin-only')
+        assert resp.status_code == 403
+        assert resp.json["error"] == "Permission denied"
 
 
+# ─────────────────────────────────────────────────────────────
+# senior_or_admin_required
+# ─────────────────────────────────────────────────────────────
+class TestSeniorOrAdminRequired:
+    @pytest.mark.parametrize("role", ['senior', 'admin'])
+    def test_allowed_roles_pass(self, role):
+        from app.utils.decorators import senior_or_admin_required
+
+        app, _ = _make_app(role=role)
+
+        @app.route('/restricted')
+        @senior_or_admin_required
+        def view():
+            return "OK", 200
+
+        client = app.test_client()
+        resp = client.get('/restricted')
+        assert resp.status_code == 200
+
+    def test_chemist_denied(self):
+        from app.utils.decorators import senior_or_admin_required
+
+        app, _ = _make_app(role='chemist')
+
+        @app.route('/restricted')
+        @senior_or_admin_required
+        def view():
+            return "OK", 200
+
+        client = app.test_client()
+        resp = client.get('/restricted')
+        assert resp.status_code == 302
+
+
+# ─────────────────────────────────────────────────────────────
+# role_or_owner_required
+# ─────────────────────────────────────────────────────────────
 class TestRoleOrOwnerRequired:
-    """role_or_owner_required декораторын тест"""
-
-    def test_decorator_returns_callable(self):
+    def test_authorized_by_role(self):
         from app.utils.decorators import role_or_owner_required
 
-        decorator = role_or_owner_required('admin', owner_check=lambda x: True)
-        assert callable(decorator)
+        app, _ = _make_app(role='admin')
 
-    @patch('app.utils.decorators.redirect')
-    @patch('app.utils.decorators.url_for')
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthenticated_user(self, mock_user, mock_flash, mock_abort, mock_url_for, mock_redirect):
-        from app.utils.decorators import role_or_owner_required
-
-        mock_user.is_authenticated = False
-        mock_url_for.return_value = '/login'
-        mock_redirect.return_value = 'redirect_response'
-
-        @role_or_owner_required('admin')
-        def test_view(item_id):
-            return "success"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view(1)
-            mock_flash.assert_called()
-            mock_redirect.assert_called()
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_authorized_by_role(self, mock_user, mock_flash, mock_abort):
-        from app.utils.decorators import role_or_owner_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'admin'
-
+        @app.route('/item/<int:item_id>')
         @role_or_owner_required('admin', 'senior')
-        def test_view(item_id):
-            return f"success {item_id}"
+        def view(item_id):
+            return f"OK {item_id}", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view(123)
-            assert result == "success 123"
+        client = app.test_client()
+        resp = client.get('/item/123')
+        assert resp.status_code == 200
+        assert b"OK 123" in resp.data
 
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_authorized_by_owner_check(self, mock_user, mock_flash, mock_abort):
+    def test_authorized_by_owner_check(self):
         from app.utils.decorators import role_or_owner_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
-        mock_user.id = 5
+        app, user = _make_app(role='chemist')
 
-        # Owner check returns True for item_id=5
-        def is_owner(item_id):
-            return item_id == 5
+        @app.route('/item/<int:item_id>')
+        @role_or_owner_required('admin', owner_check=lambda item_id: item_id == 5)
+        def view(item_id):
+            return f"owner {item_id}", 200
 
-        @role_or_owner_required('admin', owner_check=is_owner)
-        def test_view(item_id):
-            return f"owner access {item_id}"
+        client = app.test_client()
+        resp = client.get('/item/5')
+        assert resp.status_code == 200
+        assert b"owner 5" in resp.data
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view(5)
-            assert result == "owner access 5"
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthorized(self, mock_user, mock_flash, mock_abort):
+    def test_unauthorized_redirects(self):
         from app.utils.decorators import role_or_owner_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
+        app, _ = _make_app(role='chemist')
 
-        def is_owner(item_id):
-            return False
+        @app.route('/item/<int:item_id>')
+        @role_or_owner_required('admin', owner_check=lambda item_id: False)
+        def view(item_id):
+            return "OK", 200
 
-        @role_or_owner_required('admin', owner_check=is_owner)
-        def test_view(item_id):
-            return "success"
+        client = app.test_client()
+        resp = client.get('/item/999')
+        assert resp.status_code == 302
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            test_view(999)
-            mock_abort.assert_called_with(403)
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.flash')
-    @patch('app.utils.decorators.current_user')
-    def test_no_owner_check_provided(self, mock_user, mock_flash, mock_abort):
+    def test_no_owner_check_provided(self):
         from app.utils.decorators import role_or_owner_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
+        app, _ = _make_app(role='chemist')
 
-        # No owner_check provided
+        @app.route('/item/<int:item_id>')
         @role_or_owner_required('admin')
-        def test_view(item_id):
-            return "success"
+        def view(item_id):
+            return "OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            test_view(1)
-            mock_abort.assert_called_with(403)
+        client = app.test_client()
+        resp = client.get('/item/1')
+        assert resp.status_code == 302
 
 
+# ─────────────────────────────────────────────────────────────
+# analysis_role_required
+# ─────────────────────────────────────────────────────────────
 class TestAnalysisRoleRequired:
-    """analysis_role_required декораторын тест"""
-
     def test_decorator_returns_callable(self):
         from app.utils.decorators import analysis_role_required
+        assert callable(analysis_role_required())
 
-        decorator = analysis_role_required()
-        assert callable(decorator)
+    def test_custom_roles_callable(self):
+        from app.utils.decorators import analysis_role_required
+        assert callable(analysis_role_required(['admin', 'senior']))
 
-    def test_default_roles(self):
+    @pytest.mark.parametrize("role", ['chemist', 'senior', 'manager', 'admin', 'prep'])
+    def test_default_roles_pass(self, role):
         from app.utils.decorators import analysis_role_required
 
-        # Default roles should be set
-        decorator = analysis_role_required()
-        # The decorator should accept the default roles
-        assert decorator is not None
+        app, _ = _make_app(role=role)
 
-    def test_custom_roles(self):
-        from app.utils.decorators import analysis_role_required
-
-        decorator = analysis_role_required(['admin', 'senior'])
-        assert callable(decorator)
-
-    @patch('app.utils.decorators.redirect')
-    @patch('app.utils.decorators.url_for')
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthenticated_user(self, mock_user, mock_abort, mock_url_for, mock_redirect):
-        from app.utils.decorators import analysis_role_required
-
-        mock_user.is_authenticated = False
-        mock_url_for.return_value = '/login'
-        mock_redirect.return_value = 'redirect_response'
-
+        @app.route('/analysis-only')
         @analysis_role_required()
-        def test_view():
-            return "success"
+        def view():
+            return "OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            mock_redirect.assert_called()
+        client = app.test_client()
+        resp = client.get('/analysis-only')
+        assert resp.status_code == 200
 
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_authorized_chemist(self, mock_user, mock_abort):
+    def test_unauthorized_role_redirects(self):
         from app.utils.decorators import analysis_role_required
 
-        mock_user.is_authenticated = True
-        mock_user.role = 'chemist'
+        app, _ = _make_app(role='guest')
 
-        @analysis_role_required()
-        def test_view():
-            return "chemist success"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "chemist success"
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_authorized_admin(self, mock_user, mock_abort):
-        from app.utils.decorators import analysis_role_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'admin'
-
-        @analysis_role_required(['admin'])
-        def test_view():
-            return "admin only"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "admin only"
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_unauthorized_role(self, mock_user, mock_abort):
-        from app.utils.decorators import analysis_role_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'guest'
-
+        @app.route('/analysis-only')
         @analysis_role_required(['admin', 'senior'])
-        def test_view():
-            return "success"
+        def view():
+            return "OK", 200
 
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            test_view()
-            mock_abort.assert_called_with(403)
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_prep_role_allowed_by_default(self, mock_user, mock_abort):
-        from app.utils.decorators import analysis_role_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'prep'
-
-        @analysis_role_required()
-        def test_view():
-            return "prep success"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "prep success"
-
-    @patch('app.utils.decorators.abort')
-    @patch('app.utils.decorators.current_user')
-    def test_manager_role_allowed_by_default(self, mock_user, mock_abort):
-        from app.utils.decorators import analysis_role_required
-
-        mock_user.is_authenticated = True
-        mock_user.role = 'manager'
-
-        @analysis_role_required()
-        def test_view():
-            return "manager success"
-
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = 'test'
-        with app.test_request_context():
-            result = test_view()
-            assert result == "manager success"
+        client = app.test_client()
+        resp = client.get('/analysis-only')
+        assert resp.status_code == 302
 
 
+# ─────────────────────────────────────────────────────────────
+# Function metadata (functools.wraps)
+# ─────────────────────────────────────────────────────────────
 class TestDecoratorFunctionPreservation:
-    """Декораторууд функцийн metadata хадгалж байгаа эсэхийг шалгах"""
-
     def test_role_required_preserves_name(self):
         from app.utils.decorators import role_required
 
         @role_required('admin')
         def my_special_function():
-            """My docstring"""
-            pass
+            """Docstring"""
 
         assert my_special_function.__name__ == 'my_special_function'
 
@@ -445,8 +345,7 @@ class TestDecoratorFunctionPreservation:
 
         @admin_required
         def admin_only_function():
-            """Admin docstring"""
-            pass
+            """Docstring"""
 
         assert admin_only_function.__name__ == 'admin_only_function'
 
@@ -455,8 +354,7 @@ class TestDecoratorFunctionPreservation:
 
         @role_or_owner_required('admin')
         def owner_function(item_id):
-            """Owner docstring"""
-            pass
+            """Docstring"""
 
         assert owner_function.__name__ == 'owner_function'
 
@@ -465,7 +363,60 @@ class TestDecoratorFunctionPreservation:
 
         @analysis_role_required()
         def analysis_function():
-            """Analysis docstring"""
-            pass
+            """Docstring"""
 
         assert analysis_function.__name__ == 'analysis_function'
+
+
+# ─────────────────────────────────────────────────────────────
+# _role_denied_response helper
+# ─────────────────────────────────────────────────────────────
+class TestRoleDeniedResponse:
+    def test_ui_path_returns_redirect(self):
+        from app.utils.decorators import _role_denied_response
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        Babel(app)
+
+        @app.route('/ui-page')
+        def trigger():
+            return _role_denied_response()
+
+        client = app.test_client()
+        resp = client.get('/ui-page')
+        assert resp.status_code == 302
+
+    def test_api_path_returns_json_403(self):
+        from app.utils.decorators import _role_denied_response
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        Babel(app)
+
+        @app.route('/api/endpoint')
+        def trigger():
+            return _role_denied_response()
+
+        client = app.test_client()
+        resp = client.get('/api/endpoint')
+        assert resp.status_code == 403
+        assert resp.is_json
+        assert resp.json["status"] == 403
+
+    def test_api_accept_header_returns_json(self):
+        """JSON Accept header байвал JSON 403 — path-аас үл хамаарна."""
+        from app.utils.decorators import _role_denied_response
+
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        Babel(app)
+
+        @app.route('/some-route')
+        def trigger():
+            return _role_denied_response()
+
+        client = app.test_client()
+        resp = client.get('/some-route', headers={"Accept": "application/json"})
+        assert resp.status_code == 403
+        assert resp.is_json

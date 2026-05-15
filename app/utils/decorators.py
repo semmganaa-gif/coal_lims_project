@@ -16,10 +16,43 @@ Sync + async route хосыг хоёуланг дэмжих:
 import asyncio
 from functools import wraps
 from typing import Callable, Any, Optional
-from flask import flash, redirect, url_for, abort
+from flask import flash, redirect, request, url_for, jsonify
+from flask_babel import gettext as _
 from flask_login import current_user
 
 from app.constants import LabKey, UserRole
+
+
+def _role_denied_response():
+    """Эрхгүй хэрэглэгчид буцаах хариу — UI/API context-ийг ялгана.
+
+    Энэ helper нь `role_required` family decorator-ууд хооронд consistent
+    зан төлөвийг хангана (өмнө `role_required`/`admin_required` нь `abort(403)`
+    шууд хийдэг, `lab_required` нь flash + redirect хийдэг гэх мэт ялгаатай
+    байсныг арилгана):
+
+    - **API route** (path `/api/` эхэлсэн эсвэл `Accept: application/json`)
+      → JSON 403 буцаана.
+    - **UI route** → flash шиднэ + `request.referrer` эсвэл `main.index`-руу
+      redirect.
+
+    Returns Response (caller redirect эсвэл jsonify бэлэн утгыг буцаана).
+    """
+    is_api = request.path.startswith('/api/') or request.is_json or \
+        request.accept_mimetypes.best == 'application/json'
+    if is_api:
+        return jsonify({"error": "Permission denied", "status": 403}), 403
+
+    flash(_("You do not have permission for this action."), "danger")
+    # Referrer-ийг тэргүүн сонголтоор ашиглах; үгүй бол safe `main.index` руу.
+    # `main.index` бүртгэгдээгүй (жишээ нь нэг blueprint-ийн isolated test app)
+    # үед `/`-руу зайлсхийнэ.
+    if request.referrer:
+        return redirect(request.referrer)
+    try:
+        return redirect(url_for('main.index'))
+    except Exception:
+        return redirect('/')
 
 
 def _dual_wrap(check_fn: Callable[..., Any]) -> Callable[[Callable], Callable]:
@@ -52,6 +85,9 @@ def _dual_wrap(check_fn: Callable[..., Any]) -> Callable[[Callable], Callable]:
 def role_required(*allowed_roles: str) -> Callable:
     """Эрх шалгах decorator (sync + async route хоёуланг дэмжинэ).
 
+    Permission байхгүй үед `_role_denied_response()`-аар UI flash+redirect
+    эсвэл API JSON 403 буцаана (`lab_required` pattern-тай consistent).
+
     Example:
         >>> @bp.route('/equipment/edit/<int:eq_id>')
         >>> @login_required
@@ -61,7 +97,7 @@ def role_required(*allowed_roles: str) -> Callable:
     """
     def _check(*args: Any, **kwargs: Any) -> Any:
         if getattr(current_user, "role", None) not in allowed_roles:
-            abort(403)
+            return _role_denied_response()
         return None
     return _dual_wrap(_check)
 
@@ -70,7 +106,7 @@ def admin_required(f: Callable) -> Callable:
     """Зөвхөн админ эрхтэй хэрэглэгчид зориулсан decorator (sync + async)."""
     def _check(*args: Any, **kwargs: Any) -> Any:
         if getattr(current_user, "role", None) != UserRole.ADMIN.value:
-            abort(403)
+            return _role_denied_response()
         return None
     return _dual_wrap(_check)(f)
 
@@ -79,7 +115,7 @@ def senior_or_admin_required(f: Callable) -> Callable:
     """Senior эсвэл admin эрхтэй хэрэглэгчид (sync + async)."""
     def _check(*args: Any, **kwargs: Any) -> Any:
         if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
-            abort(403)
+            return _role_denied_response()
         return None
     return _dual_wrap(_check)(f)
 
@@ -99,8 +135,7 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[
             return None
         if owner_check and owner_check(*args, **kwargs):
             return None
-        flash('You do not have permission for this action.', 'danger')
-        abort(403)
+        return _role_denied_response()
     return _dual_wrap(_check)
 
 
@@ -139,7 +174,7 @@ def analysis_role_required(allowed_roles=None):
             if not current_user.is_authenticated:
                 return redirect(url_for("main.login", next=url_for(f.__name__)))
             if current_user.role not in allowed_roles:
-                abort(403)
+                return _role_denied_response()
             return None
         return _dual_wrap(_check)(f)
     return decorator
