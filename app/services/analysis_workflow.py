@@ -18,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
 from app import db, cache
+from app.constants import AnalysisResultStatus
 from app.config.analysis_schema import get_analysis_schema
 from app.models import (
     AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType,
@@ -122,8 +123,8 @@ def build_pending_results(start_date=None, end_date=None, sample_name=None):
         .join(AnalysisType, AnalysisResult.analysis_code == AnalysisType.code)
         .filter(
             or_(
-                AnalysisResult.status == "pending_review",
-                AnalysisResult.status == "rejected",
+                AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value,
+                AnalysisResult.status == AnalysisResultStatus.REJECTED.value,
             )
         )
     )
@@ -208,9 +209,9 @@ def build_dashboard_stats():
             User.username,
             User.id.label("user_id"),
             func.count(AnalysisResult.id).label("total"),
-            func.sum(case((AnalysisResult.status == "approved", 1), else_=0)).label("approved"),
-            func.sum(case((AnalysisResult.status == "pending_review", 1), else_=0)).label("pending"),
-            func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.APPROVED.value, 1), else_=0)).label("approved"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value, 1), else_=0)).label("pending"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.REJECTED.value, 1), else_=0)).label("rejected"),
         )
         .join(AnalysisResult, AnalysisResult.user_id == User.id)
         .filter(User.role.in_(["chemist", "senior", "preparer"]))
@@ -283,9 +284,9 @@ def build_dashboard_stats():
             AnalysisType.code,
             AnalysisType.name,
             func.count(AnalysisResult.id).label("total"),
-            func.sum(case((AnalysisResult.status == "approved", 1), else_=0)).label("approved"),
-            func.sum(case((AnalysisResult.status == "pending_review", 1), else_=0)).label("pending"),
-            func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.APPROVED.value, 1), else_=0)).label("approved"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value, 1), else_=0)).label("pending"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.REJECTED.value, 1), else_=0)).label("rejected"),
         )
         .join(AnalysisResult, AnalysisResult.analysis_code == AnalysisType.code)
         .filter(AnalysisResult.updated_at >= today_start)
@@ -311,9 +312,9 @@ def build_dashboard_stats():
     summary_row = (
         db.session.query(
             func.count(AnalysisResult.id).label("total"),
-            func.sum(case((AnalysisResult.status == "approved", 1), else_=0)).label("approved"),
-            func.sum(case((AnalysisResult.status == "pending_review", 1), else_=0)).label("pending"),
-            func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.APPROVED.value, 1), else_=0)).label("approved"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.PENDING_REVIEW.value, 1), else_=0)).label("pending"),
+            func.sum(case((AnalysisResult.status == AnalysisResultStatus.REJECTED.value, 1), else_=0)).label("rejected"),
         )
         .filter(AnalysisResult.updated_at >= today_start)
         .filter(AnalysisResult.updated_at <= today_end)
@@ -344,7 +345,7 @@ def _apply_status_fields(res, new_status, rejection_category=None, rejection_com
     res.status = new_status
     res.updated_at = now_local()
 
-    if new_status == "rejected":
+    if new_status == AnalysisResultStatus.REJECTED.value:
         if hasattr(res, "rejection_category"):
             res.rejection_category = rejection_category
         if hasattr(res, "rejection_comment"):
@@ -396,7 +397,7 @@ def _update_result_status_atomic(result_id, new_status, rejection_category,
 
     action_text = new_status.upper()
     reason_text = safe_comment or (
-        _l("Зөвшөөрөгдсөн") if new_status == "approved" else _l("Хянагдаж буй")
+        _l("Зөвшөөрөгдсөн") if new_status == AnalysisResultStatus.APPROVED.value else _l("Хянагдаж буй")
     )
 
     sample = db.session.get(Sample, res.sample_id) if res.sample_id else None
@@ -443,7 +444,7 @@ def update_result_status(result_id, new_status, rejection_comment=None,
             On success: ({"message": "OK", "status": ...}, None, 200)
             On error:   (None, error_message, http_status)
     """
-    if new_status not in {"approved", "rejected", "pending_review"}:
+    if new_status not in {AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.REJECTED.value, AnalysisResultStatus.PENDING_REVIEW.value}:
         return None, _l("Төлөв буруу байна"), 400
 
     safe_comment = str(escape(rejection_comment)) if rejection_comment else None
@@ -535,7 +536,7 @@ def _bulk_update_result_status_atomic(int_ids, new_status, rejection_category, s
                 continue
 
             # Only modify pending_review or rejected status
-            if res.status not in ("pending_review", "rejected"):
+            if res.status not in (AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value):
                 failed_ids.append(rid)
                 continue
 
@@ -550,10 +551,10 @@ def _bulk_update_result_status_atomic(int_ids, new_status, rejection_category, s
                 action=f"BULK_{new_status.upper()}",
                 raw_data_dict=res.raw_data,
                 final_result=res.final_result,
-                rejection_category=rejection_category if new_status == "rejected" else None,
-                error_reason=rejection_category if new_status == "rejected" else None,
+                rejection_category=rejection_category if new_status == AnalysisResultStatus.REJECTED.value else None,
+                error_reason=rejection_category if new_status == AnalysisResultStatus.REJECTED.value else None,
                 reason=safe_comment or (
-                    _l("Бөөнөөр зөвшөөрөгдсөн") if new_status == "approved"
+                    _l("Бөөнөөр зөвшөөрөгдсөн") if new_status == AnalysisResultStatus.APPROVED.value
                     else _l("Бөөнөөр буцаагдсан")
                 ),
                 sample_code_snapshot=sample.sample_code if sample else None,
@@ -596,10 +597,10 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
     if len(result_ids) > 200:
         return None, _l("Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй"), 400
 
-    if new_status not in {"approved", "rejected"}:
+    if new_status not in {AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.REJECTED.value}:
         return None, _l("Төлөв буруу байна"), 400
 
-    if new_status == "rejected" and not rejection_category:
+    if new_status == AnalysisResultStatus.REJECTED.value and not rejection_category:
         return None, _l("Буцаах шалтгаанаа сонгоно уу"), 400
 
     # XSS protection
@@ -665,7 +666,7 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
                 sample_code=f"Бөөнөөр ({success_count} үр дүн)",
                 new_status=new_status,
                 changed_by=username or "unknown",
-                reason=safe_comment if new_status == "rejected" else None,
+                reason=safe_comment if new_status == AnalysisResultStatus.REJECTED.value else None,
             )
         except (OSError, RuntimeError) as exc:
             logger.warning("Email notification failed: %s", exc)
@@ -793,9 +794,9 @@ def _update_result_status_api_atomic(result_id, new_status, action_type,
     res.updated_at = now_local()
 
     if hasattr(res, "rejection_comment"):
-        if new_status == "rejected":
+        if new_status == AnalysisResultStatus.REJECTED.value:
             res.rejection_comment = safe_comment if safe_comment else str(_l("Ахлахаас буцаагдсан"))
-        elif new_status == "approved":
+        elif new_status == AnalysisResultStatus.APPROVED.value:
             res.rejection_comment = None
 
     if hasattr(res, "error_reason") and error_reason:
@@ -805,10 +806,10 @@ def _update_result_status_api_atomic(result_id, new_status, action_type,
 
     # LazyString-ийг шууд DB column-руу хадгалж болохгүй (psycopg2 adapt чадахгүй).
     # eager `str(...)` evaluate хийж бүх reason-уудыг DB-safe болгох.
-    if new_status == "approved":
+    if new_status == AnalysisResultStatus.APPROVED.value:
         action_text = "APPROVED"
         default_reason = str(_l("Ахлахаас зөвшөөрөгдсөн"))
-    elif new_status == "rejected":
+    elif new_status == AnalysisResultStatus.REJECTED.value:
         action_text = "REJECTED"
         default_reason = str(_l("Ахлахаас буцаагдсан"))
     else:
@@ -861,7 +862,7 @@ def update_result_status_api(result_id, new_status, action_type=None,
     Returns:
         tuple: (result_dict, error_msg, http_status_code)
     """
-    allowed = {"approved", "rejected", "pending_review"}
+    allowed = {AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.REJECTED.value, AnalysisResultStatus.PENDING_REVIEW.value}
     if new_status not in allowed:
         return None, _l("Буруу статус"), 400
 
@@ -1147,11 +1148,11 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
         analysis_code, val_to_check, raw_norm, control_targets=control_targets,
     )
 
-    if new_status == "rejected" and is_gbw and status_reason:
+    if new_status == AnalysisResultStatus.REJECTED.value and is_gbw and status_reason:
         status_reason = status_reason.replace("Control Failure", "GBW Failure")
 
-    if raw_norm.get("_mad_required") and new_status == "approved":
-        new_status = "pending_review"
+    if raw_norm.get("_mad_required") and new_status == AnalysisResultStatus.APPROVED.value:
+        new_status = AnalysisResultStatus.PENDING_REVIEW.value
         status_reason = str(_l("Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)"))
 
     # --- 5. DB Operations ---
@@ -1170,7 +1171,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
     reason = status_reason if status_reason else (safe_comment or str(_l("Химичээр хадгалагдсан")))
 
     auto_error_reason = None
-    if new_status == "rejected":
+    if new_status == AnalysisResultStatus.REJECTED.value:
         if status_reason and ("Failure" in status_reason):
             auto_error_reason = "qc_fail"
 
@@ -1194,11 +1195,11 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
         db.session.add(new_res)
         db.session.flush()
 
-        if new_status == "approved":
+        if new_status == AnalysisResultStatus.APPROVED.value:
             action = "CREATED_AUTO_APPROVED"
-        elif new_status == "rejected":
+        elif new_status == AnalysisResultStatus.REJECTED.value:
             action = "CREATED_REJECTED"
-        elif new_status == "pending_review":
+        elif new_status == AnalysisResultStatus.PENDING_REVIEW.value:
             action = "CREATED_PENDING"
         else:
             action = "CREATED"
@@ -1209,7 +1210,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
 
     else:
         # Repeat analysis logic
-        if new_status == "approved":
+        if new_status == AnalysisResultStatus.APPROVED.value:
             prev_approved = (
                 AnalysisResultLog.query
                 .filter_by(sample_id=sample_id, analysis_code=analysis_code)
@@ -1243,11 +1244,11 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
 
         db.session.flush()
 
-        if new_status == "approved":
+        if new_status == AnalysisResultStatus.APPROVED.value:
             action = "UPDATED_AUTO_APPROVED"
-        elif new_status == "rejected":
+        elif new_status == AnalysisResultStatus.REJECTED.value:
             action = "UPDATED_REJECTED"
-        elif new_status == "pending_review":
+        elif new_status == AnalysisResultStatus.PENDING_REVIEW.value:
             action = "UPDATED_PENDING"
         else:
             action = "UPDATED"
