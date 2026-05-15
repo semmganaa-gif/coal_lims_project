@@ -779,7 +779,8 @@ function submitEquipmentUsage() {
   })
   .then(r => r.json())
   .then(data => {
-    if (data.status === 'success') {
+    // api_success нь `{success: true}` буцаадаг — `status: 'success'` биш.
+    if (data.success === true) {
       document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
       document.querySelectorAll('.eq-note').forEach(i => i.value = '');
       document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
