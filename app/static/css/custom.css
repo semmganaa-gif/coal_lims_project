@@ -313,49 +313,22 @@ body {
 }
 
 /* ================================================================
-   6.1 AUTO-SIZING SYSTEM (Багана тус бүрийн ухаалаг хэмжээ)
+   6.1 AUTO-SIZING SYSTEM — УСТГАСАН
+   ================================================================
+   Өмнө position-based (nth-child) rules бүх `.table`-д автоматаар
+   tan/wide хязгаар тавьдаг байсан (1-р багана 60-80px гэх мэт).
+   Энэ нь GBW name (220px шаардлагатай), Equipment Name, Sample Code
+   зэрэг урт нэртэй эхний баганатай хуудсуудад column overlap үүсгэдэг
+   байсан. `<th class="min-w-[220px]">`-ийг override хийдэг учраас
+   Tailwind utility-ыг ч эвдэж байсан.
+
+   Засвар: position-based автомат шахаа арилгасан. Багана бүрийн
+   хэмжээг 6.2-ын `.col-*` opt-in utility (доор) эсвэл Tailwind
+   `min-w-[...]` / `max-w-[...]` ашиглан явц тус бүрд тогтоох.
    ================================================================ */
 
-/* ЭХНИЙ БАГАНА (№, ID, Checkbox) - Үргэлж нарийн */
-.table th:first-child,
-.table td:first-child {
-  width: 60px;
-  min-width: 50px;
-  max-width: 80px;
-  text-align: center;
-}
-
-/* ХОЁРДАХЬ БАГАНА (Нэр, Код) - Уян хатан, гэхдээ хязгаартай */
-.table th:nth-child(2),
-.table td:nth-child(2) {
-  min-width: 180px;
-  max-width: 400px;
-}
-
-/* ГУРАВДАХЬ БАГАНА (Төрөл, Клиент) - Дунд хэмжээ */
-.table th:nth-child(3),
-.table td:nth-child(3) {
-  min-width: 120px;
-  max-width: 250px;
-}
-
-/* ДӨРӨВДЭХ БАГАНА */
-.table th:nth-child(4),
-.table td:nth-child(4) {
-  min-width: 100px;
-  max-width: 200px;
-}
-
-/* СҮҮЛИЙН БАГАНА (Үйлдэл, Статус) - Тогтмол */
-.table th:last-child,
-.table td:last-child {
-  width: 120px;
-  min-width: 100px;
-  text-align: center;
-}
-
 /* ================================================================
-   6.2 UTILITY CLASSES (Тусгай багануудад)
+   6.2 UTILITY CLASSES (Тусгай багануудад — opt-in)
    ================================================================ */
 
 /* Дугаар багана */
