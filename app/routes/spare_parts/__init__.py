@@ -41,5 +41,6 @@ STATUS_TYPES = [
     ('disposed', 'Устгагдсан'),
 ]
 
-from app.routes.spare_parts.crud import *
-from app.routes.spare_parts.api import *
+# Route registration side-effects (декоратор-аар blueprint-д бүртгэгдэнэ)
+from app.routes.spare_parts import crud  # noqa: F401
+from app.routes.spare_parts import api   # noqa: F401

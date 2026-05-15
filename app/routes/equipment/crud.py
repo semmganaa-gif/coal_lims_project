@@ -179,24 +179,25 @@ def equipment_list():
     view = request.args.get("view", "all")
     page = request.args.get("page", 1, type=int)
 
-    query = Equipment.query
+    stmt = select(Equipment)
 
     if view == "retired":
-        query = query.filter(Equipment.status == "retired")
+        stmt = stmt.where(Equipment.status == "retired")
     elif view == "spares":
-        query = query.filter(Equipment.status.in_(["needs_spare", "broken"]))
+        stmt = stmt.where(Equipment.status.in_(["needs_spare", "broken"]))
     elif view == "coal":
-        query = query.filter(Equipment.category.in_(["furnace", "prep", "analysis", "other"]))
+        stmt = stmt.where(Equipment.category.in_(["furnace", "prep", "analysis", "other"]))
     elif view == "new":
-        query = query.filter(Equipment.status == "normal").order_by(Equipment.id.desc())
+        stmt = stmt.where(Equipment.status == "normal").order_by(Equipment.id.desc())
     elif view != "all":
-        query = query.filter(Equipment.category == view)
+        stmt = stmt.where(Equipment.category == view)
 
     if view != "retired":
-        query = query.filter(Equipment.status != "retired")
+        stmt = stmt.where(Equipment.status != "retired")
 
-    pagination = query.order_by(Equipment.name.asc()).paginate(
-        page=page, per_page=500, error_out=False
+    pagination = db.paginate(
+        stmt.order_by(Equipment.name.asc()),
+        page=page, per_page=50, error_out=False,
     )
 
     return render_template(
