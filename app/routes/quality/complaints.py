@@ -12,6 +12,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy import func, extract, select
 
 from app import db
+from app.constants import AnalysisResultStatus
 from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult
 from app.repositories import ComplaintRepository, ImprovementRepository
 from app.utils.database import safe_commit
@@ -208,7 +209,7 @@ def register_routes(bp):
                         select(AnalysisResult).where(
                             AnalysisResult.id.in_(result_ids),
                             AnalysisResult.sample_id == int(sample_id),
-                            AnalysisResult.status == 'approved',
+                            AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
                         )
                     ).scalars().all())
 
@@ -217,7 +218,7 @@ def register_routes(bp):
                     sample_code = sample_obj.sample_code if sample_obj else ''
 
                     for ar in results:
-                        ar.status = 'rejected'
+                        ar.status = AnalysisResultStatus.REJECTED.value
                         ar.rejection_comment = f"Санал гомдол: {complaint_no}"
                         ar.rejection_category = 'customer_complaint'
                         ar.error_reason = 'customer_complaint'
@@ -282,7 +283,7 @@ def register_routes(bp):
             for ar in analysis_results:
                 if ar.analysis_code in reanalysis_codes:
                     # Хамгийн сүүлийн approved эсвэл pending_review-г авна
-                    if ar.status != 'rejected':
+                    if ar.status != AnalysisResultStatus.REJECTED.value:
                         current_by_code[ar.analysis_code] = ar
 
             for code in reanalysis_codes:
@@ -294,7 +295,7 @@ def register_routes(bp):
 
                 orig_result = orig.get('final_result')
                 new_result = current.final_result if current else None
-                new_status = current.status if current else 'rejected'
+                new_status = current.status if current else AnalysisResultStatus.REJECTED.value
 
                 # Зөрүү тооцох
                 diff = None

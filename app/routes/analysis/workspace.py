@@ -19,7 +19,7 @@ from app.models import AnalysisType, AnalysisResult, Sample, Equipment
 from app.repositories import AnalysisTypeRepository
 from app.utils.codes import norm_code
 from app.utils.security import escape_like_pattern
-from app.constants import ERROR_REASON_LABELS
+from app.constants import ERROR_REASON_LABELS, AnalysisResultStatus
 from app.config.analysis_schema import get_analysis_schema
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.decorators import analysis_role_required
@@ -54,7 +54,7 @@ def register_routes(bp):
         for code in MG_ONLY_CODES:
             rows = db.session.query(AnalysisResult.sample_id).filter(
                 AnalysisResult.analysis_code == code,
-                AnalysisResult.status == "approved"
+                AnalysisResult.status == AnalysisResultStatus.APPROVED.value
             ).distinct().all()
             code_approved_sets[code] = {r.sample_id for r in rows}
         if all(code_approved_sets.values()):
@@ -115,7 +115,7 @@ def register_routes(bp):
                 select(AnalysisResult).where(
                     AnalysisResult.sample_id.in_(sample_ids),
                     AnalysisResult.analysis_code.in_(WTL_MG_CODES),
-                    AnalysisResult.status.in_(["approved", "pending_review", "rejected"]),
+                    AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
                 )
             ).scalars().all())
             for r in all_results:
@@ -128,7 +128,7 @@ def register_routes(bp):
                 elif raw is None:
                     raw = {}
                 reason_code = getattr(r, "rejection_category", None) or getattr(r, "error_reason", None)
-                if r.status == "rejected" and reason_code != "data_entry":
+                if r.status == AnalysisResultStatus.REJECTED.value and reason_code != "data_entry":
                     raw = {}
                     final_result = None
                 else:
@@ -147,7 +147,7 @@ def register_routes(bp):
                 select(AnalysisResult).where(
                     AnalysisResult.sample_id.in_(sample_ids),
                     AnalysisResult.analysis_code.in_(WTL_MG_CODES),
-                    AnalysisResult.status == "rejected",
+                    AnalysisResult.status == AnalysisResultStatus.REJECTED.value,
                 )
             ).scalars().all())
             for r in rejected_results:
@@ -252,7 +252,7 @@ def register_routes(bp):
         # 2. ХУУЧИН ХАДГАЛАГДСАН ҮР ДҮНГҮҮД
         approved_ids = [r.sample_id for r in db.session.query(AnalysisResult.sample_id).filter(
             AnalysisResult.analysis_code == analysis_type.code,
-            AnalysisResult.status == "approved"
+            AnalysisResult.status == AnalysisResultStatus.APPROVED.value
         ).distinct().all()]
 
         # ✅ joinedload ашиглан N+1 query асуудлыг шийдэв
@@ -336,7 +336,7 @@ def register_routes(bp):
                 select(AnalysisResult).where(
                     AnalysisResult.sample_id.in_(sample_ids),
                     AnalysisResult.analysis_code == "Mad",
-                    AnalysisResult.status == "approved",
+                    AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
                 )
             ).scalars().all())
             mad_results_map = {r.sample_id: r.final_result for r in approved_mad_results}
@@ -353,7 +353,7 @@ def register_routes(bp):
                 select(AnalysisResult).where(
                     AnalysisResult.sample_id.in_(sample_ids),
                     AnalysisResult.analysis_code == analysis_type.code,
-                    AnalysisResult.status == "rejected",
+                    AnalysisResult.status == AnalysisResultStatus.REJECTED.value,
                 )
             ).scalars().all())
             for r in rejected_results:
@@ -371,7 +371,7 @@ def register_routes(bp):
                 select(AnalysisResult).where(
                     AnalysisResult.sample_id.in_(sample_ids),
                     AnalysisResult.analysis_code == analysis_type.code,
-                    AnalysisResult.status.in_(["pending_review", "rejected"]),
+                    AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
                 )
             ).scalars().all())
             for r in existing_results:
@@ -388,7 +388,7 @@ def register_routes(bp):
                 # Ахлахын буцаалтын дүрэм:
                 #  - "data_entry" (шивэлт/тооцооллын алдаа) → хуучин дүнгээ сэргээнэ.
                 #  - Бусад шалтгаан → хуучин дүнг хоосолж шинээр оруулна.
-                if r.status == "rejected" and reason_code != "data_entry":
+                if r.status == AnalysisResultStatus.REJECTED.value and reason_code != "data_entry":
                     raw = {}
                     final_result = None
                 else:
@@ -414,7 +414,7 @@ def register_routes(bp):
                     select(AnalysisResult).where(
                         AnalysisResult.sample_id.in_(sample_ids),
                         AnalysisResult.analysis_code.in_(paired_targets),
-                        AnalysisResult.status.in_(["pending_review", "rejected"]),
+                        AnalysisResult.status.in_([AnalysisResultStatus.PENDING_REVIEW.value, AnalysisResultStatus.REJECTED.value]),
                     )
                 ).scalars().all())
                 for r in paired_results:
@@ -427,7 +427,7 @@ def register_routes(bp):
                     elif raw is None:
                         raw = {}
                     reason_code = getattr(r, "rejection_category", None) or getattr(r, "error_reason", None)
-                    if r.status == "rejected" and reason_code != "data_entry":
+                    if r.status == AnalysisResultStatus.REJECTED.value and reason_code != "data_entry":
                         raw = {}
                         final_result = None
                     else:

@@ -11,6 +11,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy import func, select
 
 from app import db
+from app.constants import SampleStatus
 from app.models import Sample
 from app.forms import AddSampleForm
 
@@ -74,7 +75,7 @@ def register_routes(bp):
                 select(func.count(Sample.id)).where(*conds)
             ).scalar_one()
         total_samples = _count(Sample.lab_type == 'coal')
-        new_samples = _count(Sample.lab_type == 'coal', Sample.status == 'new')
+        new_samples = _count(Sample.lab_type == 'coal', Sample.status == SampleStatus.NEW.value)
         in_progress = _count(
             Sample.lab_type == 'coal',
             Sample.status.in_(['in_progress', 'analysis']),

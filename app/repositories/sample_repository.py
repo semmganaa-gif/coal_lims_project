@@ -15,6 +15,7 @@ from typing import Optional
 from sqlalchemy import select, update
 
 from app import db
+from app.constants import SampleStatus
 from app.models import Sample
 
 
@@ -79,7 +80,7 @@ class SampleRepository:
         """Идэвхтэй дээжүүд авах."""
         stmt = select(Sample)
         if exclude_archived:
-            stmt = stmt.where(Sample.status != "archived")
+            stmt = stmt.where(Sample.status != SampleStatus.ARCHIVED.value)
         stmt = stmt.order_by(Sample.received_date.desc())
         return list(db.session.execute(stmt).scalars().all())
 

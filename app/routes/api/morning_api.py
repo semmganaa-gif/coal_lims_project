@@ -11,6 +11,7 @@ from flask_login import login_required
 from sqlalchemy import func, or_, select
 
 from app import db
+from app.constants import SampleStatus
 from app.models import Equipment, Sample
 
 
@@ -95,7 +96,7 @@ def register_routes(bp):
 
         today_new = _count_samples(
             Sample.lab_type.in_(sample_types),
-            Sample.status == 'new',
+            Sample.status == SampleStatus.NEW.value,
         )
         today_in_progress = _count_samples(
             Sample.lab_type.in_(sample_types),

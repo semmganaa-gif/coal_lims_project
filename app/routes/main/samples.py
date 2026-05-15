@@ -39,8 +39,8 @@ def register_routes(bp):
         from app.repositories import AnalysisTypeRepository
         sample = SampleRepository.get_by_id_or_404(sample_id)
 
-        can_edit = current_user.role in ["admin", "senior"] or (
-            current_user.role == "prep" and sample.status == "new"
+        can_edit = current_user.role in [UserRole.ADMIN.value, UserRole.SENIOR.value] or (
+            current_user.role == UserRole.PREP.value and sample.status == SampleStatus.NEW.value
         )
         if not can_edit:
             flash(_l("Энэ дээжийг засах эрхгүй, эсвэл аль хэдийн боловсруулалтанд орсон байна."), "warning")

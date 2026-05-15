@@ -20,7 +20,7 @@ from sqlalchemy import or_, not_, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
-from app.constants import UserRole
+from app.constants import UserRole, AnalysisResultStatus
 from app.models import Sample, AnalysisResult
 from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
@@ -129,7 +129,7 @@ def register_routes(bp):
                 .join(Sample, AnalysisResult.sample_id == Sample.id)
                 .filter(
                     AnalysisResult.analysis_code == base_code,
-                    AnalysisResult.status == "rejected"
+                    AnalysisResult.status == AnalysisResultStatus.REJECTED.value
                 )
             )
 

@@ -15,6 +15,7 @@ from flask_babel import gettext as _
 from sqlalchemy import select
 
 from app import db
+from app.constants import AnalysisResultStatus
 from app.models import Sample, AnalysisResult
 from app.utils.security import escape_like_pattern
 
@@ -46,7 +47,7 @@ def _get_approved_results(sample_id):
     results = list(db.session.execute(
         select(AnalysisResult).where(
             AnalysisResult.sample_id == sample_id,
-            AnalysisResult.status == "approved",
+            AnalysisResult.status == AnalysisResultStatus.APPROVED.value,
         )
     ).scalars().all())
     return {r.analysis_code: r.final_result for r in results if r.final_result is not None}
