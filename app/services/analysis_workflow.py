@@ -348,7 +348,7 @@ def _apply_status_fields(res, new_status, rejection_category=None, rejection_com
         if hasattr(res, "rejection_category"):
             res.rejection_category = rejection_category
         if hasattr(res, "rejection_comment"):
-            res.rejection_comment = rejection_comment or _l("Ахлах буцаасан")
+            res.rejection_comment = rejection_comment or str(_l("Ахлах буцаасан"))
         if hasattr(res, "error_reason"):
             res.error_reason = rejection_category
     else:
@@ -794,7 +794,7 @@ def _update_result_status_api_atomic(result_id, new_status, action_type,
 
     if hasattr(res, "rejection_comment"):
         if new_status == "rejected":
-            res.rejection_comment = safe_comment if safe_comment else _l("Ахлахаас буцаагдсан")
+            res.rejection_comment = safe_comment if safe_comment else str(_l("Ахлахаас буцаагдсан"))
         elif new_status == "approved":
             res.rejection_comment = None
 
@@ -803,15 +803,17 @@ def _update_result_status_api_atomic(result_id, new_status, action_type,
 
     db.session.flush()
 
+    # LazyString-ийг шууд DB column-руу хадгалж болохгүй (psycopg2 adapt чадахгүй).
+    # eager `str(...)` evaluate хийж бүх reason-уудыг DB-safe болгох.
     if new_status == "approved":
         action_text = "APPROVED"
-        default_reason = _l("Ахлахаас зөвшөөрөгдсөн")
+        default_reason = str(_l("Ахлахаас зөвшөөрөгдсөн"))
     elif new_status == "rejected":
         action_text = "REJECTED"
-        default_reason = _l("Ахлахаас буцаагдсан")
+        default_reason = str(_l("Ахлахаас буцаагдсан"))
     else:
         action_text = "PENDING_REVIEW"
-        default_reason = _l("Ахлахын хяналтад буцаагдсан")
+        default_reason = str(_l("Ахлахын хяналтад буцаагдсан"))
 
     reason_text = safe_comment or default_reason
     if action_type:
@@ -1150,7 +1152,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
 
     if raw_norm.get("_mad_required") and new_status == "approved":
         new_status = "pending_review"
-        status_reason = _l("Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)")
+        status_reason = str(_l("Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)"))
 
     # --- 5. DB Operations ---
     existing = (
@@ -1165,7 +1167,7 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
     action = ""
     user_comment = item.get("rejection_comment")
     safe_comment = str(escape(user_comment)) if user_comment else None
-    reason = status_reason if status_reason else (safe_comment or _l("Химичээр хадгалагдсан"))
+    reason = status_reason if status_reason else (safe_comment or str(_l("Химичээр хадгалагдсан")))
 
     auto_error_reason = None
     if new_status == "rejected":
@@ -1345,22 +1347,32 @@ def _save_results_batch_atomic(items, user_id, coalesce_diff_fn=None,
     errors = []
 
     for index, item in enumerate(items):
+        # `result_info` нь SAVEPOINT release-н дараа л `saved`-д орох ёстой.
+        # Учир нь SAVEPOINT release үед autoflush гарвал (жнь LazyString-ийг
+        # column-руу хадгалах гэсэн алдаа) SAVEPOINT rollback болж DB-д юу ч
+        # хадгалагдахгүй атал `saved` list-д орчихсон бол route "success" гэж
+        # буруу хариу буцаана.
+        pending_info = None
+        pending_err = None
         try:
             with db.session.begin_nested():
-                result_info, err = save_single_result(
+                pending_info, pending_err = save_single_result(
                     item=item,
                     user_id=user_id,
                     batch_data=items,
                     coalesce_diff_fn=coalesce_diff_fn,
                     effective_limit_fn=effective_limit_fn,
                 )
-                if err:
-                    logger.warning("Item %d: %s", index, err)
-                    errors.append({"index": index, "sample_id": item.get("sample_id"), "error": err})
-                else:
-                    saved.append(result_info)
+                if pending_err:
+                    # save_single_result-ийн дотроос аль хэдийн зөв буцаасан тул
+                    # ValueError-ийг raise-аар savepoint-ыг rollback хийлгэнэ.
+                    raise ValueError(pending_err)
+            # SAVEPOINT амжилттай release болсон энд — одоо `saved`-д нэмнэ
+            saved.append(pending_info)
         except (ValueError, SQLAlchemyError) as e:
-            errors.append({"index": index, "sample_id": item.get("sample_id"), "error": str(e)})
+            err_msg = pending_err or str(e)
+            logger.warning("Item %d: %s", index, err_msg)
+            errors.append({"index": index, "sample_id": item.get("sample_id"), "error": err_msg})
 
     return saved, errors
 
