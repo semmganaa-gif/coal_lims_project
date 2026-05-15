@@ -377,43 +377,57 @@ class LicenseManager:
 license_manager = LicenseManager()
 
 
+def _check_license_or_redirect():
+    """Лиценз шалгаад зөв байвал None, буруу бол redirect response буцаана."""
+    result = license_manager.validate_license()
+
+    if not result['valid']:
+        error = result.get('error', 'UNKNOWN_ERROR')
+
+        if error == 'LICENSE_NOT_FOUND':
+            flash('License not found. Please contact system administrator.', 'error')
+            return redirect(url_for('license.activate'))
+
+        if error == 'LICENSE_EXPIRED':
+            flash('License has expired.', 'error')
+            return redirect(url_for('license.expired'))
+
+        if error in ('HARDWARE_MISMATCH', 'TAMPERING_DETECTED'):
+            flash('License error detected. Please contact system administrator.', 'error')
+            return redirect(url_for('license.error'))
+
+        flash('License error. Please contact system administrator.', 'error')
+        return redirect(url_for('license.expired'))
+
+    # Анхааруулга
+    if result.get('warning'):
+        warning = result['warning']
+        if warning.startswith('LICENSE_EXPIRING_SOON:'):
+            days = warning.split(':')[1]
+            flash(f'Warning: License expires in {days} days!', 'warning')
+
+    # License-г g объектод хадгалах
+    g.license = result.get('license')
+    return None
+
+
 def require_license(f):
-    """
-    Decorator - лиценз шаардах
-    Хамгаалагдсан route-уудад ашиглана
-    """
+    """Лиценз шаардах decorator (sync + async route хоёуланг дэмжинэ)."""
+    import asyncio
+
+    if asyncio.iscoroutinefunction(f):
+        @wraps(f)
+        async def async_decorated(*args, **kwargs):
+            early = _check_license_or_redirect()
+            if early is not None:
+                return early
+            return await f(*args, **kwargs)
+        return async_decorated
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        result = license_manager.validate_license()
-
-        if not result['valid']:
-            error = result.get('error', 'UNKNOWN_ERROR')
-
-            if error == 'LICENSE_NOT_FOUND':
-                flash('License not found. Please contact system administrator.', 'error')
-                return redirect(url_for('license.activate'))
-
-            elif error == 'LICENSE_EXPIRED':
-                flash('License has expired.', 'error')
-                return redirect(url_for('license.expired'))
-
-            elif error in ('HARDWARE_MISMATCH', 'TAMPERING_DETECTED'):
-                flash('License error detected. Please contact system administrator.', 'error')
-                return redirect(url_for('license.error'))
-
-            else:
-                flash('License error. Please contact system administrator.', 'error')
-                return redirect(url_for('license.expired'))
-
-        # Анхааруулга
-        if result.get('warning'):
-            warning = result['warning']
-            if warning.startswith('LICENSE_EXPIRING_SOON:'):
-                days = warning.split(':')[1]
-                flash(f'Warning: License expires in {days} days!', 'warning')
-
-        # License-г g объектод хадгалах
-        g.license = result.get('license')
-
+        early = _check_license_or_redirect()
+        if early is not None:
+            return early
         return f(*args, **kwargs)
     return decorated_function

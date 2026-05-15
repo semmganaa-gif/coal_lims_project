@@ -26,23 +26,34 @@ def can_edit_quality():
 
 
 def require_quality_edit(redirect_endpoint='quality.index'):
-    """
-    Quality засварлах эрх шаардах decorator.
+    """Quality засварлах эрх шаардах decorator (sync + async route хоёуланг дэмжинэ).
 
     Args:
         redirect_endpoint: Эрх байхгүй үед redirect хийх endpoint
-
-    Usage:
-        @require_quality_edit('quality.capa_list')
-        def capa_new():
-            ...
     """
+    import asyncio
+
     def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def _early():
             if not can_edit_quality():
                 flash("This action requires senior/admin privileges.", "danger")
                 return redirect(url_for(redirect_endpoint))
+            return None
+
+        if asyncio.iscoroutinefunction(f):
+            @wraps(f)
+            async def async_decorated(*args, **kwargs):
+                early = _early()
+                if early is not None:
+                    return early
+                return await f(*args, **kwargs)
+            return async_decorated
+
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            early = _early()
+            if early is not None:
+                return early
             return f(*args, **kwargs)
         return decorated_function
     return decorator
