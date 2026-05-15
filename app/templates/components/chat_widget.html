@@ -701,5 +701,5 @@ window.CHAT_USER_ID = {{ current_user.id }};
 window.CHAT_USERNAME = "{{ current_user.username }}";
 window.CHAT_USER_ROLE = "{{ current_user.role }}";
 </script>
-<script src="{{ url_for('static', filename='js/chat.js') }}?v=9"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}?v=9" defer></script>
 {% endif %}

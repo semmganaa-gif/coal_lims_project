@@ -140,7 +140,7 @@
 </div>
 
 <script nonce="{{ csp_nonce }}">
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
  $('#ptTable').DataTable({
  order: [[8, 'desc']],
  pageLength: 25,

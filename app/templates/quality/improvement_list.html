@@ -103,7 +103,7 @@
 {{ super() }}
 {{ vite_js_tag('src/datatables.js') }}
 <script nonce="{{ csp_nonce }}">
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     $('#improvementTable').DataTable({
         order: [[1, 'desc']],
         paging: false,

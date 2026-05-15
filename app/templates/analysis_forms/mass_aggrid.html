@@ -58,9 +58,9 @@
  .mw-badge{font-size:.75rem}
 </style>
 
-<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
-<script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
-<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/serial_balance.js') }}" defer></script>
 <script nonce="{{ csp_nonce }}">
 (() => {
  'use strict';

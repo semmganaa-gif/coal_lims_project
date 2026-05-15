@@ -90,8 +90,8 @@
 {{ super() }}
 <link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
-<script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/equipment_register.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tabulator.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/equipment_register.js') }}" defer></script>
 
 <style nonce="{{ csp_nonce }}">.tabulator .tabulator-header { background:#fffbeb; }</style>
 

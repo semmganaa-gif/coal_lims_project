@@ -683,7 +683,7 @@
 {% block scripts %}
 {{ super() }}
 
-<script src="{{ url_for('static', filename='js/repeatability.js') }}"></script>
+<script src="{{ url_for('static', filename='js/repeatability.js') }}" defer></script>
 <script nonce="{{ csp_nonce }}">
  window.LIMS_ANALYSIS_CODE_RAW = "{{ analysis.code }}";
  window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
@@ -782,8 +782,8 @@
  serverError: "{{ _('Server error!') }}"
  };
 </script>
-<script src="{{ url_for('static', filename='js/analysis_balance_ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analysis_balance_ui.js') }}" defer></script>
 
 {# --- Equipment modal JS (extracted) --- #}
-<script src="{{ url_for('static', filename='js/equipment_modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/equipment_modal.js') }}" defer></script>
 {% endblock %}

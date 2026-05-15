@@ -84,7 +84,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {% endmacro %}
 
 {% macro balance_connection_js(weight_columns="['m1', 'm2', 'm3']") %}
-<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
+<script src="{{ url_for('static', filename='js/serial_balance.js') }}" defer></script>
 <script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';

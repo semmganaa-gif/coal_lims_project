@@ -162,7 +162,7 @@
 </div>
 
 <script nonce="{{ csp_nonce }}">
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
  $('#envTable').DataTable({
  order: [[0, 'desc']],
  pageLength: 50,
