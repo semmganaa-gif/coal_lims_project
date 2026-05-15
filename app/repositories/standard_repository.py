@@ -1,9 +1,14 @@
 # app/repositories/standard_repository.py
 # -*- coding: utf-8 -*-
-"""GbwStandard / ControlStandard Repository — стандарт дээжний database operations."""
+"""GbwStandard / ControlStandard Repository — стандарт дээжний database operations.
+
+SQLAlchemy 2.0 native API (`select()` / `update()`) ашиглана.
+"""
 
 from __future__ import annotations
 from typing import Optional
+
+from sqlalchemy import select, update
 
 from app import db
 from app.models import GbwStandard, ControlStandard
@@ -18,30 +23,38 @@ class GbwStandardRepository:
 
     @staticmethod
     def get_all_ordered() -> list[GbwStandard]:
-        return GbwStandard.query.order_by(GbwStandard.created_at.desc()).all()
+        stmt = select(GbwStandard).order_by(GbwStandard.created_at.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_active() -> Optional[GbwStandard]:
-        return GbwStandard.query.filter_by(is_active=True).first()
+        stmt = select(GbwStandard).where(GbwStandard.is_active.is_(True))
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_by_name(name: str, active_only: bool = False) -> Optional[GbwStandard]:
-        q = GbwStandard.query.filter_by(name=name)
+        stmt = select(GbwStandard).where(GbwStandard.name == name)
         if active_only:
-            q = q.filter_by(is_active=True)
-        return q.first()
+            stmt = stmt.where(GbwStandard.is_active.is_(True))
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_active_or_by_name(name: str) -> Optional[GbwStandard]:
         """Нэрээр идэвхтэй хайж, олдохгүй бол нэрээр ямар ч статустай хайна."""
-        std = GbwStandard.query.filter_by(name=name, is_active=True).first()
+        active_stmt = select(GbwStandard).where(
+            GbwStandard.name == name,
+            GbwStandard.is_active.is_(True),
+        )
+        std = db.session.execute(active_stmt).scalar_one_or_none()
         if not std:
-            std = GbwStandard.query.filter_by(name=name).first()
+            any_stmt = select(GbwStandard).where(GbwStandard.name == name)
+            std = db.session.execute(any_stmt).scalar_one_or_none()
         return std
 
     @staticmethod
     def deactivate_all(commit: bool = False) -> int:
-        count = GbwStandard.query.update({GbwStandard.is_active: False})
+        stmt = update(GbwStandard).values(is_active=False)
+        count = db.session.execute(stmt).rowcount
         if commit:
             db.session.commit()
         return count
@@ -70,32 +83,41 @@ class ControlStandardRepository:
 
     @staticmethod
     def get_all_ordered() -> list[ControlStandard]:
-        return ControlStandard.query.order_by(ControlStandard.created_at.desc()).all()
+        stmt = select(ControlStandard).order_by(ControlStandard.created_at.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_active() -> Optional[ControlStandard]:
-        return ControlStandard.query.filter_by(is_active=True).first()
+        stmt = select(ControlStandard).where(ControlStandard.is_active.is_(True))
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_by_name(name: str, active_only: bool = False) -> Optional[ControlStandard]:
-        q = ControlStandard.query.filter_by(name=name)
+        stmt = select(ControlStandard).where(ControlStandard.name == name)
         if active_only:
-            q = q.filter_by(is_active=True)
-        return q.first()
+            stmt = stmt.where(ControlStandard.is_active.is_(True))
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_active_or_by_name(name: str) -> Optional[ControlStandard]:
         """Нэрээр идэвхтэй хайж, олдохгүй бол нэрээр ямар ч статустай хайна."""
-        std = ControlStandard.query.filter_by(name=name, is_active=True).first()
+        active_stmt = select(ControlStandard).where(
+            ControlStandard.name == name,
+            ControlStandard.is_active.is_(True),
+        )
+        std = db.session.execute(active_stmt).scalar_one_or_none()
         if not std:
-            std = ControlStandard.query.filter_by(name=name).first()
+            any_stmt = select(ControlStandard).where(ControlStandard.name == name)
+            std = db.session.execute(any_stmt).scalar_one_or_none()
         if not std:
-            std = ControlStandard.query.filter_by(is_active=True).first()
+            fallback_stmt = select(ControlStandard).where(ControlStandard.is_active.is_(True))
+            std = db.session.execute(fallback_stmt).scalar_one_or_none()
         return std
 
     @staticmethod
     def deactivate_all(commit: bool = False) -> int:
-        count = ControlStandard.query.update({ControlStandard.is_active: False})
+        stmt = update(ControlStandard).values(is_active=False)
+        count = db.session.execute(stmt).rowcount
         if commit:
             db.session.commit()
         return count
