@@ -54,11 +54,15 @@ def _recreate_fk(table: str, column: str, ref_table: str, ondelete: str,
         if fk_name:
             op.drop_constraint(fk_name, table, type_='foreignkey')
         else:
-            # Find FK name dynamically
+            # Find FK name dynamically (rc + kcu хоёулаа `constraint_name`-тэй —
+            # ambiguous-аас зайлсхийхийн тулд `rc.constraint_name` гэж тодорхой
+            # зааж буцаалт авах. JOIN-нд constraint_schema ч мөн нийлүүлнэ.)
             result = conn.execute(sa.text("""
-                SELECT constraint_name FROM information_schema.referential_constraints rc
+                SELECT rc.constraint_name
+                FROM information_schema.referential_constraints rc
                 JOIN information_schema.key_column_usage kcu
                   ON rc.constraint_name = kcu.constraint_name
+                 AND rc.constraint_schema = kcu.constraint_schema
                 WHERE kcu.table_name = :table AND kcu.column_name = :column
             """), {"table": table, "column": column}).first()
             if result:
