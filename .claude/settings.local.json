@@ -168,7 +168,11 @@
       "Bash(kill 978:*)",
       "Bash(sed:*)",
       "Bash(xargs -0 grep -c \"^[[:space:]]*print\\(\")",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(awk '/data.status === .success./{for\\(i=NR-15;i<=NR+1;i++\\) print i\": \"lines[i]} {lines[NR]=$0}' app/static/js/equipment_modal.js)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(awk -F'\\\\\\\\.query\\\\\\\\.' '{print $2}')",
+      "Bash(awk -F'[\\(]' '{print $1}')"
     ],
     "deny": [],
     "ask": []

@@ -21,8 +21,6 @@ from marshmallow import (
     pre_load,
 )
 
-from app.utils.validators import ANALYSIS_VALUE_RANGES, DEFAULT_RANGE
-
 
 class AnalysisResultSchema(Schema):
     """

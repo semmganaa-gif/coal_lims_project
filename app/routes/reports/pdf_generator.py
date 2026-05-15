@@ -4,20 +4,17 @@
 
 import logging
 import os
-from datetime import datetime
-from io import BytesIO
 
-from flask import render_template, current_app, url_for, request
+from flask import render_template, current_app
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.utils.database import safe_commit
 from app.utils.datetime import now_local
-from app.models import LabReport, Sample, AnalysisResult, ReportSignature
+from app.models import LabReport, Sample, AnalysisResult
 
 # Optional import - xhtml2pdf дутуу байж болно
 try:

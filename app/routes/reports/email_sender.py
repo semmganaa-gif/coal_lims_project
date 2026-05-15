@@ -4,21 +4,18 @@
 
 import os
 import smtplib
-from datetime import datetime
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from flask import current_app, render_template, flash, redirect, url_for, request, abort
-from flask_login import login_required, current_user
+from flask import current_app, render_template, flash, redirect, url_for, request
+from flask_login import login_required
 from flask_babel import lazy_gettext as _l
 
-from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
 from app.utils.datetime import now_local
-from app.models import LabReport
 from app.repositories import LabReportRepository
 from app.routes.reports import pdf_reports_bp
 from app.utils.database import safe_commit

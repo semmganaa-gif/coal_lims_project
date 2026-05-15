@@ -22,7 +22,6 @@ from app.constants import AnalysisResultStatus, DASHBOARD_RECENT_LIMIT
 from app.config.analysis_schema import get_analysis_schema
 from app.models import (
     AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType,
-    ControlStandard, GbwStandard,
 )
 from app.repositories import (
     AnalysisTypeRepository, ControlStandardRepository,

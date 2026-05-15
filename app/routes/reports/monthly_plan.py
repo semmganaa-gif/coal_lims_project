@@ -11,7 +11,6 @@ from flask_login import login_required, current_user
 from app.utils.datetime import now_local
 from app.routes.reports.routes import reports_bp, _year_arg
 from app.services.report_service import (
-    get_weeks_in_month,
     calculate_weekly_performance,
     build_monthly_plan_context,
     save_monthly_plans,

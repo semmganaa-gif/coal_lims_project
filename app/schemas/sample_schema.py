@@ -7,8 +7,6 @@ Sample моделийн validation, serialization.
 app/models/core.py-тай sync.
 """
 
-import re
-
 from marshmallow import (
     Schema,
     fields,
