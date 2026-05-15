@@ -178,16 +178,21 @@ flask license generate --company X --expiry YYYY-MM-DD
 
 ### 🔜 Үлдсэн ажил
 
-- **`api/analysis_save.py`** — StaleDataError 409 vs SQLAlchemyError 500
-  тусгай error handling-той тул `safe_commit`-аар орлоогүй, route-д
-  үлдсэн.
-- **`equipment/crud.py:_commit_with_audit`** — IntegrityError vs SQLAlchemy
-  Error ялгаатай flash өгөх тусгай helper, route-домэйн транзакц hooks-той
-  тул `safe_commit`-аар орлоогүй.
 - **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
   memory + partial-failure tolerance), `@transactional` applicable биш.
 - **Major dep upgrades** — celery 5.4→5.6 (minor), redis 5→7 (major),
   gunicorn 24→26 (major). Тус тусын session-д careful upgrade.
+
+### ✅ Sprint 4 closeout (2026-05-15)
+
+- **`api/analysis_save.py`** — `db.session.commit()` ба StaleDataError/
+  SQLAlchemyError translation-ийг `analysis_workflow._save_results_batch_
+  atomic` (@transactional) + public `save_results_batch` translator-руу
+  шилжүүлсэн (commit `789d73d`).
+- **`equipment/crud.py:_commit_with_audit`** — мөн `equipment_service.
+  _save_equipment_with_audit_atomic` (@transactional) + public
+  `save_equipment_with_audit` translator-аар орлуулсан. Route helper нь
+  одоо service дуудаад зөвхөн status-аар flash шиднэ.
 
 ## Conventions
 
@@ -228,10 +233,6 @@ flask license generate --company X --expiry YYYY-MM-DD
   `app/utils/license_protection.py:_log_event`-ээс бичигдэнэ (commit `b94d34c`).
   Integration тест: `tests/unit/test_audit.py::TestFileLoggers`. `logs/`
   фолдер хуучин — `instance/logs/` бол active path.
-- **`docs_all/README.md` "39% coverage"** гэж бичсэн — хоцрогдсон. Бодит
-  coverage 89%.
-- **CRLF/LF warning:** `git diff`-д их хэмжээний LF→CRLF warning гарна
-  (Windows). `.gitattributes` тохиргоог дараа цэгцлэх.
 
 ## Шинэ session-д юу уншихыг зөвлөнө
 
