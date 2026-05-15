@@ -77,7 +77,7 @@ class SolutionPreparation(db.Model):
     status = db.Column(db.String(20), default='active', index=True)  # active, expired, empty
 
     # Хэрэглэгч
-    prepared_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    prepared_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     created_at = db.Column(db.DateTime, default=now_mn)
 
     # Relationships
@@ -130,7 +130,7 @@ class SolutionRecipe(db.Model):
     # Төлөв
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])

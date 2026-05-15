@@ -41,7 +41,7 @@ class MonthlyPlan(db.Model):
     planned_count = db.Column(db.Integer, default=0)
 
     # Audit
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 

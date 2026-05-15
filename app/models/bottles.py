@@ -42,7 +42,7 @@ class Bottle(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     created_by_id = db.Column(
-        db.Integer, db.ForeignKey("user.id", name="fk_bottle_created_by_id"), index=True
+        db.Integer, db.ForeignKey("user.id", name="fk_bottle_created_by_id", ondelete='SET NULL'), index=True
     )
     created_at = db.Column(db.DateTime, nullable=False, default=now_mn)
 
@@ -116,14 +116,14 @@ class BottleConstant(db.Model):
     remarks = db.Column(db.String(255))
     approved_by_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id", name="fk_bottle_constant_approved_by_id"),
+        db.ForeignKey("user.id", name="fk_bottle_constant_approved_by_id", ondelete='SET NULL'),
         index=True,
     )
     approved_at = db.Column(db.DateTime)
 
     created_by_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id", name="fk_bottle_constant_created_by_id"),
+        db.ForeignKey("user.id", name="fk_bottle_constant_created_by_id", ondelete='SET NULL'),
         index=True,
     )
     created_at = db.Column(db.DateTime, nullable=False, default=now_mn)

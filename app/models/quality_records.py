@@ -36,14 +36,14 @@ class CorrectiveAction(db.Model):
     # Арга хэмжээ
     corrective_action = db.Column(db.Text)  # Засах үйлдэл
     preventive_action = db.Column(db.Text)  # Урьдчилан сэргийлэх
-    responsible_person_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    responsible_person_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     target_date = db.Column(db.Date)
     completion_date = db.Column(db.Date)
 
     # Баталгаажуулалт (хуучин - хэрэглэгдэхгүй ч DB-д үлдэнэ)
     verification_method = db.Column(db.Text)
     verification_date = db.Column(db.Date)
-    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     effectiveness = db.Column(db.String(20))
 
     # ═══ Хэсэг 2: Хяналт (Техникийн менежер) - LAB.02.00.04 ═══
@@ -53,7 +53,7 @@ class CorrectiveAction(db.Model):
     management_change_needed = db.Column(db.Boolean)         # Удирдлагын тогтолцооны өөрчлөлт шаардлагатай эсэх
     control_notes = db.Column(db.Text)
     control_date = db.Column(db.Date)
-    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='open', index=True)  # open, in_progress, reviewed, closed
@@ -122,7 +122,7 @@ class ProficiencyTest(HashableMixin, db.Model):
     notes = db.Column(db.Text)
 
     # Хэн шинжилсэн
-    tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     tested_by = db.relationship('User', backref='pt_tests')
 
     # ISO 17025: Audit log integrity hash
@@ -176,7 +176,7 @@ class EnvironmentalLog(HashableMixin, db.Model):
     within_limits = db.Column(db.Boolean, default=True)
 
     # Бүртгэсэн хүн
-    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     recorded_by = db.relationship('User', backref='env_logs')
 
     notes = db.Column(db.Text)
@@ -228,7 +228,7 @@ class QCControlChart(HashableMixin, db.Model):
     in_control = db.Column(db.Boolean, default=True)  # UCL/LCL дотор уу?
 
     # Operator
-    operator_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     operator = db.relationship('User', backref='qc_measurements')
 
     # Тэмдэглэл
@@ -295,7 +295,7 @@ class CustomerComplaint(db.Model):
     complainant_name = db.Column(db.String(200))          # Овог, нэр, албан тушаал
     complainant_department = db.Column(db.String(200))     # Хэсэг, нэгж
     complaint_content = db.Column(db.Text)                 # Агуулга, тайлбар, баримт
-    complainant_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)  # Гарын үсэг
+    complainant_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)  # Гарын үсэг
 
     # ═══ Хэсэг 2: Хүлээн авагч ═══
     receiver_name = db.Column(db.String(200))              # Овог, нэр, албан тушаал
@@ -303,13 +303,13 @@ class CustomerComplaint(db.Model):
     receiver_documentation = db.Column(db.Text)            # Баримтжуулсан материал
     is_justified = db.Column(db.Boolean)                   # Үндэслэлтэй эсэх
     response_detail = db.Column(db.Text)                   # Хариу өгсөн байдал
-    receiver_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)  # Гарын үсэг
+    receiver_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)  # Гарын үсэг
 
     # ═══ Хэсэг 3: Хяналт (Чанарын менежер) ═══
     action_corrective = db.Column(db.Boolean, default=False)       # Залруулах
     action_improvement = db.Column(db.Boolean, default=False)      # Сайжруулах
     action_partial_audit = db.Column(db.Boolean, default=False)    # Хэсэгчилсэн аудит
-    quality_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    quality_manager_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # ═══ Дахин шинжилгээ ═══
     reanalysis_codes = db.Column(db.Text)               # JSON list: ["Mad", "Aad"]
@@ -323,7 +323,7 @@ class CustomerComplaint(db.Model):
     complaint_type = db.Column(db.String(100))
     description = db.Column(db.Text)
     related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), index=True)
-    investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     investigation_findings = db.Column(db.Text)
     resolution = db.Column(db.Text)
     resolution_date = db.Column(db.Date)
@@ -388,7 +388,7 @@ class ImprovementRecord(db.Model):
     deadline = db.Column(db.Date)                          # Хугацаа
     responsible_person = db.Column(db.String(200))         # Хариуцах ажилтан
     documentation = db.Column(db.Text)                     # Баримтжуулалт, нэмэлт тайлбар
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Эх үүсвэр (санал гомдлоос автомат үүссэн бол)
     source_complaint_id = db.Column(db.Integer, db.ForeignKey('customer_complaint.id'), index=True)
@@ -398,7 +398,7 @@ class ImprovementRecord(db.Model):
     fully_implemented = db.Column(db.Boolean)              # Бүрэн хэрэгжсэн эсэх
     control_notes = db.Column(db.Text)                     # Нэмэлт тайлбар
     control_date = db.Column(db.Date)                      # Огноо
-    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='pending', index=True)
@@ -430,7 +430,7 @@ class NonConformityRecord(db.Model):
     detector_department = db.Column(db.String(200))        # Хэсэг, нэгж
     nc_description = db.Column(db.Text)                    # Мэдээлэл, баримт
     proposed_action = db.Column(db.Text)                   # Авах арга хэмжээний санал
-    detector_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    detector_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # ═══ Хэсэг 2: Хариуцсан нэгж ═══
     responsible_unit = db.Column(db.String(200))           # Хариуцах нэгж/хэсэг
@@ -440,13 +440,13 @@ class NonConformityRecord(db.Model):
     corrective_deadline = db.Column(db.Date)               # Хугацаа
     root_cause = db.Column(db.Text)                        # Суурь шалтгаан
     corrective_plan = db.Column(db.Text)                   # Төлөвлөгөө, баримтжуулалт
-    responsible_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    responsible_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # ═══ Хэсэг 3: Хяналт ═══
     completed_on_time = db.Column(db.Boolean)              # Тогтсон хугацаанд залруулсан эсэх
     fully_implemented = db.Column(db.Boolean)              # Бүрэн хэрэгжсэн эсэх
     control_notes = db.Column(db.Text)                     # Нэмэлт тайлбар
-    manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='pending', index=True)

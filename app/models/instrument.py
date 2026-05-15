@@ -44,7 +44,7 @@ class InstrumentReading(db.Model):
 
     # Workflow
     status = db.Column(db.String(20), default="pending", index=True)  # pending, approved, rejected
-    reviewed_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    reviewed_by_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='SET NULL'), nullable=True)
     reviewed_at = db.Column(db.DateTime, nullable=True)
     reject_reason = db.Column(db.String(200), nullable=True)
 

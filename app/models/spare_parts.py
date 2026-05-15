@@ -102,7 +102,7 @@ class SparePart(db.Model):
 
     # Аудит
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])
@@ -157,7 +157,7 @@ class SparePartUsage(db.Model):
     purpose = db.Column(db.String(255))  # Засвар, солих, урьдчилан сэргийлэх г.м.
 
     # Хэн, хэзээ
-    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     used_at = db.Column(db.DateTime, default=now_mn)
 
     # Нөөцийн өөрчлөлт
@@ -207,7 +207,7 @@ class SparePartLog(HashableMixin, db.Model):
     quantity_after = db.Column(db.Float)
 
     # Хэн, хэзээ
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     timestamp = db.Column(db.DateTime, default=now_mn, index=True)
 
     # Нэмэлт

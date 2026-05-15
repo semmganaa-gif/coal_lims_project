@@ -35,7 +35,7 @@ class ReportSignature(db.Model):
     name = db.Column(db.String(100), nullable=False)
     signature_type = db.Column(db.String(20), nullable=False)  # 'signature', 'stamp'
     image_path = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     lab_type = db.Column(db.String(30), default='all')
     is_active = db.Column(db.Boolean, default=True)
     position = db.Column(db.String(100))  # Албан тушаал
@@ -117,7 +117,7 @@ class LabReport(db.Model):
     stamp_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'), index=True)
 
     # Баталгаажуулалт
-    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     approved_at = db.Column(db.DateTime)
 
     # Имэйл
@@ -127,7 +127,7 @@ class LabReport(db.Model):
 
     # Мета
     notes = db.Column(db.Text)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 

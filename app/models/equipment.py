@@ -65,7 +65,7 @@ class Equipment(db.Model):
     # Timestamps (audit trail)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True, index=True)
 
     # H-9: Composite indexes
     __table_args__ = (
@@ -110,7 +110,7 @@ class MaintenanceLog(HashableMixin, db.Model):
     action_type = db.Column(db.String(50))    # 'Calibration', 'Repair', 'Maintenance', 'Daily Check' ...
     description = db.Column(db.Text)          # Юу хийсэн, ямар солисон, тэмдэглэл
     performed_by = db.Column(db.String(50))   # Гүйцэтгэсэн хүн / байгууллага (гадны)
-    performed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # Дотоод хэрэглэгч
+    performed_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True, index=True)  # Дотоод хэрэглэгч
     certificate_no = db.Column(db.String(50)) # Гэрчилгээний № (хэрэв байгаа бол)
     result = db.Column(db.String(20))         # 'Pass', 'Fail', 'Warning' ...
 
@@ -155,7 +155,7 @@ class UsageLog(HashableMixin, db.Model):
     end_time = db.Column(db.DateTime)
     duration_minutes = db.Column(db.Integer)   # Нийт ажилласан минут
     used_by = db.Column(db.String(100), nullable=True)  # Хэрэглэгчийн нэр (хуучин, backward compat)
-    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # Дотоод хэрэглэгч
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True, index=True)  # Дотоод хэрэглэгч
     purpose = db.Column(db.String(255), nullable=True)  # Ашигласан зорилго
 
     # Audit timestamp

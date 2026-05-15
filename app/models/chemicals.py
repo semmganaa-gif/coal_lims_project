@@ -78,7 +78,7 @@ class Chemical(db.Model):
     # Timestamps
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -172,7 +172,7 @@ class ChemicalUsage(db.Model):
     purpose = db.Column(db.String(255))
 
     # Хэрэглэгч
-    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
     used_at = db.Column(db.DateTime, default=now_mn, index=True)
 
     # Нөөцийн өөрчлөлт
@@ -200,7 +200,7 @@ class ChemicalLog(HashableMixin, db.Model):
     timestamp = db.Column(db.DateTime, default=now_mn, index=True)
 
     # Хэрэглэгч
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Үйлдэл
     action = db.Column(db.String(30), nullable=False, index=True)
@@ -270,7 +270,7 @@ class ChemicalWaste(db.Model):
     notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])
@@ -302,7 +302,7 @@ class ChemicalWasteRecord(db.Model):
 
     # Бүртгэсэн
     recorded_at = db.Column(db.DateTime, default=now_mn)
-    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     # Relationships
     waste = db.relationship('ChemicalWaste', back_populates='records')
