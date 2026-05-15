@@ -17,7 +17,7 @@ from app.utils.decorators import role_required
 from sqlalchemy import select
 
 from app import db
-from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
+from app.models import Sample, AnalysisResult
 from app.repositories import ControlStandardRepository, GbwStandardRepository
 from app.monitoring import track_qc_check
 from app.utils.westgard import check_westgard_rules, get_qc_status, check_single_value

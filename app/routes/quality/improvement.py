@@ -4,11 +4,10 @@
 import logging
 from datetime import date
 
-from flask import render_template, flash, redirect, url_for, request, abort
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
-from app import db
 from app.models import ImprovementRecord
 from app.repositories import ImprovementRepository
 from app.utils.database import safe_commit

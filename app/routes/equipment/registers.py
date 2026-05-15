@@ -6,12 +6,11 @@ from datetime import timedelta
 
 from flask import (
     render_template, request, redirect, url_for,
-    flash, abort, current_app
+    flash, abort,
 )
-from flask_login import login_required, current_user
+from flask_login import login_required
 from flask_babel import lazy_gettext as _l
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.constants import UserRole

@@ -15,7 +15,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app import models as M
 from app.constants import AnalysisResultStatus
-from app.utils.datetime import now_local
 from app.utils.codes import norm_code
 from app.utils.shifts import get_shift_info
 from app.routes.reports.routes import reports_bp, _year_arg, _pick_date_col, _code_expr_and_join

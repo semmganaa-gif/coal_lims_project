@@ -7,10 +7,9 @@ All backend APIs are in app/routes/api/ — these routes only serve templates.
 """
 
 from flask import render_template
-from flask_login import login_required, current_user
+from flask_login import login_required
 from app.constants import UserRole
 from app.utils.decorators import role_required
-from werkzeug.exceptions import abort
 
 
 def register_routes(bp):

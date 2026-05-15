@@ -6,10 +6,10 @@ import logging
 from collections import defaultdict
 from datetime import date
 
-from flask import render_template, flash, redirect, url_for, request, jsonify, abort
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy import func, extract, select
+from sqlalchemy import extract, select
 
 from app import db
 from app.constants import AnalysisResultStatus

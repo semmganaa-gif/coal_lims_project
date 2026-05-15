@@ -4,7 +4,7 @@
 
 import os
 import uuid
-from datetime import datetime, date
+from datetime import datetime
 
 from flask import (
     render_template, request, redirect, url_for,
@@ -21,7 +21,7 @@ from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
 from app.utils.datetime import now_local
-from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
+from app.models import LabReport, ReportSignature, AnalysisResult, User
 from app.repositories import LabReportRepository, ReportSignatureRepository
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
 from app.utils.database import safe_commit
