@@ -545,10 +545,32 @@ table[id$="-analysis-table"] .result-cell {
 .form-control,
 .form-select {
   font-size: var(--font-size-base);
-  padding: 0.5rem 0.875rem;
   border: 1px solid var(--lims-border);
   border-radius: var(--border-radius-sm);
   transition: all 0.2s;
+}
+
+.form-control {
+  padding: 0.5rem 0.875rem;
+}
+
+/* `.form-select`-ийн баруун padding нь Bootstrap-ийн chevron arrow background
+   image-д зориулагдсан (default 2.25rem). 0.875rem-болгож шахвал сум тексттэй
+   давхарлагддаг (`Бүх төлөв` гэх мэт). Хэмжээ бүрд padding-уудыг тус тус
+   тогтооно — `.form-select-sm/-lg`-уудад нь Bootstrap-ийн default size-уудыг
+   хадгална. */
+.form-select {
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem;
+}
+
+.form-select-sm {
+  padding: 0.25rem 1.75rem 0.25rem 0.5rem;
+  font-size: var(--font-size-sm);
+}
+
+.form-select-lg {
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  font-size: 1.25rem;
 }
 
 .form-control:focus,
