@@ -8,17 +8,16 @@ import json
 import logging
 from datetime import date, timedelta
 
-from flask import render_template, flash, redirect, url_for, request, abort, current_app
+from flask import render_template, flash, redirect, url_for, request, current_app
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
 from sqlalchemy import func, select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.constants import UserRole, SampleStatus
+from app.models import Sample
 from app.repositories import SampleRepository
-from app.schemas import SampleSchema
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
 from app.services.sample_service import get_retention_context
@@ -35,7 +34,6 @@ def register_routes(bp):
     @bp.route("/edit_sample/<int:sample_id>", methods=["GET", "POST"])
     @login_required
     def edit_sample(sample_id):
-        from app.models import Sample, AnalysisType
         from app.repositories import AnalysisTypeRepository
         sample = SampleRepository.get_by_id_or_404(sample_id)
 
@@ -103,7 +101,6 @@ def register_routes(bp):
     @bp.route("/delete_selected_samples", methods=["POST"])
     @login_required
     def delete_selected_samples():
-        from app.models import Sample
         sample_ids_to_delete = request.form.getlist("sample_ids")
 
         if not sample_ids_to_delete:
@@ -171,8 +168,6 @@ def register_routes(bp):
     @login_required
     def dispose_samples():
         """Mark samples as disposed (Bulk disposal)"""
-        from app.models import Sample
-
         if current_user.role not in ["admin", "senior"]:
             flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
             return redirect(url_for("main.sample_disposal"))
@@ -224,8 +219,6 @@ def register_routes(bp):
     @login_required
     def set_retention_date():
         """Set sample retention date"""
-        from app.models import Sample
-
         if current_user.role not in ["admin", "senior"]:
             flash(_l("Энэ үйлдлийг гүйцэтгэх эрхгүй байна."), "danger")
             return redirect(url_for("main.sample_disposal"))
@@ -280,8 +273,6 @@ def register_routes(bp):
     @login_required
     def bulk_set_retention():
         """Set retention date for all samples without one"""
-        from app.models import Sample
-
         retention_days = request.form.get("retention_days", type=int)
         from_date_type = request.form.get("from_date", "received")
 

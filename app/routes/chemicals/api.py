@@ -5,10 +5,8 @@
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
-from app.models import Chemical
 from app.repositories import ChemicalRepository
 from app.routes.chemicals import chemicals_bp
 from app.routes.api.helpers import api_success, api_error

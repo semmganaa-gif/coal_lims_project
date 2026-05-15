@@ -19,7 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import socketio, db
 from app.constants import UserRole
-from app.models import ChatMessage, UserOnlineStatus, User, Sample
+from app.models import ChatMessage, User
 from app.repositories import UserRepository, SampleRepository
 from app.repositories.chat_repository import (
     ChatMessageRepository, UserOnlineStatusRepository,

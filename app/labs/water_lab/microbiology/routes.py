@@ -25,7 +25,6 @@ from app.labs.water_lab.chemistry.constants import (
 from app.labs.water_lab.microbiology.constants import MICRO_UNITS
 from app.utils.decorators import lab_required
 from app.utils.database import safe_commit
-from app.utils.datetime import now_local
 from app.labs.water_lab.chemistry.constants import parse_display_name as _parse_display_name
 
 logger = logging.getLogger(__name__)
@@ -295,8 +294,6 @@ def api_samples():
       → тухайн category-д хамааралтай шинжилгээтэй дээжийг шүүж,
         аль хэдийн үр дүн хадгалсан дээжийг хасна.
     """
-    from app.labs.water_lab.microbiology.constants import CATEGORY_ANALYSIS_CODES
-
     category = request.args.get('category')
 
     stmt = select(Sample).where(

@@ -13,7 +13,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
-from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.repositories import ChemicalUsageRepository, ChemicalLogRepository
 from app.repositories import ChemicalRepository
 from app.utils.database import safe_commit
