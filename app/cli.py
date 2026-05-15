@@ -392,7 +392,7 @@ def register_commands(app):
 
         db.session.commit()
 
-        click.echo(f"Лиценз сунгагдлаа:")
+        click.echo("Лиценз сунгагдлаа:")
         click.echo(f"  Хуучин: {old_expiry}")
         click.echo(f"  Шинэ:   {lic.expiry_date}")
         click.echo(f"  Үлдсэн: {lic.days_remaining} хоног")

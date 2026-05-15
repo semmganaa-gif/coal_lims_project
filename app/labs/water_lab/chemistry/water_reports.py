@@ -275,7 +275,6 @@ def api_consumption_cell():
         if not (1 <= month <= 12) or not (2000 <= year <= 2100):
             raise ValueError('Invalid year/month range')
         unit = request.args.get('unit', '').strip()
-        stype = request.args.get('stype', '').strip()
         kind = request.args.get('kind', 'samples').strip()
         code = request.args.get('code', '').strip()
         if kind not in ('samples', 'code'):

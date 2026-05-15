@@ -163,12 +163,6 @@ def build_query(config: dict):
     if entity not in ENTITY_COLUMNS:
         raise ValueError(f"Unknown entity: {entity}")
 
-    # Determine base model
-    if entity == "analysis_result":
-        base_model = AnalysisResult
-    else:
-        base_model = Sample
-
     # Build select columns
     needs_join = False
     select_cols = []

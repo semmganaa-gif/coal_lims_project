@@ -136,7 +136,6 @@ def edit_user(user_id):
         # Success — may include admin role warning prefix
         if 'эрхийн түвшинг' in message:
             # Split: warning part + success part
-            parts = message.split(' ', 1)
             warning_msg = 'Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.'
             success_msg = message.replace(warning_msg + ' ', '')
             flash(warning_msg, 'warning')

@@ -83,10 +83,8 @@ def api_notifications():
 
     Returns expiring-soon + expired chemicals (нийт тоо + жагсаалт).
     """
-    from datetime import date
     from app.models import Chemical
 
-    today = date.today()
     chemicals = list(db.session.execute(
         select(Chemical).where(
             Chemical.status.in_(['active', 'low_stock', 'expired']),
