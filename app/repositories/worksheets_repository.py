@@ -6,11 +6,15 @@ Water Worksheet Repository - QC ажлын хуудасны database operations.
 2 model:
 - WaterWorksheet — усны хими QC worksheet header
 - WorksheetRow — worksheet-ийн мөр (QC, sample, blank, spike, etc.)
+
+SQLAlchemy 2.0 native API (`select()` / `delete()`) ашиглана.
 """
 
 from __future__ import annotations
 
 from typing import Optional
+
+from sqlalchemy import delete, select
 
 from app import db
 from app.models.worksheets import WaterWorksheet, WorksheetRow
@@ -45,13 +49,14 @@ class WaterWorksheetRepository:
             status: байгаа бол тухайн төлвөөр шүүх ('open', 'submitted', ...)
             limit: дээд мөрийн тоо (default 200).
         """
-        query = WaterWorksheet.query.order_by(
+        stmt = select(WaterWorksheet)
+        if status:
+            stmt = stmt.where(WaterWorksheet.status == status)
+        stmt = stmt.order_by(
             WaterWorksheet.analysis_date.desc(),
             WaterWorksheet.id.desc(),
-        )
-        if status:
-            query = query.filter(WaterWorksheet.status == status)
-        return query.limit(limit).all()
+        ).limit(limit)
+        return list(db.session.execute(stmt).scalars().all())
 
 
 # =========================================================================
@@ -68,9 +73,12 @@ class WorksheetRowRepository:
     @staticmethod
     def get_for_worksheet(worksheet_id: int) -> list[WorksheetRow]:
         """Worksheet-ийн бүх мөр, position-аар sort."""
-        return WorksheetRow.query.filter_by(
-            worksheet_id=worksheet_id
-        ).order_by(WorksheetRow.position).all()
+        stmt = (
+            select(WorksheetRow)
+            .where(WorksheetRow.worksheet_id == worksheet_id)
+            .order_by(WorksheetRow.position)
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def delete_for_worksheet(worksheet_id: int) -> int:
@@ -78,9 +86,8 @@ class WorksheetRowRepository:
 
         Returns: устгасан тоо.
         """
-        return WorksheetRow.query.filter_by(
-            worksheet_id=worksheet_id
-        ).delete()
+        stmt = delete(WorksheetRow).where(WorksheetRow.worksheet_id == worksheet_id)
+        return db.session.execute(stmt).rowcount
 
     @staticmethod
     def get_for_lot_with_result(lot_id: int) -> list[WorksheetRow]:
@@ -88,7 +95,8 @@ class WorksheetRowRepository:
 
         chemical_service.invalidate_results_by_lot-д ашиглана.
         """
-        return WorksheetRow.query \
-            .filter_by(reagent_lot_id=lot_id) \
-            .filter(WorksheetRow.analysis_result_id.isnot(None)) \
-            .all()
+        stmt = select(WorksheetRow).where(
+            WorksheetRow.reagent_lot_id == lot_id,
+            WorksheetRow.analysis_result_id.isnot(None),
+        )
+        return list(db.session.execute(stmt).scalars().all())

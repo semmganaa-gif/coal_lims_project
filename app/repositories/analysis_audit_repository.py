@@ -6,13 +6,15 @@ AnalysisResultLog Repository — Шинжилгээний үр дүнгийн au
 ⚠️ AnalysisResultLog нь HashableMixin model — UPDATE/DELETE blocked at
 SQLAlchemy event level (ISO 17025 audit immutability). Repository нь зөвхөн
 read query-уудыг агуулна; бичих үйлдлийг шууд session.add() хийнэ.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
 """
 
 from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from app import db
 from app.models.analysis_audit import AnalysisResultLog
@@ -39,17 +41,24 @@ class AnalysisResultLogRepository:
             sample_id: Sample.id
             limit: hard limit, None бол бүх log
         """
-        query = AnalysisResultLog.query.filter_by(sample_id=sample_id) \
+        stmt = (
+            select(AnalysisResultLog)
+            .where(AnalysisResultLog.sample_id == sample_id)
             .order_by(AnalysisResultLog.timestamp.desc())
+        )
         if limit is not None:
-            query = query.limit(limit)
-        return query.all()
+            stmt = stmt.limit(limit)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_result(result_id: int) -> list[AnalysisResultLog]:
         """Тухайн AnalysisResult-ийн бүх log."""
-        return AnalysisResultLog.query.filter_by(analysis_result_id=result_id) \
-            .order_by(AnalysisResultLog.timestamp.desc()).all()
+        stmt = (
+            select(AnalysisResultLog)
+            .where(AnalysisResultLog.analysis_result_id == result_id)
+            .order_by(AnalysisResultLog.timestamp.desc())
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     # =========================================================================
     # Aggregation queries (KPI dashboards)
@@ -67,24 +76,25 @@ class AnalysisResultLogRepository:
             date_to:   timestamp <  date_to (datetime, exclusive)
             username:  ilike pattern (user-аар шүүх)
         """
-        q = db.session.query(
+        stmt = select(
             AnalysisResultLog.error_reason,
             func.count(AnalysisResultLog.id),
-        ).filter(
+        ).where(
             AnalysisResultLog.error_reason.isnot(None),
             AnalysisResultLog.error_reason != "",
         )
 
         if date_from is not None:
-            q = q.filter(AnalysisResultLog.timestamp >= date_from)
+            stmt = stmt.where(AnalysisResultLog.timestamp >= date_from)
         if date_to is not None:
-            q = q.filter(AnalysisResultLog.timestamp < date_to)
+            stmt = stmt.where(AnalysisResultLog.timestamp < date_to)
 
         if username:
             from app.utils.security import escape_like_pattern
             safe = escape_like_pattern(username)
-            q = q.join(User, AnalysisResultLog.user_id == User.id).filter(
+            stmt = stmt.join(User, AnalysisResultLog.user_id == User.id).where(
                 User.username.ilike(f"%{safe}%")
             )
 
-        return q.group_by(AnalysisResultLog.error_reason).all()
+        stmt = stmt.group_by(AnalysisResultLog.error_reason)
+        return list(db.session.execute(stmt).all())

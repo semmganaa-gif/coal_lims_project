@@ -1,10 +1,15 @@
 # app/repositories/quality_repository.py
 # -*- coding: utf-8 -*-
-"""Quality Repository - Чанарын бүртгэлүүдийн database operations."""
+"""Quality Repository - Чанарын бүртгэлүүдийн database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 
 from typing import Optional
+
+from sqlalchemy import select
 
 from app import db
 from app.models import (
@@ -34,21 +39,23 @@ class ComplaintRepository:
 
     @staticmethod
     def get_all(status: Optional[str] = None) -> list[CustomerComplaint]:
-        query = CustomerComplaint.query
+        stmt = select(CustomerComplaint)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(CustomerComplaint.complaint_date.desc()).all()
+            stmt = stmt.where(CustomerComplaint.status == status)
+        stmt = stmt.order_by(CustomerComplaint.complaint_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_next_number() -> str:
         from app.utils.datetime import now_local as now_mn
         year = now_mn().year
-        last = (
-            CustomerComplaint.query
-            .filter(CustomerComplaint.complaint_no.like(f"COMP-{year}-%"))
+        stmt = (
+            select(CustomerComplaint)
+            .where(CustomerComplaint.complaint_no.like(f"COMP-{year}-%"))
             .order_by(CustomerComplaint.id.desc())
-            .first()
+            .limit(1)
         )
+        last = db.session.execute(stmt).scalar_one_or_none()
         if last and last.complaint_no:
             try:
                 seq = int(last.complaint_no.split("-")[-1]) + 1
@@ -90,10 +97,11 @@ class CAPARepository:
 
     @staticmethod
     def get_all(status: Optional[str] = None) -> list[CorrectiveAction]:
-        query = CorrectiveAction.query
+        stmt = select(CorrectiveAction)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(CorrectiveAction.issue_date.desc()).all()
+            stmt = stmt.where(CorrectiveAction.status == status)
+        stmt = stmt.order_by(CorrectiveAction.issue_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(capa: CorrectiveAction, commit: bool = False) -> CorrectiveAction:
@@ -127,10 +135,11 @@ class NonConformityRepository:
 
     @staticmethod
     def get_all(status: Optional[str] = None) -> list[NonConformityRecord]:
-        query = NonConformityRecord.query
+        stmt = select(NonConformityRecord)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(NonConformityRecord.record_date.desc()).all()
+            stmt = stmt.where(NonConformityRecord.status == status)
+        stmt = stmt.order_by(NonConformityRecord.record_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(record: NonConformityRecord, commit: bool = False) -> NonConformityRecord:
@@ -164,10 +173,11 @@ class ImprovementRepository:
 
     @staticmethod
     def get_all(status: Optional[str] = None) -> list[ImprovementRecord]:
-        query = ImprovementRecord.query
+        stmt = select(ImprovementRecord)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(ImprovementRecord.record_date.desc()).all()
+            stmt = stmt.where(ImprovementRecord.status == status)
+        stmt = stmt.order_by(ImprovementRecord.record_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(record: ImprovementRecord, commit: bool = False) -> ImprovementRecord:
@@ -201,16 +211,17 @@ class ProficiencyTestRepository:
 
     @staticmethod
     def get_all() -> list[ProficiencyTest]:
-        return ProficiencyTest.query.order_by(ProficiencyTest.test_date.desc()).all()
+        stmt = select(ProficiencyTest).order_by(ProficiencyTest.test_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_analysis(analysis_code: str) -> list[ProficiencyTest]:
-        return (
-            ProficiencyTest.query
-            .filter_by(analysis_code=analysis_code)
+        stmt = (
+            select(ProficiencyTest)
+            .where(ProficiencyTest.analysis_code == analysis_code)
             .order_by(ProficiencyTest.test_date.desc())
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(test: ProficiencyTest, commit: bool = False) -> ProficiencyTest:
@@ -236,16 +247,17 @@ class EnvironmentalLogRepository:
 
     @staticmethod
     def get_all() -> list[EnvironmentalLog]:
-        return EnvironmentalLog.query.order_by(EnvironmentalLog.log_date.desc()).all()
+        stmt = select(EnvironmentalLog).order_by(EnvironmentalLog.log_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_location(location: str) -> list[EnvironmentalLog]:
-        return (
-            EnvironmentalLog.query
-            .filter_by(location=location)
+        stmt = (
+            select(EnvironmentalLog)
+            .where(EnvironmentalLog.location == location)
             .order_by(EnvironmentalLog.log_date.desc())
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(log: EnvironmentalLog, commit: bool = False) -> EnvironmentalLog:

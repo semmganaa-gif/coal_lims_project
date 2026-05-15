@@ -7,6 +7,8 @@ Solution Repository - Уусмал бэлдэх / жорын database operations
 - SolutionRecipe — уусмалын жор
 - SolutionPreparation — бэлдсэн уусмалын бүртгэл
 - SolutionRecipeIngredient — жорын орц
+
+SQLAlchemy 2.0 native API (`select()` / `delete()`) ашиглана.
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import delete, func, select
 
 from app import db
 from app.models.solutions import (
@@ -46,12 +48,13 @@ class SolutionRecipeRepository:
     def get_active_for_lab(lab_type: str = "water_chemistry",
                            ordered: bool = True) -> list[SolutionRecipe]:
         """Идэвхтэй жорууд (lab-аар фильтр)."""
-        query = SolutionRecipe.query.filter_by(
-            lab_type=lab_type, is_active=True
+        stmt = select(SolutionRecipe).where(
+            SolutionRecipe.lab_type == lab_type,
+            SolutionRecipe.is_active.is_(True),
         )
         if ordered:
-            query = query.order_by(SolutionRecipe.name)
-        return query.all()
+            stmt = stmt.order_by(SolutionRecipe.name)
+        return list(db.session.execute(stmt).scalars().all())
 
 
 # =========================================================================
@@ -78,70 +81,87 @@ class SolutionPreparationRepository:
                      end_date: Optional[str] = None,
                      status: str = "all") -> list[SolutionPreparation]:
         """Хугацаа + статусаар уусмал хайх (journal page-д)."""
-        query = SolutionPreparation.query
+        stmt = select(SolutionPreparation)
 
         if start_date:
             try:
                 start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
-                query = query.filter(SolutionPreparation.prepared_date >= start_dt)
+                stmt = stmt.where(SolutionPreparation.prepared_date >= start_dt)
             except (ValueError, TypeError):
                 pass
 
         if end_date:
             try:
                 end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-                query = query.filter(SolutionPreparation.prepared_date <= end_dt)
+                stmt = stmt.where(SolutionPreparation.prepared_date <= end_dt)
             except (ValueError, TypeError):
                 pass
 
         if status and status != 'all':
-            query = query.filter(SolutionPreparation.status == status)
+            stmt = stmt.where(SolutionPreparation.status == status)
 
-        return query.order_by(SolutionPreparation.prepared_date.desc()).all()
+        stmt = stmt.order_by(SolutionPreparation.prepared_date.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_all_ordered() -> list[SolutionPreparation]:
         """Бүх уусмал, шинээр бэлдсэнээр sort."""
-        return SolutionPreparation.query.order_by(
+        stmt = select(SolutionPreparation).order_by(
             SolutionPreparation.prepared_date.desc()
-        ).all()
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_recipe(recipe_id: int,
                        limit: Optional[int] = None) -> list[SolutionPreparation]:
         """Тухайн жороор бэлдсэн уусмалууд."""
-        query = SolutionPreparation.query.filter_by(recipe_id=recipe_id) \
+        stmt = (
+            select(SolutionPreparation)
+            .where(SolutionPreparation.recipe_id == recipe_id)
             .order_by(SolutionPreparation.prepared_date.desc())
+        )
         if limit is not None:
-            query = query.limit(limit)
-        return query.all()
+            stmt = stmt.limit(limit)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_journal_stats() -> dict[str, int]:
         """Journal-ийн дээд статистик: total / active / expired."""
         today = date.today()
+        total = db.session.execute(
+            select(func.count(SolutionPreparation.id))
+        ).scalar_one()
+        active = db.session.execute(
+            select(func.count(SolutionPreparation.id))
+            .where(SolutionPreparation.status == 'active')
+        ).scalar_one()
+        expired = db.session.execute(
+            select(func.count(SolutionPreparation.id))
+            .where(SolutionPreparation.expiry_date < today)
+        ).scalar_one()
         return {
-            'total': SolutionPreparation.query.count(),
-            'active': SolutionPreparation.query.filter_by(status='active').count(),
-            'expired': SolutionPreparation.query.filter(
-                SolutionPreparation.expiry_date < today
-            ).count(),
+            'total': total,
+            'active': active,
+            'expired': expired,
         }
 
     @staticmethod
     def get_recipe_stats(recipe_ids: list[int]) -> dict[int, dict]:
         """Жорын статистик: {recipe_id: {prep_count, last_prep}}."""
-        stats = {rid: {'last_prep': None, 'prep_count': 0} for rid in recipe_ids}
+        stats: dict[int, dict] = {rid: {'last_prep': None, 'prep_count': 0} for rid in recipe_ids}
         if not recipe_ids:
             return stats
 
-        count_rows = db.session.query(
-            SolutionPreparation.recipe_id,
-            func.count(SolutionPreparation.id),
-            func.max(SolutionPreparation.prepared_date),
-        ).filter(
-            SolutionPreparation.recipe_id.in_(recipe_ids)
-        ).group_by(SolutionPreparation.recipe_id).all()
+        count_stmt = (
+            select(
+                SolutionPreparation.recipe_id,
+                func.count(SolutionPreparation.id),
+                func.max(SolutionPreparation.prepared_date),
+            )
+            .where(SolutionPreparation.recipe_id.in_(recipe_ids))
+            .group_by(SolutionPreparation.recipe_id)
+        )
+        count_rows = db.session.execute(count_stmt).all()
 
         max_dates = {}
         for rid, cnt, max_date in count_rows:
@@ -149,10 +169,13 @@ class SolutionPreparationRepository:
             max_dates[rid] = max_date
 
         if max_dates:
-            last_preps = SolutionPreparation.query.filter(
-                SolutionPreparation.recipe_id.in_(list(max_dates.keys()))
-            ).order_by(SolutionPreparation.prepared_date.desc()).all()
-            seen = set()
+            last_preps_stmt = (
+                select(SolutionPreparation)
+                .where(SolutionPreparation.recipe_id.in_(list(max_dates.keys())))
+                .order_by(SolutionPreparation.prepared_date.desc())
+            )
+            last_preps = db.session.execute(last_preps_stmt).scalars().all()
+            seen: set[int] = set()
             for p in last_preps:
                 if p.recipe_id not in seen:
                     stats[p.recipe_id]['last_prep'] = p
@@ -174,6 +197,7 @@ class SolutionRecipeIngredientRepository:
 
         Returns: устгасан тоо.
         """
-        return SolutionRecipeIngredient.query.filter_by(
-            recipe_id=recipe_id
-        ).delete()
+        stmt = delete(SolutionRecipeIngredient).where(
+            SolutionRecipeIngredient.recipe_id == recipe_id
+        )
+        return db.session.execute(stmt).rowcount

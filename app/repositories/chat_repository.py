@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 
 from app import db
 from app.models import ChatMessage, UserOnlineStatus
@@ -104,7 +104,8 @@ class UserOnlineStatusRepository:
 
     @staticmethod
     def get_online_users() -> list[UserOnlineStatus]:
-        return UserOnlineStatus.query.filter_by(is_online=True).all()
+        stmt = select(UserOnlineStatus).where(UserOnlineStatus.is_online.is_(True))
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def set_online(user_id: int, socket_id: str, commit: bool = False) -> UserOnlineStatus:

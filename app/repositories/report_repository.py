@@ -1,10 +1,15 @@
 # app/repositories/report_repository.py
 # -*- coding: utf-8 -*-
-"""Report Repository - Тайлангийн database operations."""
+"""Report Repository - Тайлангийн database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 
 from typing import Optional
+
+from sqlalchemy import or_, select
 
 from app import db
 from app.models import LabReport, ReportSignature
@@ -27,21 +32,24 @@ class LabReportRepository:
 
     @staticmethod
     def get_by_number(report_number: str) -> Optional[LabReport]:
-        return LabReport.query.filter_by(report_number=report_number).first()
+        stmt = select(LabReport).where(LabReport.report_number == report_number)
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_by_lab(lab_type: str, status: Optional[str] = None) -> list[LabReport]:
-        query = LabReport.query.filter_by(lab_type=lab_type)
+        stmt = select(LabReport).where(LabReport.lab_type == lab_type)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(LabReport.created_at.desc()).all()
+            stmt = stmt.where(LabReport.status == status)
+        stmt = stmt.order_by(LabReport.created_at.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_all(status: Optional[str] = None) -> list[LabReport]:
-        query = LabReport.query
+        stmt = select(LabReport)
         if status:
-            query = query.filter_by(status=status)
-        return query.order_by(LabReport.created_at.desc()).all()
+            stmt = stmt.where(LabReport.status == status)
+        stmt = stmt.order_by(LabReport.created_at.desc())
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(report: LabReport, commit: bool = False) -> LabReport:
@@ -67,20 +75,20 @@ class ReportSignatureRepository:
 
     @staticmethod
     def get_active(sig_type: Optional[str] = None, lab_type: Optional[str] = None) -> list[ReportSignature]:
-        query = ReportSignature.query.filter_by(is_active=True)
+        stmt = select(ReportSignature).where(ReportSignature.is_active.is_(True))
         if sig_type:
-            query = query.filter_by(signature_type=sig_type)
+            stmt = stmt.where(ReportSignature.signature_type == sig_type)
         if lab_type:
-            from sqlalchemy import or_
-            query = query.filter(or_(
+            stmt = stmt.where(or_(
                 ReportSignature.lab_type == lab_type,
                 ReportSignature.lab_type == 'all',
             ))
-        return query.all()
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_user(user_id: int) -> list[ReportSignature]:
-        return ReportSignature.query.filter_by(user_id=user_id).all()
+        stmt = select(ReportSignature).where(ReportSignature.user_id == user_id)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(sig: ReportSignature, commit: bool = False) -> ReportSignature:

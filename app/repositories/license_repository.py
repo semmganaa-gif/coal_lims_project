@@ -28,9 +28,8 @@ class SystemLicenseRepository:
     @staticmethod
     def get_active() -> Optional[SystemLicense]:
         """Идэвхтэй лицензийг буцаах (нэгэн зэрэг ганц л байх ёстой)."""
-        return db.session.execute(
-            select(SystemLicense).filter_by(is_active=True)
-        ).scalars().first()
+        stmt = select(SystemLicense).where(SystemLicense.is_active.is_(True))
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def deactivate_all() -> None:
@@ -50,13 +49,20 @@ class LicenseLogRepository:
     @staticmethod
     def get_recent(limit: int = 50) -> list[LicenseLog]:
         """Сүүлийн N audit log."""
-        return LicenseLog.query.order_by(
-            LicenseLog.created_at.desc()
-        ).limit(limit).all()
+        stmt = (
+            select(LicenseLog)
+            .order_by(LicenseLog.created_at.desc())
+            .limit(limit)
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_license(license_id: int, limit: int = 100) -> list[LicenseLog]:
         """Тухайн лицензийн event-ууд."""
-        return LicenseLog.query.filter_by(license_id=license_id) \
-            .order_by(LicenseLog.created_at.desc()) \
-            .limit(limit).all()
+        stmt = (
+            select(LicenseLog)
+            .where(LicenseLog.license_id == license_id)
+            .order_by(LicenseLog.created_at.desc())
+            .limit(limit)
+        )
+        return list(db.session.execute(stmt).scalars().all())

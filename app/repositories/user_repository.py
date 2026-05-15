@@ -1,10 +1,15 @@
 # app/repositories/user_repository.py
 # -*- coding: utf-8 -*-
-"""User Repository - Хэрэглэгчийн database operations."""
+"""User Repository - Хэрэглэгчийн database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 
 from typing import Optional
+
+from sqlalchemy import select
 
 from app import db
 from app.models import User
@@ -27,26 +32,30 @@ class UserRepository:
 
     @staticmethod
     def get_by_username(username: str) -> Optional[User]:
-        return User.query.filter_by(username=username).first()
+        stmt = select(User).where(User.username == username)
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def username_exists(username: str, exclude_id: Optional[int] = None) -> bool:
-        query = User.query.filter_by(username=username)
+        stmt = select(User.id).where(User.username == username)
         if exclude_id:
-            query = query.filter(User.id != exclude_id)
-        return query.first() is not None
+            stmt = stmt.where(User.id != exclude_id)
+        return db.session.execute(stmt.limit(1)).first() is not None
 
     @staticmethod
     def get_all() -> list[User]:
-        return User.query.order_by(User.username).all()
+        stmt = select(User).order_by(User.username)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_role(role: str) -> list[User]:
-        return User.query.filter_by(role=role).order_by(User.username).all()
+        stmt = select(User).where(User.role == role).order_by(User.username)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_roles(roles: list[str]) -> list[User]:
-        return User.query.filter(User.role.in_(roles)).order_by(User.username).all()
+        stmt = select(User).where(User.role.in_(roles)).order_by(User.username)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(user: User, commit: bool = False) -> User:

@@ -1,9 +1,14 @@
 # app/repositories/analysis_type_repository.py
 # -*- coding: utf-8 -*-
-"""AnalysisType Repository — шинжилгээний төрлийн database operations."""
+"""AnalysisType Repository — шинжилгээний төрлийн database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 from typing import Optional
+
+from sqlalchemy import select
 
 from app import db
 from app.models import AnalysisType
@@ -18,11 +23,12 @@ class AnalysisTypeRepository:
 
     @staticmethod
     def get_by_code(code: str) -> Optional[AnalysisType]:
-        return AnalysisType.query.filter_by(code=code).first()
+        stmt = select(AnalysisType).where(AnalysisType.code == code)
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_by_code_or_404(code: str) -> AnalysisType:
-        at = AnalysisType.query.filter_by(code=code).first()
+        at = AnalysisTypeRepository.get_by_code(code)
         if at is None:
             from flask import abort
             abort(404)
@@ -30,31 +36,33 @@ class AnalysisTypeRepository:
 
     @staticmethod
     def get_all_ordered() -> list[AnalysisType]:
-        return AnalysisType.query.order_by(AnalysisType.order_num).all()
+        stmt = select(AnalysisType).order_by(AnalysisType.order_num)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_all() -> list[AnalysisType]:
-        return AnalysisType.query.all()
+        stmt = select(AnalysisType)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_by_role(role: str) -> list[AnalysisType]:
-        return (
-            AnalysisType.query
-            .filter_by(required_role=role)
+        stmt = (
+            select(AnalysisType)
+            .where(AnalysisType.required_role == role)
             .order_by(AnalysisType.order_num)
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_codes() -> list[str]:
-        rows = AnalysisType.query.with_entities(AnalysisType.code).all()
-        return [r.code for r in rows]
+        stmt = select(AnalysisType.code)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_all_excluding(exclude_codes: list[str]) -> list[AnalysisType]:
-        return (
-            AnalysisType.query
-            .filter(~AnalysisType.code.in_(exclude_codes))
+        stmt = (
+            select(AnalysisType)
+            .where(~AnalysisType.code.in_(exclude_codes))
             .order_by(AnalysisType.order_num)
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())

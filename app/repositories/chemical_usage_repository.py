@@ -8,12 +8,16 @@ Models:
 - ChemicalLog — HashableMixin audit log (ISO 17025)
 - ChemicalWaste — хог хаягдлын ангилал/нэр
 - ChemicalWasteRecord — сар бүрийн хог хаягдлын бүртгэл
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
+
+from sqlalchemy import or_, select
 
 from app import db
 from app.models import (
@@ -32,16 +36,21 @@ class ChemicalUsageRepository:
     @staticmethod
     def get_for_chemical(chemical_id: int, limit: int = 50) -> list[ChemicalUsage]:
         """Тухайн химийн бодисын хэрэглээний түүх."""
-        return ChemicalUsage.query.filter_by(chemical_id=chemical_id) \
-            .order_by(ChemicalUsage.used_at.desc()).limit(limit).all()
+        stmt = (
+            select(ChemicalUsage)
+            .where(ChemicalUsage.chemical_id == chemical_id)
+            .order_by(ChemicalUsage.used_at.desc())
+            .limit(limit)
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_lot(lot_id: int, with_sample: bool = True) -> list[ChemicalUsage]:
         """Lot ашигласан бүх ChemicalUsage (lot invalidation-д)."""
-        query = ChemicalUsage.query.filter_by(chemical_id=lot_id)
+        stmt = select(ChemicalUsage).where(ChemicalUsage.chemical_id == lot_id)
         if with_sample:
-            query = query.filter(ChemicalUsage.sample_id.isnot(None))
-        return query.all()
+            stmt = stmt.where(ChemicalUsage.sample_id.isnot(None))
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def query_with_chemical(chemical_id: Optional[int] = None,
@@ -53,26 +62,30 @@ class ChemicalUsageRepository:
 
         Returns: list of (usage, chemical) tuples.
         """
-        query = db.session.query(ChemicalUsage, Chemical).join(Chemical)
+        stmt = select(ChemicalUsage, Chemical).join(
+            Chemical, ChemicalUsage.chemical_id == Chemical.id
+        )
 
         if chemical_id is not None:
-            query = query.filter(ChemicalUsage.chemical_id == chemical_id)
+            stmt = stmt.where(ChemicalUsage.chemical_id == chemical_id)
 
         if lab and lab != "all":
-            query = query.filter(
-                (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
-            )
+            stmt = stmt.where(or_(
+                Chemical.lab_type == lab,
+                Chemical.lab_type == 'all',
+            ))
 
         if start_date:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-            query = query.filter(ChemicalUsage.used_at >= start_dt)
+            stmt = stmt.where(ChemicalUsage.used_at >= start_dt)
 
         if end_date:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
             end_dt = end_dt.replace(hour=23, minute=59, second=59)
-            query = query.filter(ChemicalUsage.used_at <= end_dt)
+            stmt = stmt.where(ChemicalUsage.used_at <= end_dt)
 
-        return query.order_by(ChemicalUsage.used_at.desc()).limit(limit).all()
+        stmt = stmt.order_by(ChemicalUsage.used_at.desc()).limit(limit)
+        return list(db.session.execute(stmt).all())
 
 
 # =========================================================================
@@ -88,8 +101,13 @@ class ChemicalLogRepository:
     @staticmethod
     def get_for_chemical(chemical_id: int, limit: int = 50) -> list[ChemicalLog]:
         """Тухайн химийн бодисын audit log."""
-        return ChemicalLog.query.filter_by(chemical_id=chemical_id) \
-            .order_by(ChemicalLog.timestamp.desc()).limit(limit).all()
+        stmt = (
+            select(ChemicalLog)
+            .where(ChemicalLog.chemical_id == chemical_id)
+            .order_by(ChemicalLog.timestamp.desc())
+            .limit(limit)
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
 
 # =========================================================================
@@ -110,12 +128,14 @@ class ChemicalWasteRepository:
         Args:
             lab: "all" эсвэл лаб код ("coal", "water_chemistry", ...)
         """
-        query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
+        stmt = select(ChemicalWaste).where(ChemicalWaste.is_active.is_(True))
         if lab != "all":
-            query = query.filter(
-                (ChemicalWaste.lab_type == lab) | (ChemicalWaste.lab_type == 'all')
-            )
-        return query.order_by(ChemicalWaste.name_mn.asc()).all()
+            stmt = stmt.where(or_(
+                ChemicalWaste.lab_type == lab,
+                ChemicalWaste.lab_type == 'all',
+            ))
+        stmt = stmt.order_by(ChemicalWaste.name_mn.asc())
+        return list(db.session.execute(stmt).scalars().all())
 
 
 # =========================================================================
@@ -128,16 +148,21 @@ class ChemicalWasteRecordRepository:
     @staticmethod
     def find(waste_id: int, year: int, month: int) -> Optional[ChemicalWasteRecord]:
         """Тодорхой ангилал/жил/сарын бүртгэл (upsert lookup)."""
-        return ChemicalWasteRecord.query.filter_by(
-            waste_id=waste_id, year=year, month=month,
-        ).first()
+        stmt = select(ChemicalWasteRecord).where(
+            ChemicalWasteRecord.waste_id == waste_id,
+            ChemicalWasteRecord.year == year,
+            ChemicalWasteRecord.month == month,
+        )
+        return db.session.execute(stmt).scalar_one_or_none()
 
     @staticmethod
     def get_for_year(waste_id: int, year: int) -> list[ChemicalWasteRecord]:
         """Тухайн жилийн бүх сарын бүртгэл (тайланд)."""
-        return ChemicalWasteRecord.query.filter_by(
-            waste_id=waste_id, year=year,
-        ).all()
+        stmt = select(ChemicalWasteRecord).where(
+            ChemicalWasteRecord.waste_id == waste_id,
+            ChemicalWasteRecord.year == year,
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_month(year: int, month: int,
@@ -147,7 +172,10 @@ class ChemicalWasteRecordRepository:
         Args:
             waste_ids: байгаа бол зөвхөн тэдгээрт хязгаарлах.
         """
-        query = ChemicalWasteRecord.query.filter_by(year=year, month=month)
+        stmt = select(ChemicalWasteRecord).where(
+            ChemicalWasteRecord.year == year,
+            ChemicalWasteRecord.month == month,
+        )
         if waste_ids is not None:
-            query = query.filter(ChemicalWasteRecord.waste_id.in_(waste_ids))
-        return query.all()
+            stmt = stmt.where(ChemicalWasteRecord.waste_id.in_(waste_ids))
+        return list(db.session.execute(stmt).scalars().all())

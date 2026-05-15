@@ -1,10 +1,15 @@
 # app/repositories/chemical_repository.py
 # -*- coding: utf-8 -*-
-"""Chemical Repository — химийн бодисын database operations."""
+"""Chemical Repository — химийн бодисын database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 from datetime import date
 from typing import Optional
+
+from sqlalchemy import func, or_, select
 
 from app import db
 from app.models import Chemical
@@ -19,50 +24,57 @@ class ChemicalRepository:
 
     @staticmethod
     def get_active_count() -> int:
-        return Chemical.query.filter(Chemical.status != 'disposed').count()
+        stmt = select(func.count(Chemical.id)).where(Chemical.status != 'disposed')
+        return db.session.execute(stmt).scalar_one()
 
     @staticmethod
     def get_low_stock_count() -> int:
-        return Chemical.query.filter(Chemical.status == 'low_stock').count()
+        stmt = select(func.count(Chemical.id)).where(Chemical.status == 'low_stock')
+        return db.session.execute(stmt).scalar_one()
 
     @staticmethod
     def get_expired_count() -> int:
-        return Chemical.query.filter(Chemical.status == 'expired').count()
+        stmt = select(func.count(Chemical.id)).where(Chemical.status == 'expired')
+        return db.session.execute(stmt).scalar_one()
 
     @staticmethod
     def get_low_stock() -> list[Chemical]:
-        return Chemical.query.filter(Chemical.status == 'low_stock').all()
+        stmt = select(Chemical).where(Chemical.status == 'low_stock')
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_expiring_before(before_date: date) -> list[Chemical]:
         """Хугацаа дуусах гэж буй бодисууд."""
-        return Chemical.query.filter(
+        stmt = select(Chemical).where(
             Chemical.expiry_date <= before_date,
             Chemical.status != 'disposed',
-        ).all()
+        )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_active(lab_type: Optional[str] = None) -> list[Chemical]:
         """Идэвхтэй (disposed биш) бодисууд."""
-        q = Chemical.query.filter(Chemical.status != 'disposed')
+        stmt = select(Chemical).where(Chemical.status != 'disposed')
         if lab_type:
-            q = q.filter(
-                (Chemical.lab_type == lab_type) | (Chemical.lab_type == 'all')
-            )
-        return q.order_by(Chemical.name).all()
+            stmt = stmt.where(or_(
+                Chemical.lab_type == lab_type,
+                Chemical.lab_type == 'all',
+            ))
+        stmt = stmt.order_by(Chemical.name)
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def get_for_water_lab() -> list[Chemical]:
         """Усны лабд хэрэглэгддэг бодисууд."""
-        return (
-            Chemical.query
-            .filter(
+        stmt = (
+            select(Chemical)
+            .where(
                 Chemical.status != 'disposed',
-                (Chemical.lab_type == 'water_chemistry') | (Chemical.lab_type == 'all'),
+                or_(Chemical.lab_type == 'water_chemistry', Chemical.lab_type == 'all'),
             )
             .order_by(Chemical.name)
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def save(chemical: Chemical, commit: bool = False) -> Chemical:

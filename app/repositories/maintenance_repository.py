@@ -1,10 +1,15 @@
 # app/repositories/maintenance_repository.py
 # -*- coding: utf-8 -*-
-"""Maintenance & Usage Repository - Засвар/ашиглалтын database operations."""
+"""Maintenance & Usage Repository - Засвар/ашиглалтын database operations.
+
+SQLAlchemy 2.0 native API (`select()` builder) ашиглана.
+"""
 
 from __future__ import annotations
 
 from typing import Optional
+
+from sqlalchemy import select
 
 from app import db
 from app.models import MaintenanceLog, UsageLog
@@ -19,16 +24,17 @@ class MaintenanceLogRepository:
 
     @staticmethod
     def get_by_equipment(equipment_id: int) -> list[MaintenanceLog]:
-        return (
-            MaintenanceLog.query
-            .filter_by(equipment_id=equipment_id)
+        stmt = (
+            select(MaintenanceLog)
+            .where(MaintenanceLog.equipment_id == equipment_id)
             .order_by(MaintenanceLog.action_date.desc())
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def has_records(equipment_id: int) -> bool:
-        return MaintenanceLog.query.filter_by(equipment_id=equipment_id).first() is not None
+        stmt = select(MaintenanceLog.id).where(MaintenanceLog.equipment_id == equipment_id)
+        return db.session.execute(stmt.limit(1)).first() is not None
 
     @staticmethod
     def save(log: MaintenanceLog, commit: bool = False) -> MaintenanceLog:
@@ -54,16 +60,17 @@ class UsageLogRepository:
 
     @staticmethod
     def get_by_equipment(equipment_id: int) -> list[UsageLog]:
-        return (
-            UsageLog.query
-            .filter_by(equipment_id=equipment_id)
+        stmt = (
+            select(UsageLog)
+            .where(UsageLog.equipment_id == equipment_id)
             .order_by(UsageLog.start_time.desc())
-            .all()
         )
+        return list(db.session.execute(stmt).scalars().all())
 
     @staticmethod
     def has_records(equipment_id: int) -> bool:
-        return UsageLog.query.filter_by(equipment_id=equipment_id).first() is not None
+        stmt = select(UsageLog.id).where(UsageLog.equipment_id == equipment_id)
+        return db.session.execute(stmt.limit(1)).first() is not None
 
     @staticmethod
     def save(log: UsageLog, commit: bool = False) -> UsageLog:
