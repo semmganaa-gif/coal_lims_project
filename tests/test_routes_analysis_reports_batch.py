@@ -108,33 +108,31 @@ def save_app(chemist_user):
     def load_user(uid):
         return chemist_user
 
+    # Flask-Babel init — route нь `flask_babel.gettext` (`_`) ашигладаг
+    # (жишээ: "JSON массив байх ёстой"). Babel extension-гүй бол `_(...)`
+    # `KeyError: 'babel'` шиднэ.
+    from flask_babel import Babel
+    Babel(app)
+
     mock_limiter = MagicMock()
     mock_limiter.limit = lambda *a, **kw: lambda f: f
 
-    mock_db = MagicMock()
-    mock_db.session = MagicMock()
-    ctx = MagicMock()
-    ctx.__enter__ = MagicMock(return_value=None)
-    ctx.__exit__ = MagicMock(return_value=False)
-    mock_db.session.begin_nested.return_value = ctx
-
+    # Sprint 4 closeout-н дараа route нь `db`-г шууд хэрэглэхээ больсон —
+    # `save_results_batch` service function-аар дамжуулна. Тиймээс энэ
+    # fixture зөвхөн limiter-ийг patch хийнэ. DB-той тестүүд service
+    # boundary-р (`app.routes.api.analysis_save.save_results_batch`) mock
+    # хийнэ.
     p1 = patch("app.routes.api.analysis_save.limiter", mock_limiter)
-    p2 = patch("app.routes.api.analysis_save.db", mock_db)
-
     p1.start()
-    p2.start()
 
     bp = Blueprint("api", __name__, url_prefix="/api")
     from app.routes.api.analysis_save import register_save_routes
     register_save_routes(bp)
     app.register_blueprint(bp)
 
-    app._mock_db = mock_db
-
     yield app
 
     p1.stop()
-    p2.stop()
 
 
 # ---------------------------------------------------------------------------
@@ -474,13 +472,18 @@ class TestSaveResults:
     """Tests for POST /api/save_results"""
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_single_item_success(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
+    def test_save_single_item_success(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{"sample_id": 1}], [])
-        mock_save.return_value = ({"success": True, "analysis_code": "Mad", "status": "completed"}, None)
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [{"success": True, "analysis_code": "Mad", "status": "completed"}],
+            "errors": [],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -492,13 +495,21 @@ class TestSaveResults:
         mock_track.assert_called_once_with(analysis_type="Mad", status="completed")
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_batch_success(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
+    def test_save_batch_success(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}, {}], [])
-        mock_save.return_value = ({"success": True, "analysis_code": "Aad", "status": "completed"}, None)
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [
+                {"success": True, "analysis_code": "Aad", "status": "completed"},
+                {"success": True, "analysis_code": "Aad", "status": "completed"},
+            ],
+            "errors": [],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -513,16 +524,18 @@ class TestSaveResults:
         assert mock_track.call_count == 2
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_partial_failure(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
+    def test_save_partial_failure(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}, {}], [])
-        mock_save.side_effect = [
-            ({"success": True, "analysis_code": "Mad", "status": "completed"}, None),
-            (None, "Invalid data"),
-        ]
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [{"success": True, "analysis_code": "Mad", "status": "completed"}],
+            "errors": [{"index": 1, "sample_id": None, "error": "Invalid data"}],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -552,14 +565,19 @@ class TestSaveResults:
         assert resp.status_code == 403
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_schema_validation_warnings(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
+    def test_save_schema_validation_warnings(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
         """Schema validation errors are logged but do not block saving."""
         mock_schema_cls.return_value.validate.return_value = {"sample_id": ["Required"]}
         mock_validate.return_value = (False, [{}], ["warning"])
-        mock_save.return_value = ({"success": True, "analysis_code": "X", "status": "done"}, None)
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [{"success": True, "analysis_code": "X", "status": "done"}],
+            "errors": [],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -567,56 +585,61 @@ class TestSaveResults:
 
         assert resp.status_code == 200
 
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_stale_data_error(self, mock_schema_cls, mock_validate, mock_save, save_app, chemist_user):
-        """StaleDataError during commit returns 409."""
-        from sqlalchemy.orm.exc import StaleDataError
+    def test_save_stale_data_error(self, mock_schema_cls, mock_validate, mock_batch, save_app, chemist_user):
+        """Service-аас 'conflict' статус ирэх үед 409 буцаах."""
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}], [])
-        mock_save.return_value = ({"success": True}, None)
-
-        save_app._mock_db.session.commit.side_effect = StaleDataError("stale")
+        mock_batch.return_value = {
+            "status": "conflict",
+            "saved": [],
+            "errors": [],
+            "message": "Concurrent edit",
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
                 resp = client.post("/api/save_results", json={"sample_id": 1})
 
         assert resp.status_code == 409
-        save_app._mock_db.session.rollback.assert_called()
-        # Reset side_effect for other tests
-        save_app._mock_db.session.commit.side_effect = None
 
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_sqlalchemy_error_on_commit(self, mock_schema_cls, mock_validate, mock_save, save_app, chemist_user):
-        """SQLAlchemyError during commit returns 500."""
-        from sqlalchemy.exc import SQLAlchemyError
+    def test_save_sqlalchemy_error_on_commit(self, mock_schema_cls, mock_validate, mock_batch, save_app, chemist_user):
+        """Service-аас 'db_error' статус ирэх үед 500 буцаах."""
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}], [])
-        mock_save.return_value = ({"success": True}, None)
 
-        save_app._mock_db.session.commit.side_effect = SQLAlchemyError("DB error")
+        mock_batch.return_value = {
+            "status": "db_error",
+            "saved": [],
+            "errors": [],
+            "message": "DB error",
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
                 resp = client.post("/api/save_results", json={"sample_id": 1})
 
         assert resp.status_code == 500
-        save_app._mock_db.session.rollback.assert_called()
-        save_app._mock_db.session.commit.side_effect = None
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_value_error_in_loop(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
-        """ValueError raised by save_single_result within the loop."""
+    def test_save_value_error_in_loop(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
+        """Item-level ValueError бол service-аас errors жагсаалтад орно (207)."""
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}], [])
-        mock_save.side_effect = ValueError("bad value")
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [],
+            "errors": [{"index": 0, "sample_id": 1, "error": "bad value"}],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -628,15 +651,19 @@ class TestSaveResults:
         assert data["errors"][0]["error"] == "bad value"
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_sqlalchemy_error_in_loop(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
-        """SQLAlchemyError raised by save_single_result within the loop."""
-        from sqlalchemy.exc import SQLAlchemyError
+    def test_save_sqlalchemy_error_in_loop(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
+        """Item-level SQLAlchemyError бол service-аас errors-д орно (207)."""
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}], [])
-        mock_save.side_effect = SQLAlchemyError("db error in loop")
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [],
+            "errors": [{"index": 0, "sample_id": 1, "error": "db error in loop"}],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):
@@ -663,14 +690,19 @@ class TestSaveResults:
         assert resp.status_code == 400
 
     @patch("app.routes.api.analysis_save.track_analysis")
-    @patch("app.routes.api.analysis_save.save_single_result")
+    @patch("app.routes.api.analysis_save.save_results_batch")
     @patch("app.routes.api.analysis_save.validate_save_results_batch")
     @patch("app.routes.api.analysis_save.AnalysisResultSchema")
-    def test_save_result_not_tracked_if_not_success(self, mock_schema_cls, mock_validate, mock_save, mock_track, save_app, chemist_user):
-        """track_analysis not called if result success is not True."""
+    def test_save_result_not_tracked_if_not_success(self, mock_schema_cls, mock_validate, mock_batch, mock_track, save_app, chemist_user):
+        """track_analysis үл дуудагдах: saved result-ийн success=False үед."""
         mock_schema_cls.return_value.validate.return_value = {}
         mock_validate.return_value = (True, [{}], [])
-        mock_save.return_value = ({"success": False, "analysis_code": "Mad"}, None)
+        mock_batch.return_value = {
+            "status": "ok",
+            "saved": [{"success": False, "analysis_code": "Mad"}],
+            "errors": [],
+            "message": None,
+        }
 
         with save_app.test_client() as client:
             with patch("flask_login.utils._get_user", return_value=chemist_user):

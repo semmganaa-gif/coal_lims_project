@@ -11,7 +11,8 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+# SQLAlchemy exception handling нь service layer-д шилжсэн
+# (equipment_service.save_equipment_with_audit)
 from werkzeug.utils import secure_filename
 
 from app import db
@@ -141,23 +142,26 @@ def _populate_equipment(eq: Equipment, form) -> None:
 
 
 def _commit_with_audit(action: str, eq: Equipment, **extra_details) -> bool:
-    """Commit + audit log + flash. Амжилтгүй бол False."""
-    try:
-        db.session.commit()
-        details = {"name": eq.name, "category": eq.category}
-        details.update(extra_details)
-        log_audit(action=action, resource_type="Equipment", resource_id=eq.id, details=details)
+    """Equipment-ийг service дамжуулан хадгалж audit log бичих flash translator.
+
+    `equipment_service.save_equipment_with_audit` нь @transactional-аар commit
+    хариуцна. Энэ route-helper нь зөвхөн ирсэн status-аар тохирох flash шиднэ.
+    """
+    from app.services.equipment_service import (
+        EQ_SAVE_INTEGRITY_ERROR,
+        EQ_SAVE_OK,
+        save_equipment_with_audit,
+    )
+
+    result = save_equipment_with_audit(eq, action, **extra_details)
+    if result["status"] == EQ_SAVE_OK:
         return True
-    except IntegrityError as e:
-        db.session.rollback()
-        current_app.logger.error(f"IntegrityError in {action}: {e}")
+    if result["status"] == EQ_SAVE_INTEGRITY_ERROR:
         flash(_l("Өгөгдөл зөрчилдлөө (давхардсан утга)."), "danger")
         return False
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in {action}: {e}")
-        flash(_l("Алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
-        return False
+    # EQ_SAVE_DB_ERROR
+    flash(_l("Алдаа гарлаа: %(error)s") % {"error": result["message"]}, "danger")
+    return False
 
 
 # -------------------------------------------------

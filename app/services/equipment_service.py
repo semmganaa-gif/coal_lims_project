@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import func
 from flask_babel import lazy_gettext as _l
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app import db
 from app.models import (
@@ -615,3 +615,54 @@ def get_monthly_stats(year, category):
         rows.append(row)
 
     return rows
+
+
+# -------------------------------------------------
+# WRITE: Equipment CRUD with audit (public + atomic core)
+# -------------------------------------------------
+# Sprint 4 closeout: route layer-аас `db.session.commit()` болон
+# IntegrityError vs SQLAlchemyError ялгалт-уудыг service-руу шилжүүлэв.
+# Route одоо зөвхөн service дуудаад буцсан status-аар flash шиднэ.
+
+EQ_SAVE_OK = "ok"
+EQ_SAVE_INTEGRITY_ERROR = "integrity_error"   # давхардсан утга
+EQ_SAVE_DB_ERROR = "db_error"
+
+
+@transactional()
+def _save_equipment_with_audit_atomic(eq, action, **extra_details):
+    """Equipment object-д хийгдсэн өөрчлөлтүүдийг commit + audit log бичих.
+
+    Caller `eq`-г session-д орууллаа/өөрчиллөө гэж тооцно. @transactional
+    нь commit-ыг хариуцна. IntegrityError/SQLAlchemyError public-руу
+    дамжаад нэр зааж барина.
+    """
+    details = {"name": eq.name, "category": eq.category}
+    details.update(extra_details)
+    log_audit(
+        action=action,
+        resource_type="Equipment",
+        resource_id=eq.id,
+        details=details,
+    )
+    return eq.id
+
+
+def save_equipment_with_audit(eq, action, **extra_details):
+    """Equipment CRUD-ын public translator.
+
+    Returns:
+        dict with keys:
+          - status: 'ok' | 'integrity_error' | 'db_error'
+          - eq_id: int | None
+          - message: str | None
+    """
+    try:
+        eq_id = _save_equipment_with_audit_atomic(eq, action, **extra_details)
+        return {"status": EQ_SAVE_OK, "eq_id": eq_id, "message": None}
+    except IntegrityError as e:
+        logger.error("IntegrityError in %s: %s", action, e)
+        return {"status": EQ_SAVE_INTEGRITY_ERROR, "eq_id": None, "message": None}
+    except SQLAlchemyError as e:
+        logger.error("Database error in %s: %s", action, e)
+        return {"status": EQ_SAVE_DB_ERROR, "eq_id": None, "message": str(e)[:100]}

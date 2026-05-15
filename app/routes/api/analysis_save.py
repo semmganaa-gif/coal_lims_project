@@ -9,13 +9,14 @@ Analysis save & status update endpoints:
 from flask import request, jsonify, current_app, url_for, redirect
 from flask_babel import gettext as _
 from flask_login import login_required, current_user
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm.exc import StaleDataError
 
-from app import db, limiter
+from app import limiter
 from app.schemas import AnalysisResultSchema
 from app.services.analysis_workflow import (
-    save_single_result,
+    BATCH_SAVE_CONFLICT,
+    BATCH_SAVE_DB_ERROR,
+    BATCH_SAVE_OK,
+    save_results_batch,
     update_result_status_api,
 )
 from app.utils.validators import validate_save_results_batch
@@ -64,66 +65,38 @@ def register_save_routes(bp):
             current_app.logger.warning("Schema validation errors: %s", schema_errors)
 
         # Input validation (business logic: range, CSN, etc.)
-        is_valid, validated_items, validation_errors = validate_save_results_batch(data)
-
+        is_valid, _validated_items, validation_errors = validate_save_results_batch(data)
         if not is_valid:
             current_app.logger.warning("Validation warnings: %s", validation_errors)
 
-        saved_count = 0
-        failed_count = 0
-        results_for_response = []
-        errors = []
+        # Service: atomic batch save + StaleDataError/SQLAlchemyError translation
+        result = save_results_batch(
+            items=data,
+            user_id=current_user.id,
+            coalesce_diff_fn=_coalesce_diff,
+            effective_limit_fn=_effective_limit,
+        )
 
-        for index, item in enumerate(data):
-            try:
-                with db.session.begin_nested():
-                    result_info, err = save_single_result(
-                        item=item,
-                        user_id=current_user.id,
-                        batch_data=data,
-                        coalesce_diff_fn=_coalesce_diff,
-                        effective_limit_fn=_effective_limit,
-                    )
+        if result["status"] == BATCH_SAVE_CONFLICT:
+            return jsonify({"message": _(result["message"])}), 409
+        if result["status"] == BATCH_SAVE_DB_ERROR:
+            return jsonify({"message": _(result["message"])}), 500
 
-                    if err:
-                        current_app.logger.warning("Item %d: %s", index, err)
-                        errors.append(f"Item {index} {err}")
-                        failed_count += 1
-                        continue
+        # BATCH_SAVE_OK — partial success боломжтой (errors list-ээр илэрхийлэгдэнэ)
+        saved_count = len(result["saved"])
+        failed_count = len(result["errors"])
 
-                    saved_count += 1
-                    results_for_response.append(result_info)
+        for res in result["saved"]:
+            if res.get("success"):
+                track_analysis(
+                    analysis_type=res.get("analysis_code", "unknown"),
+                    status=res.get("status", "completed"),
+                )
 
-            except (ValueError, SQLAlchemyError) as e:
-                failed_count += 1
-                error_msg = str(e)
-                errors.append({"index": index, "sample_id": item.get("sample_id"), "error": error_msg})
-
-        # Commit All
-        try:
-            db.session.commit()
-
-            for res in results_for_response:
-                if res.get("success"):
-                    track_analysis(
-                        analysis_type=res.get("analysis_code", "unknown"),
-                        status=res.get("status", "completed"),
-                    )
-
-        except StaleDataError:
-            db.session.rollback()
-            current_app.logger.warning("StaleDataError: concurrent edit detected")
-            return jsonify({"message": _("Өөр хэрэглэгч энэ үр дүнг засварласан байна. Хуудсаа дахин ачаалж оролдоно уу.")}), 409
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error("DB save error: %s", e, exc_info=True)
-            return jsonify({"message": _("Мэдээллийн сан хадгалах алдаа")}), 500
-
-        # Response
         response_data = {
             "message": f"{saved_count} мөр амжилттай хадгалагдлаа, {failed_count} алдаа.",
-            "results": results_for_response,
-            "errors": errors,
+            "results": result["saved"],
+            "errors": result["errors"],
         }
         status_code = 200 if failed_count == 0 else 207
         return jsonify(response_data), status_code

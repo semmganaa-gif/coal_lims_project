@@ -1314,3 +1314,94 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
         "success": True,
         "reason": reason,
     }, None
+
+
+# =========================================================================
+# BATCH SAVE (public + atomic core)
+# =========================================================================
+# Зорилго: route layer-аас `db.session.commit()`, SAVEPOINT loop, exception
+# translation-уудыг бүхэлд нь зайлуулж service-д төвлөрүүлэх. Public функц
+# нь structured Result буцаах ба caller HTTP layer status code-тай мэргэн
+# хослуулна.
+
+BATCH_SAVE_OK = "ok"
+BATCH_SAVE_CONFLICT = "conflict"     # StaleDataError — concurrent edit
+BATCH_SAVE_DB_ERROR = "db_error"     # SQLAlchemyError — DB-related fail
+
+
+@transactional()
+def _save_results_batch_atomic(items, user_id, coalesce_diff_fn=None,
+                               effective_limit_fn=None):
+    """Batch результат хадгалалт — нэг transaction, per-item SAVEPOINT.
+
+    SAVEPOINT тус бүр ValueError/SQLAlchemyError-аас тусгаарлагдсан тул
+    нэг алдаатай мөр бусдын commit-ыг блоклохгүй. @transactional outer-аас
+    StaleDataError/SQLAlchemyError гарвал бүгдийг rollback.
+
+    Returns:
+        tuple: (saved_results: list[dict], errors: list[dict])
+    """
+    saved = []
+    errors = []
+
+    for index, item in enumerate(items):
+        try:
+            with db.session.begin_nested():
+                result_info, err = save_single_result(
+                    item=item,
+                    user_id=user_id,
+                    batch_data=items,
+                    coalesce_diff_fn=coalesce_diff_fn,
+                    effective_limit_fn=effective_limit_fn,
+                )
+                if err:
+                    logger.warning("Item %d: %s", index, err)
+                    errors.append({"index": index, "sample_id": item.get("sample_id"), "error": err})
+                else:
+                    saved.append(result_info)
+        except (ValueError, SQLAlchemyError) as e:
+            errors.append({"index": index, "sample_id": item.get("sample_id"), "error": str(e)})
+
+    return saved, errors
+
+
+def save_results_batch(items, user_id, coalesce_diff_fn=None,
+                       effective_limit_fn=None):
+    """Batch результат хадгалалт — public translator.
+
+    Returns:
+        dict with keys:
+          - status: 'ok' | 'conflict' | 'db_error'
+          - saved: list[dict] (successful results)
+          - errors: list[dict] (per-item errors)
+          - message: str | None
+    """
+    try:
+        saved, errors = _save_results_batch_atomic(
+            items=items,
+            user_id=user_id,
+            coalesce_diff_fn=coalesce_diff_fn,
+            effective_limit_fn=effective_limit_fn,
+        )
+        return {
+            "status": BATCH_SAVE_OK,
+            "saved": saved,
+            "errors": errors,
+            "message": None,
+        }
+    except StaleDataError:
+        logger.warning("StaleDataError: concurrent edit detected in batch save")
+        return {
+            "status": BATCH_SAVE_CONFLICT,
+            "saved": [],
+            "errors": [],
+            "message": "Өөр хэрэглэгч энэ үр дүнг засварласан байна. Хуудсаа дахин ачаалж оролдоно уу.",
+        }
+    except SQLAlchemyError as e:
+        logger.error("DB error in batch save: %s", e, exc_info=True)
+        return {
+            "status": BATCH_SAVE_DB_ERROR,
+            "saved": [],
+            "errors": [],
+            "message": "Мэдээллийн сан хадгалах алдаа",
+        }
