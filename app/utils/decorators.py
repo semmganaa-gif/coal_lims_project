@@ -164,10 +164,10 @@ def lab_required(lab_key: str) -> Callable:
 def analysis_role_required(allowed_roles=None):
     """Шинжилгээний модульд хандах эрх шалгах decorator (sync + async).
 
-    Default эрхүүд: chemist, senior, manager, admin, prep
+    Default: бүх authenticated role-ууд (UserRole enum-аас).
     """
     if allowed_roles is None:
-        allowed_roles = ["chemist", "senior", "manager", "admin", "prep"]
+        allowed_roles = UserRole.values()
 
     def decorator(f: Callable) -> Callable:
         def _check(*args: Any, **kwargs: Any) -> Any:

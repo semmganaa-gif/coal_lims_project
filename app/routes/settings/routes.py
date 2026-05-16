@@ -15,7 +15,7 @@ from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
 from app import db
-from app.constants import BOTTLE_TOLERANCE
+from app.constants import BOTTLE_TOLERANCE, UserRole
 from app.models import Bottle, BottleConstant, SystemSetting
 from app.repositories import BottleRepository, SystemSettingRepository
 from app.utils.database import safe_commit
@@ -46,11 +46,13 @@ def _natural_sort_key(serial_no: str):
 
 
 def _is_admin() -> bool:
-    return getattr(current_user, "role", "") == "admin"
+    return getattr(current_user, "role", "") == UserRole.ADMIN.value
 
 
 def _is_senior_or_admin() -> bool:
-    return getattr(current_user, "role", "") in ("senior", "admin")
+    return getattr(current_user, "role", "") in (
+        UserRole.SENIOR.value, UserRole.ADMIN.value,
+    )
 
 
 # ================================

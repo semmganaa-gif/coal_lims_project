@@ -20,7 +20,7 @@ from app.services.workflow_engine import (
     list_workflows,
 )
 
-VALID_ROLES = {"admin", "manager", "senior", "senior_analyst", "analyst", "chemist", "prep"}
+VALID_ROLES = set(UserRole.values())
 
 
 @api_bp.route("/workflow/list")
@@ -349,7 +349,7 @@ def workflow_result_actions(result_id):
         return jsonify({"success": False, "message": "Not found"}), 404
 
     engine = WorkflowEngine("analysis_result")
-    user_role = getattr(current_user, "role", "analyst")
+    user_role = getattr(current_user, "role", None) or ""
     transitions = engine.get_available_transitions(res.status, user_role)
 
     state_info = engine.get_state_info(res.status)

@@ -113,15 +113,17 @@ def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
     try:
         from app.services.workflow_engine import WorkflowEngine
         engine = WorkflowEngine("sample")
-        user_role = getattr(current_user, 'role', 'admin')
+        user_role = getattr(current_user, 'role', None) or ''
         # Check first sample to validate transition
         first_sample = db.session.get(Sample, sample_ids[0])
         if first_sample:
             check = engine.can_transition(first_sample.status, new_status, user_role)
             if not check.allowed:
                 return ServiceResult(False, check.reason, status_code=403)
-    except Exception:
-        pass  # Fallback: allow if workflow unavailable
+    except (ImportError, AttributeError, KeyError, RuntimeError) as exc:
+        # Workflow engine config олдсонгүй → legacy backward-compat зам
+        # (allow). Бусад exception нь bubble up хийж 500-аар буцана.
+        logger.warning("Workflow engine validation skipped: %s", exc)
 
     try:
         return _update_sample_status_atomic(sample_ids, new_status)

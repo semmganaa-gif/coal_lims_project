@@ -1,229 +1,296 @@
 # LIMS - ROLE PERMISSIONS LOG
-# Огноо: 2025-12-04
+# Сүүлд шинэчилсэн: 2026-05-16
 # ============================================================================
 
-## 1. СИСТЕМИЙН ROLE-УУД (5 төрөл)
+> Энэхүү баримт нь Coal LIMS төслийн **role-based access control (RBAC)**
+> policy-ийн нэгдсэн эх сурвалж. Шинэ route нэмэх эсвэл эрхийн дүрэм засах
+> үед энэ файлыг тулгуур болгоно.
+>
+> **Cross-reference:** `docs/dev-logs/ROLE_PERMISSIONS_MATRIX_2026_05_16.md`
+> — кодоос шууд scan хийсэн 120+ үйлдлийн нарийвчилсан матриц.
+
+---
+
+## 1. Системийн ROLE-УУД (5 төрөл)
 
 | Role | Код | Монгол нэр | Тайлбар |
 |------|-----|-----------|---------|
-| Sample Preparation | `prep` | Дээж бэлтгэгч | Дээж бүртгэх, бэлтгэлийн үе шат |
-| Chemist | `chemist` | Химич | Шинжилгээ хийх, үр дүн оруулах |
-| Senior Chemist | `senior` | Ахлах химич | Үр дүн шалгах, баталгаажуулах |
-| Manager | `manager` | Менежер | Чанарын удирдлага, тайлан |
+| Sample Preparation | `prep` | Дээж бэлтгэгч | Дээж бүртгэх, бэлтгэх (status='new' үед засна) |
+| Chemist | `chemist` | Химич | Шинжилгээ хийх, өөрийн pending үр дүн submit |
+| Senior Chemist | `senior` | Ахлах химич | Үр дүн approve/reject, оперaциональ удирдлага |
+| Manager | `manager` | Менежер | **VIEW ONLY** — observer/auditor |
 | Administrator | `admin` | Админ | Системийн бүх эрх |
 
+**Source of truth:** `app/constants/enums.py:UserRole`
+
+```python
+class UserRole(_StrEnum):
+    PREP = "prep"
+    CHEMIST = "chemist"
+    SENIOR = "senior"
+    MANAGER = "manager"
+    ADMIN = "admin"
+```
+
 ---
 
-## 2. ЭРХИЙН МАТРИЦ
+## 2. POLICY (2026-05-16 хэрэглэгч баталсан)
 
-### 2.1 Үндсэн функцууд
+### admin
+**Бүх эрхтэй.** Хязгаар үгүй.
 
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **Дээж бүртгэх** | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **Дээж засах** | Шинэ л | ❌ | ❌ | ✅ | ✅ |
-| **Дээж устгах** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Шинжилгээ оруулах** | ❌ | ✅ | ❌ | ❌ | ❌ |
-| **Үр дүн батлах** | ❌ | ❌ | ❌ | ✅ | ✅ |
+### senior
+- Operational бүх үйлдэл (sample, analysis review, equipment, chemical, quality, standards, reports, settings) ✅
+- **Системийн тохиргоо, хэрэглэгч удирдлага, workflow config, лиценз** ❌ (admin only)
+- **Аудит лог:** view + export ✅; устгах/purge ❌ (append-only enforced)
 
-### 2.2 Чанарын удирдлага (Quality)
+### manager (VIEW-ONLY)
+- Бүх модулийг **харах боломжтой** ✅
+- **Ямар ч бичих/засах/устгах үйлдэл** ❌
+- 2026-05-16-ны дараа quality_helpers + equipment + chemicals + reports + spare_parts + control_charts + sla_api + tools + instrument + report_builder декораторуудаас хасагдсан.
 
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **CAPA бүртгэх** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Гомдол бүртгэх** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **PT Testing** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Орчны хяналт** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Control Charts** | ❌ | ❌ | ✅ | ✅ | ✅ |
+### chemist
+- View ✅
+- **Өөрийн шинжилгээний үр дүн submit/edit** ✅ (pending_review status үед)
+- Sample register ❌
+- Sample edit ❌
+- Бусдын record устгах/засах ❌
 
-### 2.3 Тоног төхөөрөмж
+### prep
+- View ✅
+- Sample register ✅
+- Sample edit ✅ — **ЗӨВХӨН `status='new'`** үед (шинжилгээ эхэлсэн бол засах боломжгүй)
+- Sample delete ❌
 
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **Харах** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Нэмэх** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Засах** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Устгах** | ❌ | ❌ | ✅ | ✅ | ✅ |
+---
 
-### 2.4 Стандарт (CM/GBW)
+## 3. DECORATORS
 
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **Харах** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Нэмэх** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Засах** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Устгах** | ❌ | ❌ | ❌ | ✅ | ✅ |
+`app/utils/decorators.py`:
 
-### 2.5 Системийн удирдлага
+| Decorator | Хамрах роль | API response | Тэмдэглэл |
+|-----------|------------|--------------|----------|
+| `@admin_required` | admin | JSON 403 / UI flash+redirect | |
+| `@senior_or_admin_required` | senior, admin | JSON 403 / UI flash+redirect | |
+| `@role_required(*roles)` | varargs | JSON 403 / UI flash+redirect | UserRole.X.value заавал |
+| `@analysis_role_required(roles=None)` | default: бүх 5 role | JSON 403 / UI flash+redirect | `UserRole.values()` default |
+| `@lab_required(lab_key)` | allowed_labs JSON | Flash+redirect | Admin bypass |
 
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **Хэрэглэгч удирдлага** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Шинжилгээний тохиргоо** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Repeatability лимит** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Бортого тогтмол** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **CSV импорт** | ❌ | ❌ | ❌ | ✅ | ✅ |
+`app/utils/quality_helpers.py`:
 
-### 2.6 Лабораторийн хандалтын эрх (allowed_labs)
+| Function | Allow | Hard-coded? |
+|----------|-------|-------------|
+| `can_edit_quality()` | senior, admin | ✅ UserRole enum (manager хасагдсан 2026-05-16) |
+| `@require_quality_edit(endpoint)` | senior, admin | (uses can_edit_quality) |
 
-Хэрэглэгч бүрт `allowed_labs` JSON талбараар аль лабд хандах эрхтэйг тохируулна.
+`app/routes/settings/routes.py`:
 
-| Лаб | Key | Тайлбар |
-|-----|-----|---------|
-| Нүүрсний лаб | `coal` | Үндсэн лаб |
-| Усны лаб | `water` | Усны хими шинжилгээ |
-| Микробиологи | `microbiology` | Микробиологийн шинжилгээ |
-| Петрограф | `petrography` | Петрографийн шинжилгээ |
+| Helper | Allow | Type |
+|--------|-------|------|
+| `_is_admin()` | admin | UserRole.ADMIN.value |
+| `_is_senior_or_admin()` | senior, admin | UserRole enum |
 
-| Эрх | prep | chemist | manager | senior | admin |
-|-----|------|---------|---------|--------|-------|
-| **Өөрийн лабын дээж** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Бусад лабын дээж** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **allowed_labs тохируулах** | ❌ | ❌ | ❌ | ❌ | ✅ |
+---
+
+## 4. RECENT CHANGES (2026-05-15 → 2026-05-16)
+
+### `ef2d63c` — Ahlah dashboard audit
+- senior.py inline `("senior","admin")` → `@analysis_role_required(_SENIOR_ROLES)`
+- `_apply_status_fields`: error_reason (KPI tag) approve/pending үед хадгална
+- Workflow engine `except Exception: pass` → specific exceptions + logger.warning
+- `"preparer"` typo → `UserRole.PREP.value`
+
+### `57db49d` — Manager view-only + audit log senior view (2026-05-16 policy)
+- 15 файл, 30+ декоратораас `MANAGER` хасах
+- audit_api: `@admin_required` → `@senior_or_admin_required` (5 route)
+- spare_parts category_list → @login_required (view бүгд)
+- routes/main/index.py:122 — `["prep","admin"]` literal → UserRole enum
+- Quality module manager хориглож (can_edit_quality) senior+admin
+
+### Дараах commit (2026-05-16 эцэст)
+- workflow_api.py: ghost roles "senior_analyst", "analyst" устгасан
+- mass_service.py: `'admin'` fallback → `'' (хоосон)`; bare `except Exception` → specific
+- decorators.py: `analysis_role_required` default `UserRole.values()`
+- settings/routes.py: `_is_admin()`/`_is_senior_or_admin()` UserRole enum
+
+---
+
+## 5. ЭРХИЙН МАТРИЦ (cheat sheet)
+
+> Бүрэн матриц: `docs/dev-logs/ROLE_PERMISSIONS_MATRIX_2026_05_16.md` (120+ үйлдэл)
+
+### 5.1 Үндсэн функцууд
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| Дээж бүртгэх | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Дээж засах (status=new) | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Дээж засах (бусад status) | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Дээж устгах | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Шинжилгээний үр дүн submit | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Approve/Reject result | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.2 Чанарын удирдлага (Quality)
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View (CAPA, complaints, PT, environmental, control charts) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create/Edit | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Approve | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.3 Тоног төхөөрөмж
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Add/Edit/Calibrate/Maintenance | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Retire/Delete | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.4 Урвалж/Хими
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Add/Edit/Consume | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Dispose/Waste approve | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.5 Сэлбэг (Spare Parts)
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| Categories view | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Categories add/edit | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Categories delete | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Parts add/edit/receive | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Parts dispose | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.6 Стандарт (CM/GBW)
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Add/Edit/Activate/Delete | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+> **Note:** Стандарт нэмэх/засах нь chemist/manager/prep-д ил үзэгдэхгүй (admin/senior only). View ч admin/senior only.
+
+### 5.7 Системийн удирдлага
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| Хэрэглэгч CRUD | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Workflow config | ❌ | ❌ | ❌ | ❌ | ✅ |
+| CSV historical import | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Лиценз info/hwid | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Audit log purge | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Bottle constants (settings) | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Repeatability limits | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Error reason taxonomy | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Analysis types config | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.8 Тайлан ба Export
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View PDF report | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Excel/CSV export | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Send email report | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Approve report | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Report template save | ❌ | ❌ | ❌ | ❌ | ✅ |
+| SLA config save | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+### 5.9 Audit log
+
+| Функц | prep | chemist | senior | manager | admin |
+|-------|------|---------|--------|---------|-------|
+| View audit hub | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Search audit log | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Export audit (CSV) | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Modify/Delete | ❌ | ❌ | ❌ | ❌ | ❌ (event listener block) |
+
+### 5.10 Лабораторийн хандалт (allowed_labs)
+
+| Эрх | prep | chemist | senior | manager | admin |
+|-----|------|---------|--------|---------|-------|
+| Өөрийн лабын дээж | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Бусад лабын дээж | ❌ | ❌ | ❌ | ❌ | ✅ |
+| `allowed_labs` тохируулах | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 **Decorator:** `@lab_required('lab_key')` — route бүрт лаб эрх шалгана.
-**Admin:** Бүх лабд автоматаар хандах эрхтэй.
+**Admin bypass:** Admin бүх лабд автоматаар хандах эрхтэй.
 
-### 2.7 Тайлан ба Export
-
-| Функц | prep | chemist | manager | senior | admin |
-|-------|------|---------|---------|--------|-------|
-| **Тайлан харах** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Excel Export** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Ээлжийн гүйцэтгэл** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Цагийн тайлан илгээх** | ❌ | ❌ | ❌ | ✅ | ✅ |
+**Lab keys:** `coal`, `petrography`, `water_chemistry`, `microbiology`
 
 ---
 
-## 3. NAVIGATION MENU ЭРХҮҮД
+## 6. NAVIGATION MENU ЭРХҮҮД (templates)
 
-### 3.1 Бүгдэд харагдана
+> **Анхаар:** Template-аас одоо `current_user.role` literal-аар шалгалт хийдэг (14+ газар). Manager view-only refactor-ийн дараа эдгээр template-аас manager-ыг write-action товчнуудаас хорих засвар шаардлагатай.
+> **Үлдсэн ажил:** User model-д `is_admin`, `is_senior`, `can_edit_quality` гэх мэт boolean property нэмж template-уудыг refactor хийх.
+
+### 6.1 Бүгдэд харагдана
 - Нүүр
 - Шинжилгээ
 - Тоног төхөөрөмж
 - Чанар (бүх submenu)
-- Стандарт (CM, GBW)
+- Стандарт (admin/senior only — view ч хязгаарлагдсан)
 - Тайлан (Consumption, Monthly Plan, Статистик, Дээж хадгалалт)
 
-### 3.2 Senior, Manager, Admin
-- Нэгтгэл
-- Удирдлага (бүх submenu)
+### 6.2 Senior, Manager, Admin
+- Нэгтгэл (sample summary)
+- Удирдлага (admin menu)
 
-### 3.3 Senior, Admin
-- Ахлахын хяналт
+### 6.3 Senior, Admin
+- Ахлахын хяналт (`ahlah_dashboard`)
 - Цагийн тайлан илгээх товч
+- Audit menu
 
-### 3.4 Admin only
+### 6.4 Admin only
 - Хэрэглэгч удирдлага
+- Workflow config
+- Settings → Error reason
+- License management
 
 ---
 
-## 4. НЭГТГЭЛ (SAMPLE SUMMARY) ХУУДАСНЫ ТОВЧНУУД
+## 7. WORKFLOW ENGINE
 
-| Товч | manager | senior | admin |
-|------|---------|--------|-------|
-| QC: Tol | ❌ | ✅ | ✅ |
-| QC: Spec | ❌ | ✅ | ✅ |
-| Correlation | ❌ | ✅ | ✅ |
-| CSV | ❌ | ✅ | ✅ |
-| Хуулах | ❌ | ✅ | ✅ |
-| Аудит | ❌ | ✅ | ✅ |
-| **Архив** | ✅ | ✅ | ✅ |
-| Архивлах | ❌ | ✅ | ✅ |
-| Шинэчлэх | ✅ | ✅ | ✅ |
+`app/services/workflow_engine.py:DEFAULT_WORKFLOWS` — sample, analysis_result workflow-уудын transition-уудад role check:
+- `["senior", "admin", "manager"]` — гэхдээ manager view-only policy-ын дараа transition хэрэгжүүлэхгүй (allow рулийн effective хэрэглээг senior+admin ширхэглэх төлөв)
+- Admin custom workflow config үед `UserRole.values()` (5 role) дотроос л сонгох — workflow_api.py:VALID_ROLES enforce хийнэ.
 
 ---
 
-## 5. ROUTE ФАЙЛУУД ДАХ ЭРХ ШАЛГАЛТУУД
+## 8. DATABASE / MIGRATIONS
 
-### 5.1 admin_routes.py
-```python
-# Админ л
-@admin_required  # manage_users, edit_user, delete_user
-
-# Ахлах/Админ
-@senior_or_admin_required  # analysis_config, control_standards, gbw_standards
-```
-
-### 5.2 equipment_routes.py
-```python
-if current_user.role not in ["senior", "manager", "admin"]:
-    # add_equipment, edit_equipment, delete_equipment, calibration_update
-```
-
-### 5.3 quality/*.py (capa, complaints, proficiency, environmental, control_charts)
-```python
-def _can_edit():
-    return current_user.role in ['senior', 'manager', 'admin']
-```
-
-### 5.4 analysis/senior.py
-```python
-@analysis_role_required(["senior", "admin"])
-# ahlah_dashboard, api_ahlah_data, api_ahlah_stats
-```
-
-### 5.5 settings_routes.py
-```python
-def _is_senior_or_admin():
-    return current_user.role in ("senior", "admin")
-# bottles, repeatability_limits
-```
-
-### 5.6 report_routes.py
-```python
-if current_user.role not in ["senior", "admin"]:
-    # monthly_plan save
-```
-
----
-
-## 6. TEMPLATE ФАЙЛУУД ДАХ ЭРХ ШАЛГАЛТУУД
-
-### 6.1 base.html (Navigation)
-- Line 200: Ахлахын хяналт `['senior', 'admin']`
-- Line 209: Нэгтгэл `['senior', 'manager', 'admin']`
-- Line 240: Удирдлага `['senior', 'manager', 'admin']`
-- Line 246: Хэрэглэгч `admin`
-- Line 275: Цагийн тайлан `['senior', 'admin']`
-
-### 6.2 sample_summary.html
-- Line 15-54: Товчнуудын эрх шалгалт
-
-### 6.3 index.html
-- Line 201: Excel товч `['senior', 'manager', 'admin']`
-
-### 6.4 equipment_list.html
-- Line 20: Шинэ төхөөрөмж товч `['senior', 'manager', 'admin']`
-- Line 411: Устгах товч `['senior', 'manager', 'admin']`
-
-### 6.5 admin/control_standards.html
-- Line 10: Шинэ стандарт товч `['senior', 'admin']`
-- Line 53-84: Үйлдлийн товчнууд `['senior', 'admin']`
-
-### 6.6 admin/gbw_list.html
-- Line 10: Шинэ GBW товч `['senior', 'admin']`
-- Line 54-96: Үйлдлийн товчнууд `['senior', 'admin']`
-
-### 6.7 analytics_dashboard.html
-- Line 8-26: Excel Export `['senior', 'manager', 'admin']`
-
-### 6.8 audit_hub.html
-- Line 215: Excel Export `['senior', 'manager', 'admin']`
-
----
-
-## 7. DATABASE MIGRATION-УУД
-
-### 7.1 Role нэрийн өөрчлөлтүүд
+### Role нэрсийн өөрчлөлтийн түүх
 - `b3ed3b177364`: ahlah → senior
 - `c3bc04cf9877`: himich → chemist, beltgegch → prep
 
+### User устгах FK behavior
+- Audit FK-ууд: `ondelete='SET NULL'` (audit_log, analysis_result_log) + ORM `passive_deletes=True`
+- Operational FK-ууд: ondelete=SET NULL (chemicals, equipment, etc.) — `768ae2c`, `1161f61`
+- Chat/worksheets/settings: CASCADE / SET NULL — `957db5e` (2026-05-16)
+
 ---
 
-## 8. FORMS ДАХ ROLE СОНГОЛТУУД
+## 9. ҮЛДСЭН АЖИЛ (code quality)
 
-### app/forms.py - UserManagementForm
+| # | Asуудал | Файл |
+|---|---------|------|
+| 5 | Template `current_user.role == 'admin'` literals (14+ газар) — User model-д `is_admin` property нэмж refactor хийх | `base.html`, `equipment/list.html`, `sample_summary.html`, `workflow_admin.html`, etc. |
+
+Бусад code-quality items 2026-05-16-нд хаагдсан:
+- ✅ #1 Ghost roles `workflow_api.py`
+- ✅ #2 mass_service.py:116 security fallback
+- ✅ #3 decorators.py default literal
+- ✅ #4 settings/routes.py helper literals
+
+---
+
+## 10. FORMS
+
+`app/forms.py` — UserManagementForm role choices:
+
 ```python
 role = SelectField(
     "Эрхийн түвшин",
@@ -231,7 +298,7 @@ role = SelectField(
         ("prep", "Дээж бэлтгэгч (Sample Preparation)"),
         ("chemist", "Химич (Chemist)"),
         ("senior", "Ахлах химич (Senior Chemist)"),
-        ("manager", "Менежер (Manager)"),
+        ("manager", "Менежер (Manager — view only)"),
         ("admin", "Админ"),
     ],
 )
@@ -239,15 +306,17 @@ role = SelectField(
 
 ---
 
-## 9. MODELS ДАХ ROLE
+## 11. MODELS
 
-### app/models.py - User
+`app/models/core.py` — User:
+
 ```python
 role = db.Column(db.String(64), index=True, default="prep")
-# Боломжит утгууд: prep, chemist, senior, manager, admin
+# Боломжит утгууд: UserRole.values() = ['prep', 'chemist', 'senior', 'manager', 'admin']
 ```
 
-### app/models.py - AnalysisType
+`app/models/analysis.py` — AnalysisType:
+
 ```python
 required_role = db.Column(db.String(64), default="chemist")
 # FM, Solid → prep
@@ -256,38 +325,21 @@ required_role = db.Column(db.String(64), default="chemist")
 
 ---
 
-## 10. DECORATORS
-
-### app/utils/decorators.py
-```python
-allowed_roles = ["chemist", "senior", "manager", "admin", "prep"]
-```
-
-### app/routes/admin_routes.py
-```python
-def admin_required(f):
-    # role == 'admin'
-
-def senior_or_admin_required(f):
-    # role in ['senior', 'admin']
-```
-
----
-
 ## ТҮҮХ
 
 | Огноо | Өөрчлөлт |
 |-------|----------|
-| 2025-12-04 | ahlah → senior нэр солисон |
-| 2025-12-04 | himich → chemist нэр солисон |
-| 2025-12-04 | beltgegch → prep нэр солисон |
-| 2025-12-04 | manager role нэмэгдсэн |
-| 2025-12-04 | Чанар, Тоног төхөөрөмжийн эрх manager-т нэмэгдсэн |
-| 2025-12-04 | Excel export эрх manager-т нэмэгдсэн |
-| 2025-12-04 | Нэгтгэл хуудасны товчнуудын эрх тохируулсан |
+| 2025-12-04 | Анхны audit — ahlah/himich/beltgegch → senior/chemist/prep rename |
+| 2025-12-04 | manager role нэмэгдсэн, allowed_labs JSON анх анх |
+| 2026-02-03 | allowed_labs 4 лаб дэмжих (coal/petro/water/micro) |
+| 2026-05-15 | Theme C decorator cleanup — inline role check → @role_required (12 газар) |
+| 2026-05-16 AM | ahlah dashboard audit — preparer typo, error_reason KPI loss, role pattern unify |
+| **2026-05-16 PM** | **Manager view-only policy баталсан + 30+ декоратор хасагдсан + audit log senior view нээгдсэн** |
+| 2026-05-16 PM | Code-quality cleanup #1-4: ghost roles, security fallback, default literals |
+| 2026-05-16 | role policy matrix doc үүсгэсэн (`docs/dev-logs/ROLE_PERMISSIONS_MATRIX_2026_05_16.md`) |
 
-| 2026-02-03 | allowed_labs лаб хандалтын эрх нэмэгдсэн (4 лаб дэмжих) |
 ---
 
 **Файл үүсгэсэн:** Claude Code
-**Сүүлд шинэчилсэн:** 2025-12-04
+**Сүүлд шинэчилсэн:** 2026-05-16 (Manager view-only policy + code quality cleanup)
+**Холбоотой:** `docs/dev-logs/ROLE_PERMISSIONS_MATRIX_2026_05_16.md` (120+ үйлдлийн дэлгэрэнгүй матриц)
