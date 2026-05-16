@@ -29,7 +29,6 @@ from app.utils.database import safe_commit
 
 @spare_parts_bp.route('/categories')
 @login_required
-@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def category_list():
     """Категорийн жагсаалт."""
     categories = get_all_categories_ordered()
@@ -42,7 +41,7 @@ def category_list():
 
 @spare_parts_bp.route('/categories/add', methods=['GET', 'POST'])
 @login_required
-@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_category():
     """Шинэ категори нэмэх."""
     if request.method == 'POST':
@@ -71,7 +70,7 @@ def add_category():
 
 @spare_parts_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_category(id):
     """Категори засварлах."""
     if request.method == 'POST':
@@ -172,7 +171,7 @@ def spare_part_detail(id):
 
 @spare_parts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_spare_part():
     """Шинэ сэлбэг нэмэх."""
     if request.method == 'POST':
@@ -224,7 +223,7 @@ def add_spare_part():
 
 @spare_parts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_spare_part(id):
     """Сэлбэг засварлах."""
     from app import db
@@ -294,7 +293,7 @@ def edit_spare_part(id):
 
 @spare_parts_bp.route('/receive/<int:id>', methods=['POST'])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def receive_spare_part(id):
     """Сэлбэг нөөц нэмэх (шинээр ирсэн)."""
     try:
@@ -360,7 +359,7 @@ def consume_spare_part(id):
 
 @spare_parts_bp.route('/dispose/<int:id>', methods=['POST'])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def dispose_spare_part(id):
     """Сэлбэг устгах (disposal)."""
     reason = request.form.get('reason', 'Устгав')

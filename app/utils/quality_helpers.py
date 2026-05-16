@@ -17,12 +17,18 @@ logger = logging.getLogger(__name__)
 
 def can_edit_quality():
     """
-    Senior, Manager, Admin эрхтэй эсэхийг шалгах.
+    Senior, Admin эрхтэй эсэхийг шалгах.
+
+    Manager бол view-only role — quality модулийн бичих/засах эрхгүй
+    (role policy 2026-05-16).
 
     Returns:
         bool: Засах эрхтэй эсэх
     """
-    return current_user.is_authenticated and current_user.role in ['senior', 'manager', 'admin']
+    from app.constants import UserRole
+    return current_user.is_authenticated and current_user.role in (
+        UserRole.SENIOR.value, UserRole.ADMIN.value,
+    )
 
 
 def require_quality_edit(redirect_endpoint='quality.index'):

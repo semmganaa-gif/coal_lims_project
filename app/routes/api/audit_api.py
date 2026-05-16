@@ -26,7 +26,7 @@ from app.config.analysis_schema import get_analysis_schema
 from app.constants import ERROR_REASON_LABELS
 from app.utils.codes import norm_code
 from app.utils.datetime import now_local
-from app.utils.decorators import admin_required
+from app.utils.decorators import senior_or_admin_required
 from app.utils.security import escape_like_pattern
 from app.utils.shifts import get_shift_date, get_shift_info
 
@@ -39,7 +39,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_hub")
     @login_required
-    @admin_required
+    @senior_or_admin_required
     async def audit_hub():
         return render_template("audit_hub.html", title="Аудитын мөр")
 
@@ -48,7 +48,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_log/<analysis_code>")
     @login_required
-    @admin_required
+    @senior_or_admin_required
     async def audit_log_page(analysis_code):
         # Normalize analysis code (Solid -> SOLID, St,ad -> TS г.м.)
         base_code = norm_code(analysis_code)
@@ -260,7 +260,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_search")
     @login_required
-    @admin_required
+    @senior_or_admin_required
     async def api_audit_search():
         """
         Бүх шинжилгээнээс аудит хайх API
@@ -348,7 +348,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/export/audit")
     @login_required
-    @admin_required
+    @senior_or_admin_required
     async def export_audit():
         """Аудит логийг Excel экспорт"""
         from app.utils.exports import send_excel_response
@@ -397,7 +397,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/system_audit")
     @login_required
-    @admin_required
+    @senior_or_admin_required
     async def system_audit():
         """Системийн аудит лог — login, logout, delete, approve гэх мэт."""
         # JSON API хүсэлт (AG-Grid-ээс)

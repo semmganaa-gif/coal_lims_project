@@ -122,7 +122,7 @@ def equipment_journal_special(journal_type):
 
 @equipment_bp.route("/add_register_item/<register_type>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_register_item(register_type):
     """Бүртгэлд шинэ мөр нэмэх."""
     data = request.form.to_dict()
@@ -164,7 +164,7 @@ def add_register_item(register_type):
 
 @equipment_bp.route("/edit_register_item/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_register_item(id):
     """Бүртгэлийн мөр засах."""
     item = EquipmentRepository.get_by_id(id)
@@ -206,7 +206,7 @@ def edit_register_item(id):
 
 @equipment_bp.route("/delete_register_items", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def delete_register_items():
     """Бүртгэлийн мөрүүд устгах."""
     ids = request.form.getlist('item_ids')

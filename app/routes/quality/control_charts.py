@@ -642,7 +642,7 @@ def register_routes(bp):
 
     @bp.route("/api/chart_auto_ca", methods=["POST"])
     @login_required
-    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def api_chart_auto_ca():
         """Auto-create Corrective Action from QC violation."""
         data = request.json or {}

@@ -29,7 +29,7 @@ from app.services.instrument_service import (
 
 @api_bp.route("/instrument/upload", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
 def instrument_upload():
     """Upload and parse an instrument output file."""
     file = request.files.get("file")
@@ -84,7 +84,7 @@ def instrument_pending():
 
 @api_bp.route("/instrument/approve/<int:reading_id>", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
 def instrument_approve(reading_id):
     """Approve a single reading."""
     try:
@@ -97,7 +97,7 @@ def instrument_approve(reading_id):
 
 @api_bp.route("/instrument/reject/<int:reading_id>", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
 def instrument_reject(reading_id):
     """Reject a single reading."""
     reason = (request.json or {}).get("reason", "")
@@ -111,7 +111,7 @@ def instrument_reject(reading_id):
 
 @api_bp.route("/instrument/bulk-approve", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
 def instrument_bulk_approve():
     """Approve multiple readings."""
     ids = (request.json or {}).get("ids", [])
@@ -125,7 +125,7 @@ def instrument_bulk_approve():
 
 @api_bp.route("/instrument/bulk-reject", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+@role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
 def instrument_bulk_reject():
     """Reject multiple readings."""
     data = request.json or {}

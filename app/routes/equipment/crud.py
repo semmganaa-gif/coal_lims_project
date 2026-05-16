@@ -251,7 +251,7 @@ def equipment_journal_page(id):
 
 @equipment_bp.route("/add_equipment", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_equipment():
     """Шинэ төхөөрөмж нэмэх."""
     new_eq = Equipment(status=EquipmentStatus.NORMAL.value)
@@ -267,7 +267,7 @@ def add_equipment():
 
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_equipment(id):
     """Төхөөрөмжийн мэдээлэл засах."""
     eq = EquipmentRepository.get_by_id(id)
@@ -286,7 +286,7 @@ def edit_equipment(id):
 
 @equipment_bp.route("/equipment/delete/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def delete_equipment(id):
     """Төхөөрөмж устгах (түүхтэй бол retired болгоно)."""
     eq = EquipmentRepository.get_by_id(id)
@@ -319,7 +319,7 @@ def delete_equipment(id):
 
 @equipment_bp.route("/bulk_delete", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def bulk_delete():
     """Олон төхөөрөмж нэг дор устгах."""
     ids = request.form.getlist("equipment_ids")

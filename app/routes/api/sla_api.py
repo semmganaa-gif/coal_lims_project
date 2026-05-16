@@ -18,6 +18,7 @@ from flask_login import login_required, current_user
 from flask_babel import gettext as _
 
 from app import limiter
+from app.constants import UserRole
 from app.services.sla_service import (
     get_sla_summary,
     get_overdue_samples,
@@ -89,7 +90,7 @@ def register_routes(bp):
     @limiter.limit("10 per minute")
     def sla_bulk_assign():
         """Active дээжүүдэд SLA автоматаар тохируулах."""
-        if getattr(current_user, "role", None) not in ("manager", "admin"):
+        if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         lab_type = request.args.get("lab_type", "coal")
@@ -105,7 +106,7 @@ def register_routes(bp):
     @limiter.limit("60 per minute")
     def sla_set(sample_id):
         """Нэг дээжийн SLA тохируулах."""
-        if getattr(current_user, "role", None) not in ("senior", "manager", "admin"):
+        if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         data = request.get_json(silent=True) or {}
@@ -161,7 +162,7 @@ def register_routes(bp):
     @limiter.limit("30 per minute")
     def sla_config_save():
         """SLA тохиргоо хадгалах (upsert)."""
-        if getattr(current_user, "role", None) not in ("manager", "admin"):
+        if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         data = request.get_json(silent=True) or {}
@@ -188,7 +189,7 @@ def register_routes(bp):
     @limiter.limit("30 per minute")
     def sla_config_delete(config_id):
         """SLA тохиргоо устгах."""
-        if getattr(current_user, "role", None) not in ("manager", "admin"):
+        if getattr(current_user, "role", None) not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
             return jsonify({"success": False, "message": _("Эрх хүрэлцэхгүй")}), 403
 
         if delete_sla_config(config_id):

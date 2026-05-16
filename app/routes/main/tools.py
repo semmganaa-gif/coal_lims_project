@@ -23,7 +23,7 @@ def register_routes(bp):
 
     @bp.route("/instrument-readings")
     @login_required
-    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def instrument_readings():
         """Instrument Readings review UI."""
         return render_template("instrument_readings.html", title="Instrument Readings")
@@ -36,7 +36,7 @@ def register_routes(bp):
 
     @bp.route("/workflow-admin")
     @login_required
-    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
+    @role_required(UserRole.ADMIN.value, UserRole.SENIOR.value)
     def workflow_admin():
         """Workflow configuration admin page."""
         return render_template("workflow_admin.html", title="Workflow Configuration")

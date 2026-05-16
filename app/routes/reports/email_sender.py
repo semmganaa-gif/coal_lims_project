@@ -103,7 +103,7 @@ def send_report_email(report, recipients, subject=None, body=None):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/send_email", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def send_email(id):
     """Тайлан имэйлээр илгээх."""
     report = LabReportRepository.get_by_id_or_404(id)

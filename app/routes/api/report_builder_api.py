@@ -152,7 +152,7 @@ def rb_template_save():
 
 @api_bp.route("/report-builder/templates/<name>/delete", methods=["POST"])
 @login_required
-@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value)
+@role_required(UserRole.ADMIN.value)
 def rb_template_delete(name):
     """Delete a report template."""
     deleted = delete_report_template(name)

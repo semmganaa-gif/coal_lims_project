@@ -11,7 +11,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy import func, select
 
 from app import db
-from app.constants import SampleStatus
+from app.constants import SampleStatus, UserRole
 from app.models import Sample
 from app.forms import AddSampleForm
 
@@ -119,7 +119,7 @@ def register_routes(bp):
 
         # Submit
         if form.validate_on_submit():
-            if current_user.role not in ["prep", "admin"]:
+            if current_user.role not in (UserRole.PREP.value, UserRole.ADMIN.value):
                 flash(_l("Дээж бүртгэх эрхгүй байна."), "danger")
                 return redirect(url_for("main.index"))
 

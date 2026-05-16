@@ -73,7 +73,7 @@ def report_list():
 # -------------------------------------------------
 @pdf_reports_bp.route("/signatures")
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def signature_list():
     """Гарын үсэг, тамгын жагсаалт."""
     signatures = list(db.session.execute(
@@ -92,7 +92,7 @@ def signature_list():
 
 @pdf_reports_bp.route("/signatures/add", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_signature():
     """Гарын үсэг/тамга нэмэх."""
     if request.method == "POST":
@@ -179,7 +179,7 @@ def add_signature():
 
 @pdf_reports_bp.route("/signatures/delete/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.ADMIN.value)
 def delete_signature(id):
     """Гарын үсэг/тамга устгах."""
     sig = ReportSignatureRepository.get_by_id(id)
@@ -236,7 +236,7 @@ def report_detail(id):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/approve", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def approve_report(id):
     """Тайлан баталгаажуулах."""
     report = LabReportRepository.get_by_id_or_404(id)
@@ -302,7 +302,7 @@ def download_report(id):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
-@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.ADMIN.value)
 def delete_report(id):
     """Тайлан устгах."""
     report = LabReportRepository.get_by_id_or_404(id)

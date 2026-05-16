@@ -99,7 +99,7 @@ def chemical_detail(id):
 
 @chemicals_bp.route("/add", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_chemical():
     """Шинэ химийн бодис нэмэх."""
     if request.method == "POST":
@@ -169,7 +169,7 @@ def add_chemical():
 
 @chemicals_bp.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_chemical(id):
     """Химийн бодис засварлах."""
     chemical = ChemicalRepository.get_by_id(id)
@@ -241,7 +241,7 @@ def edit_chemical(id):
 
 @chemicals_bp.route("/receive/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def receive_chemical(id):
     """Химийн бодисын нөөц нэмэх."""
     chemical = ChemicalRepository.get_by_id(id)
@@ -333,7 +333,7 @@ def consume_chemical(id):
 
 @chemicals_bp.route("/dispose/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def dispose_chemical(id):
     """Химийн бодис устгах."""
     chemical = ChemicalRepository.get_by_id(id)

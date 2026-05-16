@@ -97,7 +97,7 @@ def waste_list():
 # -------------------------------------------------
 @chemicals_bp.route("/waste/add", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def add_waste():
     """Шинэ хог хаягдал нэмэх."""
     if request.method == "POST":
@@ -142,7 +142,7 @@ def add_waste():
 # -------------------------------------------------
 @chemicals_bp.route("/waste/edit/<int:id>", methods=["GET", "POST"])
 @login_required
-@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.ADMIN.value)
 def edit_waste(id):
     """Хог хаягдал засах."""
     waste = ChemicalWasteRepository.get_by_id(id)
@@ -187,7 +187,7 @@ def edit_waste(id):
 # -------------------------------------------------
 @chemicals_bp.route("/waste/delete/<int:id>", methods=["POST"])
 @login_required
-@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def delete_waste(id):
     """Хог хаягдал устгах (идэвхгүй болгох)."""
     waste = ChemicalWasteRepository.get_by_id(id)
