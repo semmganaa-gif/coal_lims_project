@@ -1,5 +1,6 @@
 {# app/templates/equipment/journal.html #}
 {% extends "base.html" %}
+{% set use_aggrid = true %}
 
 {% block content %}
 <div class="container-fluid mt-4 equipment-journal-page">
@@ -295,10 +296,13 @@
       defaultColDef: {
         sortable: true,
         filter: true,
+        floatingFilter: true,
         resizable: true,
-        flex: 1,
         minWidth: 80
       },
+      enableCellTextSelection: true,
+      ensureDomOrder: true,
+      autoSizeStrategy: { type: 'fitCellContents' },
       animateRows: true,
       rowHeight: 38
     };
@@ -363,13 +367,16 @@
       columnDefs: monthlyColumnDefs,
       defaultColDef: {
         sortable: true,
+        filter: true,
+        floatingFilter: true,
         resizable: true,
         minWidth: 80
       },
+      enableCellTextSelection: true,
+      ensureDomOrder: true,
+      autoSizeStrategy: { type: 'fitCellContents' },
       suppressRowClickSelection: true,
       rowSelection: 'single',
-      pagination: true,
-      paginationPageSize: 50,
       rowHeight: 36
     };
 
@@ -449,11 +456,13 @@
       defaultColDef: {
         sortable: true,
         filter: true,
+        floatingFilter: true,
         resizable: true,
         minWidth: 80
       },
-      pagination: true,
-      paginationPageSize: 20,
+      enableCellTextSelection: true,
+      ensureDomOrder: true,
+      autoSizeStrategy: { type: 'fitCellContents' },
       rowHeight: 38,
       animateRows: true
     };

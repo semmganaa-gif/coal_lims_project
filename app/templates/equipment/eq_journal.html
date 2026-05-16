@@ -1,5 +1,6 @@
 {# app/templates/equipment/eq_journal.html — Тухайн багажийн тусдаа журнал #}
 {% extends "base.html" %}
+{% set use_aggrid = true %}
 {% block title %}{{ eq.name }} — {{ _("Journal") }}{% endblock %}
 
 {% block content %}
