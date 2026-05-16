@@ -8,7 +8,15 @@
  <div class="summary-header">
  <div class="header-left">
  <h1><i class="bi bi-table text-primary"></i> {{ title }}</h1>
- <span class="badge bg-light text-dark">{{ samples|length }} {{ _("samples") }}</span>
+ <span class="badge bg-light text-dark"><span id="rowCountBadge">0</span> {{ _("samples") }}</span>
+ </div>
+
+ <div class="d-flex gap-2 align-items-center mx-3">
+ <input type="date" id="filterStartDate" class="form-control form-control-sm" value="{{ default_start }}">
+ <span class="small text-muted">→</span>
+ <input type="date" id="filterEndDate" class="form-control form-control-sm" value="{{ default_end }}">
+ <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="{{ _('Search sample code') }}" style="width: 200px;">
+ <button type="button" id="filterApplyBtn" class="btn btn-sm btn-primary">{{ _("Apply") }}</button>
  </div>
 
  <div class="header-actions">
@@ -114,23 +122,11 @@
  { code: "{{ at.code }}", header: "{{ at.code|fmt_code }}" },
  {% endfor %}
  ],
- samplesData: [
- {%- for sample in samples -%}
- {
- "id": "{{ sample.id }}",
- "name": {{ (sample.sample_code or sample.name or sample.sample_name or None) | tojson }},
- "sample_code": {{ (sample.sample_code or None) | tojson }},
- "report_url": "{{ url_for('api.sample_report', sample_id=sample.id) }}",
- "client_name": {{ (sample.client_name or None) | tojson }},
- "sample_type": {{ (sample.sample_type or None) | tojson }},
- "received_date": {{ (sample.received_date.strftime('%Y-%m-%d %H:%M') if sample.received_date else None) | tojson }},
- "analysis_date": {{ (analysis_dates_map.get(sample.id) if analysis_dates_map.get(sample.id) else None) | tojson }}
- {%- for at in analysis_types %},
- "{{ at.code }}": {{ (results_map.get(sample.id, {}).get(at.code, None)) | tojson }}
- {%- endfor %}
- }{% if not loop.last %},{% endif %}
- {%- endfor %}
- ]
+ // Server-side pagination — дата нь /api/v1/sample_summary/page-аас chunk-аар татна
+ pageEndpoint: "{{ url_for('api.sample_summary_page') }}",
+ defaultStart: "{{ default_start }}",
+ defaultEnd: "{{ default_end }}",
+ pageSize: 100
  };
 </script>
 

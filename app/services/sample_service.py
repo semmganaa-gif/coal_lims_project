@@ -247,6 +247,157 @@ def get_samples_with_results(
     return sort_samples(samples, by=sort_by)
 
 
+def get_archived_samples_paginated(
+    *,
+    offset: int = 0,
+    limit: int = 100,
+    client: Optional[str] = None,
+    sample_type: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    q: Optional[str] = None,
+    sort_field: str = "received_date",
+    sort_dir: str = "desc",
+) -> tuple[list[Sample], int]:
+    """Архивлагдсан дээжүүдийг paginated байдлаар буцаах + нийт тоо.
+
+    Archive hub-ийн drill-down panel-д ашиглана. 500 sample-аар hardcap биш.
+
+    Returns:
+        (samples_chunk, total_count) tuple
+    """
+    from sqlalchemy import or_, func, extract
+    from app.utils.security import escape_like_pattern
+
+    base = select(Sample).where(
+        Sample.status == SampleStatus.ARCHIVED.value,
+        Sample.lab_type == 'coal',
+    )
+
+    if client:
+        base = base.where(Sample.client_name == client)
+    if sample_type:
+        base = base.where(Sample.sample_type == sample_type)
+    if year:
+        base = base.where(extract('year', Sample.received_date) == year)
+    if month:
+        base = base.where(extract('month', Sample.received_date) == month)
+
+    if q:
+        safe = escape_like_pattern(q)
+        like = f"%{safe}%"
+        base = base.where(or_(
+            Sample.sample_code.ilike(like),
+            Sample.client_name.ilike(like),
+        ))
+
+    count_stmt = select(func.count()).select_from(base.subquery())
+    total = db.session.execute(count_stmt).scalar_one()
+
+    sort_col = {
+        "received_date": Sample.received_date,
+        "sample_code": Sample.sample_code,
+        "client_name": Sample.client_name,
+        "id": Sample.id,
+    }.get(sort_field, Sample.received_date)
+    if sort_dir == "asc":
+        base = base.order_by(sort_col.asc(), Sample.id.asc())
+    else:
+        base = base.order_by(sort_col.desc(), Sample.id.desc())
+
+    base = base.offset(offset).limit(limit)
+    samples = list(db.session.execute(base).scalars().all())
+
+    return samples, total
+
+
+def get_samples_paginated(
+    *,
+    offset: int = 0,
+    limit: int = 100,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    client: Optional[str] = None,
+    sample_type: Optional[str] = None,
+    q: Optional[str] = None,
+    sort_field: str = "received_date",
+    sort_dir: str = "desc",
+    exclude_archived: bool = True,
+) -> tuple[list[Sample], int]:
+    """Дээжүүдийг paginated байдлаар буцаах + нийт тоо.
+
+    Зорилго: 50k+ дээжтэй системд `sample_summary` хуудас pagination ашиглана.
+    Бүгдийг нэг payload-р татахын оронд тус 100-р chunk-р авна.
+
+    Returns:
+        (samples_chunk, total_count) tuple
+    """
+    from sqlalchemy import or_, func
+    from app.utils.security import escape_like_pattern
+
+    WTL_MG_CODES = ['MG', 'MG_SIZE', 'MT', 'TRD']
+
+    # Үр дүнтэй дээжүүдийг л шүүх
+    exists_q = (
+        select(AnalysisResult.id)
+        .where(
+            AnalysisResult.sample_id == Sample.id,
+            AnalysisResult.status.in_([
+                AnalysisResultStatus.APPROVED.value,
+                AnalysisResultStatus.PENDING_REVIEW.value,
+            ]),
+            ~AnalysisResult.analysis_code.in_(WTL_MG_CODES),
+        )
+        .exists()
+    )
+
+    base = select(Sample).where(exists_q, Sample.lab_type == 'coal')
+
+    if exclude_archived:
+        base = base.where(Sample.status != SampleStatus.ARCHIVED.value)
+
+    if start_date:
+        base = base.where(Sample.received_date >= start_date)
+    if end_date:
+        # inclusive end of day
+        end_dt = datetime.combine(end_date, datetime.max.time())
+        base = base.where(Sample.received_date <= end_dt)
+
+    if client:
+        base = base.where(Sample.client_name == client)
+    if sample_type:
+        base = base.where(Sample.sample_type == sample_type)
+
+    if q:
+        safe = escape_like_pattern(q)
+        like = f"%{safe}%"
+        base = base.where(or_(
+            Sample.sample_code.ilike(like),
+            Sample.client_name.ilike(like),
+        ))
+
+    # Нийт тоо (count query)
+    count_stmt = select(func.count()).select_from(base.subquery())
+    total = db.session.execute(count_stmt).scalar_one()
+
+    # Sort
+    sort_col = {
+        "received_date": Sample.received_date,
+        "sample_code": Sample.sample_code,
+        "client_name": Sample.client_name,
+        "id": Sample.id,
+    }.get(sort_field, Sample.received_date)
+    if sort_dir == "asc":
+        base = base.order_by(sort_col.asc(), Sample.id.asc())
+    else:
+        base = base.order_by(sort_col.desc(), Sample.id.desc())
+
+    base = base.offset(offset).limit(limit)
+    samples = list(db.session.execute(base).scalars().all())
+
+    return samples, total
+
+
 def build_sample_summary_data(samples: list[Sample]) -> dict[str, Any]:
     """
     Дээжний нэгтгэлийн өгөгдлийг бүрдүүлэх.

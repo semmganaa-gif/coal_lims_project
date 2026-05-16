@@ -9,7 +9,7 @@ Sample-related API endpoints:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import (
     request,
@@ -35,6 +35,8 @@ from app.services import (
     archive_samples,
     get_sample_report_data,
     get_samples_with_results,
+    get_samples_paginated,
+    get_archived_samples_paginated,
     build_sample_summary_data,
 )
 from app.services.dashboard_service import (
@@ -107,22 +109,100 @@ def register_routes(bp):
                 flash(result.message, "success" if result.success else "danger")
                 return redirect(url_for("api.sample_summary", **request.args))
 
-        samples = get_samples_with_results(exclude_archived=True, sort_by="full")
-        summary_data = build_sample_summary_data(samples)
-
+        # Initial render: зөвхөн analysis_types + precision_map дамжуулна.
+        # Дата нь /sample_summary/page endpoint-аас AG Grid infinite datasource-ээр
+        # 100 row chunk-аар татна. 50k+ sample-тай системд UI 23 сек biш < 1 сек.
+        from app.services.sample_service import _build_analysis_types
         from app.config.display_precision import DECIMAL_PLACES, DEFAULT_DECIMAL_PLACES
+
+        analysis_types = _build_analysis_types()
         precision_map = {code: dp for code, dp in DECIMAL_PLACES.items()}
         precision_map["_default"] = DEFAULT_DECIMAL_PLACES
+
+        # Default date filter: сүүлийн 30 хоног (initial chunk-ийг хурдан болгох)
+        today = now_local().date()
+        default_end = today.isoformat()
+        default_start = (today - timedelta(days=30)).isoformat()
 
         return render_template(
             "sample_summary.html",
             title="Sample Summary",
-            samples=samples,
-            analysis_types=summary_data["analysis_types"],
-            results_map=summary_data["results_map"],
-            analysis_dates_map=summary_data["analysis_dates_map"],
+            analysis_types=analysis_types,
             precision_map=precision_map,
+            default_start=default_start,
+            default_end=default_end,
         )
+
+    @bp.route("/sample_summary/page")
+    @login_required
+    @limiter.limit("300 per minute")
+    async def sample_summary_page():
+        """Server-side paginated chunk for AG Grid infinite datasource.
+
+        Query params:
+            offset (int, default 0)
+            limit (int, default 100, max 500)
+            start_date, end_date (YYYY-MM-DD)
+            client (Sample.client_name exact)
+            sample_type (exact)
+            q (search: sample_code/client ILIKE)
+            sort_field (received_date|sample_code|client_name|id)
+            sort_dir (asc|desc)
+
+        Response:
+            {"rows": [...], "lastRow": N}
+        """
+        from datetime import date as _date
+        offset = max(0, int(request.args.get("offset", 0) or 0))
+        limit = min(500, max(1, int(request.args.get("limit", 100) or 100)))
+
+        def _parse_date(s: str | None):
+            if not s:
+                return None
+            try:
+                return _date.fromisoformat(s)
+            except ValueError:
+                return None
+
+        samples, total = get_samples_paginated(
+            offset=offset,
+            limit=limit,
+            start_date=_parse_date(request.args.get("start_date")),
+            end_date=_parse_date(request.args.get("end_date")),
+            client=(request.args.get("client") or None),
+            sample_type=(request.args.get("sample_type") or None),
+            q=(request.args.get("q") or None),
+            sort_field=request.args.get("sort_field", "received_date"),
+            sort_dir=request.args.get("sort_dir", "desc"),
+        )
+
+        # Build summary data зөвхөн энэ chunk-д
+        summary = build_sample_summary_data(samples)
+        results_map = summary["results_map"]
+        analysis_dates_map = summary["analysis_dates_map"]
+
+        rows = []
+        for s in samples:
+            row = {
+                "id": s.id,
+                "name": s.sample_code or "",
+                "sample_code": s.sample_code or "",
+                "report_url": url_for("api.sample_report", sample_id=s.id),
+                "client_name": s.client_name or "",
+                "sample_type": s.sample_type or "",
+                "received_date": (
+                    s.received_date.strftime("%Y-%m-%d %H:%M") if s.received_date else None
+                ),
+                "analysis_date": analysis_dates_map.get(s.id),
+            }
+            # Result-уудыг flatten
+            row.update(results_map.get(s.id, {}))
+            rows.append(row)
+
+        return jsonify({
+            "rows": rows,
+            "lastRow": total,
+        })
 
     # -----------------------------------------------------------
     # 3) Sample Report
@@ -217,6 +297,62 @@ def register_routes(bp):
             selected_month=request.args.get("month", type=int),
             month_names=MONTH_NAMES,
         )
+
+    @bp.route("/archive_hub/page")
+    @login_required
+    @limiter.limit("300 per minute")
+    async def archive_hub_page():
+        """Server-side paginated chunk of ARCHIVED samples for archive_hub drill-down.
+
+        Query params:
+            offset, limit (default 0, 100; max 500)
+            client, type, year, month — drill-down filters
+            q — search by sample_code/client
+            sort_field, sort_dir
+
+        Response: {"rows": [...], "lastRow": N}
+        """
+        offset = max(0, int(request.args.get("offset", 0) or 0))
+        limit = min(500, max(1, int(request.args.get("limit", 100) or 100)))
+
+        samples, total = get_archived_samples_paginated(
+            offset=offset,
+            limit=limit,
+            client=(request.args.get("client") or None),
+            sample_type=(request.args.get("type") or None),
+            year=request.args.get("year", type=int),
+            month=request.args.get("month", type=int),
+            q=(request.args.get("q") or None),
+            sort_field=request.args.get("sort_field", "received_date"),
+            sort_dir=request.args.get("sort_dir", "desc"),
+        )
+
+        summary = build_sample_summary_data(samples)
+        results_map = summary["results_map"]
+        analysis_dates_map = summary["analysis_dates_map"]
+
+        rows = []
+        for s in samples:
+            row = {
+                "id": s.id,
+                "sample_code": s.sample_code or "",
+                "sample_condition": s.sample_condition or "",
+                "received_date": (
+                    s.received_date.strftime("%Y-%m-%d") if s.received_date else None
+                ),
+                "client_name": s.client_name or "",
+                "sample_type": s.sample_type or "",
+                "analysis_date": analysis_dates_map.get(s.id),
+            }
+            # Flatten analysis results — value-only (display)
+            for code, data in (results_map.get(s.id) or {}).items():
+                row[code] = data.get("value") if isinstance(data, dict) else data
+            rows.append(row)
+
+        return jsonify({
+            "rows": rows,
+            "lastRow": total,
+        })
 
     # -----------------------------------------------------------
     # 6) Dashboard Statistics API

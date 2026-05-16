@@ -470,13 +470,63 @@ const GridModule = (function() {
 
   /* -------- GRID OPTIONS -------- */
 
+  // Server-side pagination datasource
+  // Backend: /api/v1/sample_summary/page returns {rows, lastRow}
+  const PAGE_ENDPOINT = CONFIG.pageEndpoint || '/api/v1/sample_summary/page';
+  const PAGE_SIZE = CONFIG.pageSize || 100;
+
+  // Current filter state (mutable, updated by UI)
+  const filterState = {
+    start_date: CONFIG.defaultStart || '',
+    end_date: CONFIG.defaultEnd || '',
+    q: '',
+    sort_field: 'received_date',
+    sort_dir: 'desc',
+  };
+
+  function buildDatasource() {
+    return {
+      getRows: function(params) {
+        const qs = new URLSearchParams({
+          offset: String(params.startRow),
+          limit: String(params.endRow - params.startRow),
+          sort_field: filterState.sort_field,
+          sort_dir: filterState.sort_dir,
+        });
+        if (filterState.start_date) qs.set('start_date', filterState.start_date);
+        if (filterState.end_date) qs.set('end_date', filterState.end_date);
+        if (filterState.q) qs.set('q', filterState.q);
+
+        fetch(`${PAGE_ENDPOINT}?${qs.toString()}`)
+          .then(r => r.json())
+          .then(data => {
+            const rows = data.rows || [];
+            const lastRow = data.lastRow || 0;
+            params.successCallback(rows, lastRow);
+            // Update row count badge
+            const badge = document.getElementById('rowCountBadge');
+            if (badge) badge.textContent = lastRow.toLocaleString();
+          })
+          .catch(err => {
+            logger.error('Pagination fetch error:', err);
+            params.failCallback();
+          });
+      }
+    };
+  }
+
   const gridOptions = {
     columnDefs: buildColumnDefs(),
-    rowData: tableData,
+    // Infinite row model — pagination chunks on-demand
+    rowModelType: 'infinite',
+    cacheBlockSize: PAGE_SIZE,
+    maxBlocksInCache: 10,         // RAM-д max 10 page хадгална (1000 row)
+    infiniteInitialRowCount: 100, // Эхэндээ scroll bar-д заагч
+    datasource: buildDatasource(),
     defaultColDef: {
       resizable: true,
       sortable: true,
-      filter: true,
+      filter: false,
       suppressHeaderMenuButton: true,
       suppressFloatingFilterButton: true
     },
@@ -498,29 +548,30 @@ const GridModule = (function() {
       try {
         gridApi = params.api;
 
-        // Set data
-        if (tableData && tableData.length > 0) {
-          if (typeof params.api.setGridOption === 'function') {
-            params.api.setGridOption('rowData', tableData);
-          } else if (typeof params.api.setRowData === 'function') {
-            params.api.setRowData(tableData);
-          }
-        }
-
         // Restore column state after a short delay
         setTimeout(function() {
           try {
             restoreColumnState();
-            if (typeof params.api.autoSizeColumns === 'function') {
-              params.api.autoSizeColumns(['id']);
-            }
           } catch (e) {
-            logger.warn('Column restore/autosize error:', e);
+            logger.warn('Column restore error:', e);
           }
         }, 100);
       } catch (e) {
         logger.error('onGridReady error:', e);
       }
+    },
+
+    onSortChanged: function(params) {
+      // Sort model-аас filterState шинэчилнэ + grid refresh
+      const sortModel = params.api.getColumnState().filter(c => c.sort);
+      if (sortModel.length > 0) {
+        filterState.sort_field = sortModel[0].colId;
+        filterState.sort_dir = sortModel[0].sort;
+      } else {
+        filterState.sort_field = 'received_date';
+        filterState.sort_dir = 'desc';
+      }
+      params.api.purgeInfiniteCache();
     },
 
     onFirstDataRendered: function(params) {
@@ -771,6 +822,15 @@ const GridModule = (function() {
     }
   }
 
+  function applyFilter(opts) {
+    filterState.start_date = opts.start_date || '';
+    filterState.end_date = opts.end_date || '';
+    filterState.q = opts.q || '';
+    if (gridApi && typeof gridApi.purgeInfiniteCache === 'function') {
+      gridApi.purgeInfiniteCache();
+    }
+  }
+
   return {
     init: init,
     getApi: getApi,
@@ -778,6 +838,7 @@ const GridModule = (function() {
     exportXlsx: exportXlsx,
     exportCsv: exportCsv,
     copySelected: copySelected,
+    applyFilter: applyFilter,
     URLS: URLS
   };
 })();
@@ -795,6 +856,37 @@ document.addEventListener('DOMContentLoaded', function() {
     GridModule.init();
   } catch (e) {
     logger.error('Grid initialization failed:', e);
+  }
+
+  // Filter Apply button — purge cache + reload
+  const applyBtn = document.getElementById('filterApplyBtn');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', function() {
+      try {
+        const start = document.getElementById('filterStartDate');
+        const end = document.getElementById('filterEndDate');
+        const search = document.getElementById('filterSearch');
+        if (GridModule.applyFilter) {
+          GridModule.applyFilter({
+            start_date: start ? start.value : '',
+            end_date: end ? end.value : '',
+            q: search ? search.value : '',
+          });
+        }
+      } catch (e) {
+        logger.error('Filter apply error:', e);
+      }
+    });
+  }
+  // Enter key on search input → apply filter
+  const searchInput = document.getElementById('filterSearch');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (applyBtn) applyBtn.click();
+      }
+    });
   }
 
   // Helper to safely add event listener

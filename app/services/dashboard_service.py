@@ -225,38 +225,11 @@ def get_archive_tree(
         client_totals[client] += count
         total_archived += count
 
-    # 3. Шүүсэн дээжүүд + үр дүнгүүд
+    # 3. Drill-down дээжүүд НЕ ачаалагдана энэ funkc-аас — Frontend AG Grid
+    #    /api/v1/archive_hub/page endpoint-аас server-side pagination-аар татна.
+    #    DASHBOARD_RECENT_LIMIT (500)-аар hardcap байсныг арилгасан.
     samples: list = []
     results_map: dict[int, dict] = {}
-
-    if selected_client and selected_type:
-        stmt = select(Sample).where(
-            Sample.status == SampleStatus.ARCHIVED.value,
-            Sample.lab_type == "coal",
-            Sample.client_name == selected_client,
-            Sample.sample_type == selected_type,
-        )
-        if selected_year:
-            stmt = stmt.where(extract("year", Sample.received_date) == selected_year)
-        if selected_month:
-            stmt = stmt.where(extract("month", Sample.received_date) == selected_month)
-
-        stmt = stmt.order_by(Sample.received_date.desc()).limit(DASHBOARD_RECENT_LIMIT)
-        samples = list(db.session.execute(stmt).scalars().all())
-
-        if samples:
-            sample_ids = [s.id for s in samples]
-            results_stmt = select(AnalysisResult).where(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.status.in_([AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value]),
-            )
-            all_results = list(db.session.execute(results_stmt).scalars().all())
-            for r in all_results:
-                results_map.setdefault(r.sample_id, {})[r.analysis_code] = {
-                    "id": r.id,
-                    "value": r.final_result,
-                    "status": r.status,
-                }
 
     analysis_types = AnalysisTypeRepository.get_all_ordered()
 

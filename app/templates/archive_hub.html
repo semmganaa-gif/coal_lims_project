@@ -378,7 +378,7 @@
  <i class="bi bi-building me-1"></i> {{ selected_client }} &middot; {{ selected_type }}
  {% if selected_year %} &middot; {{ selected_year }}{% endif %}
  {% if selected_month %} &middot; {{ month_names[selected_month] }}{% endif %}
- <span class="text-muted ms-2">({{ samples|length }} {{ _("samples") }})</span>
+ <span class="text-muted ms-2">(<span id="archiveTotalCount">{{ samples|length }}</span> {{ _("samples") }})</span>
  </div>
  <div class="grid-actions">
  <button type="button" id="exportCsvBtn" class="btn btn-sm btn-success">
@@ -439,30 +439,65 @@ document.addEventListener('click', function(e) {
  }
 });
 
-{% if selected_client and selected_type and samples %}
-// AG Grid setup
-const resultsMap = {{ results_map|tojson|safe }};
+{% if selected_client and selected_type %}
+// AG Grid setup — server-side pagination via /api/v1/archive_hub/page
+// 500-row hardcap-аас гарч infinite scroll-р шилжсэн (2026-05-17)
 
-// Number formatter
+const ANALYSIS_CODES = [
+ {% for at in analysis_types %}'{{ at.code }}'{% if not loop.last %}, {% endif %}{% endfor %}
+];
+
 function formatNumber(params) {
  if (params.value === null || params.value === undefined) return '';
- return Number(params.value).toFixed(2);
+ const n = Number(params.value);
+ return isNaN(n) ? '' : n.toFixed(2);
 }
 
-// Build row data
-const rowData = [
- {% for s in samples %}
- {
- id: {{ s.id }},
- sample_code: "{{ s.sample_code or '' }}",
- sample_condition: "{{ s.sample_condition or '' }}",
- received_date: "{{ s.received_date.strftime('%Y-%m-%d') if s.received_date else '' }}",
- {% for at in analysis_types %}
- "{{ at.code }}": resultsMap["{{ s.id }}"] && resultsMap["{{ s.id }}"]["{{ at.code }}"] ? resultsMap["{{ s.id }}"]["{{ at.code }}"].value : null,
- {% endfor %}
- },
- {% endfor %}
-];
+const PAGE_ENDPOINT = '{{ url_for("api.archive_hub_page") }}';
+const PAGE_SIZE = 100;
+
+// Query params (tree-аас сонгосон)
+const filterParams = {
+ client: {{ selected_client|tojson }},
+ type: {{ selected_type|tojson }},
+ year: {{ selected_year|tojson }},
+ month: {{ selected_month|tojson }},
+};
+
+function buildDatasource() {
+ return {
+ getRows: function(params) {
+ const qs = new URLSearchParams({
+ offset: String(params.startRow),
+ limit: String(params.endRow - params.startRow),
+ });
+ if (filterParams.client) qs.set('client', filterParams.client);
+ if (filterParams.type) qs.set('type', filterParams.type);
+ if (filterParams.year) qs.set('year', filterParams.year);
+ if (filterParams.month) qs.set('month', filterParams.month);
+
+ const sortState = (params.sortModel || []);
+ if (sortState.length) {
+ qs.set('sort_field', sortState[0].colId);
+ qs.set('sort_dir', sortState[0].sort);
+ }
+
+ fetch(`${PAGE_ENDPOINT}?${qs.toString()}`)
+ .then(r => r.json())
+ .then(data => {
+ const rows = data.rows || [];
+ const lastRow = data.lastRow || 0;
+ params.successCallback(rows, lastRow);
+ const badge = document.getElementById('archiveTotalCount');
+ if (badge) badge.textContent = lastRow.toLocaleString();
+ })
+ .catch(err => {
+ console.error('Archive page fetch error:', err);
+ params.failCallback();
+ });
+ }
+ };
+}
 
 // Column definitions
 const columnDefs = [
@@ -472,47 +507,68 @@ const columnDefs = [
  width: 50,
  pinned: 'left',
  suppressHeaderMenuButton: true,
+ sortable: false,
  },
- { field: 'sample_code', headerName: '{{ _("Sample Code") }}', width: 170, pinned: 'left', filter: 'agTextColumnFilter', floatingFilter: true },
- { field: 'sample_condition', headerName: '{{ _("Status") }}', width: 80 },
- { field: 'received_date', headerName: '{{ _("Date") }}', width: 100 },
+ { field: 'sample_code', headerName: '{{ _("Sample Code") }}', width: 170, pinned: 'left' },
+ { field: 'sample_condition', headerName: '{{ _("Status") }}', width: 90 },
+ { field: 'received_date', headerName: '{{ _("Date") }}', width: 110 },
  {% for at in analysis_types %}
- { field: '{{ at.code }}', headerName: '{{ at.code }}', width: 70, type: 'numericColumn', valueFormatter: formatNumber },
+ { field: '{{ at.code }}', headerName: '{{ at.code }}', width: 80, type: 'numericColumn', valueFormatter: formatNumber, sortable: false },
  {% endfor %}
 ];
 
-// Grid options
+// Grid options — infinite row model
 const gridOptions = {
  columnDefs: columnDefs,
- rowData: rowData,
+ rowModelType: 'infinite',
+ cacheBlockSize: PAGE_SIZE,
+ maxBlocksInCache: 10,
+ infiniteInitialRowCount: 100,
+ datasource: buildDatasource(),
  rowSelection: 'multiple',
  suppressRowClickSelection: true,
  animateRows: true,
+ getRowId: function(p) { return String(p.data.id); },
  defaultColDef: {
  sortable: true,
- filter: true,
+ filter: false,
  resizable: true,
- suppressFloatingFilterButton: true,
  },
- onSelectionChanged: function() {
- const selectedRows = gridOptions.api.getSelectedRows();
+ onSelectionChanged: function(params) {
+ const selectedRows = params.api.getSelectedRows();
  const ids = selectedRows.map(r => r.id).join(',');
- document.getElementById('selectedSampleIds').value = ids;
- document.getElementById('unarchiveBtn').disabled = selectedRows.length === 0;
- }
+ const sel = document.getElementById('selectedSampleIds');
+ const btn = document.getElementById('unarchiveBtn');
+ if (sel) sel.value = ids;
+ if (btn) btn.disabled = selectedRows.length === 0;
+ },
 };
 
-// Initialize grid
 document.addEventListener('DOMContentLoaded', function() {
  const gridDiv = document.getElementById('archiveGrid');
+ let gridApi = null;
+ if (agGrid.createGrid) {
+ gridApi = agGrid.createGrid(gridDiv, gridOptions);
+ } else {
  new agGrid.Grid(gridDiv, gridOptions);
+ gridApi = gridOptions.api;
+ }
 
- // CSV export
- document.getElementById('exportCsvBtn').addEventListener('click', function() {
+ // CSV export — server-side тул бүх дата биш зөвхөн ачаалагдсан хэсэг export болно
+ const csvBtn = document.getElementById('exportCsvBtn');
+ if (csvBtn) {
+ csvBtn.addEventListener('click', function() {
+ if (gridApi && gridApi.exportDataAsCsv) {
+ gridApi.exportDataAsCsv({
+ fileName: 'archive_{{ selected_client }}_{{ selected_year or "all" }}_{{ selected_month or "all" }}.csv'
+ });
+ } else if (gridOptions.api && gridOptions.api.exportDataAsCsv) {
  gridOptions.api.exportDataAsCsv({
- fileName: 'archive_{{ selected_client }}_{{ selected_year }}_{{ selected_month }}.csv'
+ fileName: 'archive_{{ selected_client }}_{{ selected_year or "all" }}_{{ selected_month or "all" }}.csv'
  });
+ }
  });
+ }
 });
 {% endif %}
 </script>
