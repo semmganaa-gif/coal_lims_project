@@ -68,6 +68,10 @@
  <button type="button" id="simulatorSendBtn" class="btn btn-sm btn-warning" title="{{ _("Send selected samples to CHPP Simulator") }}">
  <i class="bi bi-cpu"></i> {{ _("Simulator") }}
  </button>
+
+ <button type="button" id="mine2nemoSendBtn" class="btn btn-sm btn-dark" title="{{ _("Send selected CHPP 2-hourly samples to Mine2NEMO ProcessControl") }}">
+ <i class="bi bi-database-up"></i> Mine2NEMO
+ </button>
  {% elif current_user.role == 'manager' %}
  {# Manager зөвхөн Архив товч харна #}
  <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive Center") }}">
@@ -114,7 +118,8 @@
  updateStatus: "/api/update_result_status",
  requestAnalysis: "/api/request_analysis",
  simulatorSendChpp: "/api/send_to_simulator/chpp",
- simulatorSendWtl: "/api/send_to_simulator/wtl"
+ simulatorSendWtl: "/api/send_to_simulator/wtl",
+ mine2nemoSend: "{{ url_for('api.mine2nemo_send') }}"
  },
  precisionMap: {{ precision_map | tojson }},
  analysisTypes: [

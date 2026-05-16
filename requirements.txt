@@ -76,4 +76,5 @@ gunicorn==26.0.0
 gevent>=24.2.1
 gevent-websocket>=0.10.1
 psycopg2-binary==2.9.10
+pymssql>=2.3.0  # Mine2NEMO ProcessControl SQL Server integration
 waitress>=3.0.0

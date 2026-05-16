@@ -43,3 +43,8 @@ class IntegrationsConfig:
 
     # CHPP Simulator
     SIMULATOR_URL = os.getenv('SIMULATOR_URL', 'http://localhost:8001')
+
+    # Mine2NEMO ProcessControl SQL Server
+    # CHPP 2-hourly дээжүүдийг шууд бичих (Zobo legacy compat)
+    # Хоосон бол feature идэвхгүй
+    MINE2NEMO_DATABASE_URL = os.getenv('MINE2NEMO_DATABASE_URL', '')

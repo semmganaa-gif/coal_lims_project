@@ -241,13 +241,11 @@ const GridModule = (function() {
 
   function buildColumnDefs() {
     const cols = [
-      // Selection checkbox
+      // Selection checkbox column — infinite row model-д individual checkbox л идэвхтэй
+      // (header checkbox infinite mode-д supported биш). AG Grid v32+ rowSelection object-аар тохируулна.
       {
         headerName: '',
         field: '_sel',
-        checkboxSelection: true,
-        headerCheckboxSelection: true,
-        headerCheckboxSelectionFilteredOnly: true,
         width: 40, minWidth: 40, maxWidth: 40,
         pinned: 'left',
         sortable: false,
@@ -533,7 +531,14 @@ const GridModule = (function() {
     rowHeight: 28,
     headerHeight: 26,
     floatingFiltersHeight: 28,
-    rowSelection: 'multiple',
+    // AG Grid v32+ — rowSelection object-аар. Infinite mode-д header checkbox
+    // (select all) дэмжигдэхгүй тул `checkboxes: true` ашиглана.
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: true,
+      headerCheckbox: false,        // infinite-д supported биш
+      enableClickSelection: false,  // row click дээр select хийхгүй (зөвхөн checkbox)
+    },
     domLayout: 'normal',
     suppressHorizontalScroll: false,
     alwaysShowVerticalScroll: true,
@@ -1158,5 +1163,77 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       alert(resultMsg);
     });
+  });
+
+  // Mine2NEMO ProcessControl-руу илгээх товч
+  safeAddListener('mine2nemoSendBtn', 'click', function(e) {
+    e.preventDefault();
+    var selectedIds = GridModule.getSelectedIds ? GridModule.getSelectedIds() : [];
+    if (!selectedIds.length) {
+      alert('Mine2NEMO руу илгээх дээжүүдийг сонгоно уу.');
+      return;
+    }
+
+    if (selectedIds.length > 100) {
+      alert('Нэг удаад 100-аас дээш дээж илгээх боломжгүй.');
+      return;
+    }
+
+    if (!confirm('Сонгосон ' + selectedIds.length + ' дээжийг Mine2NEMO ProcessControl-руу илгээх үү?\n\n(Зөвхөн CHPP/2 hourly дээжүүд илгээгдэнэ.)')) {
+      return;
+    }
+
+    var url = GridModule.URLS.mine2nemoSend || '/api/v1/mine2nemo/send';
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sample_ids: selectedIds.map(Number) })
+    })
+      .then(function(resp) {
+        return resp.json().then(function(data) {
+          return { ok: resp.ok, status: resp.status, data: data };
+        });
+      })
+      .then(function(payload) {
+        if (!payload.ok) {
+          alert('Mine2NEMO алдаа (' + payload.status + '): ' + (payload.data.error || 'тодорхойгүй'));
+          return;
+        }
+        var d = payload.data;
+        var msg = 'Mine2NEMO үр дүн:\n\n';
+        msg += '✓ Амжилттай: ' + d.success_count + '\n';
+        if (d.skipped_count > 0) {
+          msg += '⊘ Алгассан: ' + d.skipped_count + ' (Mine2NEMO-руу очих дээж биш)\n';
+        }
+        if (d.failed_count > 0) {
+          msg += '✗ Алдаатай: ' + d.failed_count + '\n';
+        }
+        msg += '\n— Дэлгэрэнгүй:\n';
+        (d.items || []).forEach(function(item) {
+          var icon = item.success ? '✓' : (item.action === 'skipped' ? '⊘' : '✗');
+          var detail;
+          if (item.success) {
+            var renamed = (item.mine2nemo_code && item.mine2nemo_code !== item.sample_code)
+                          ? ' → "' + item.mine2nemo_code + '"' : '';
+            detail = item.action + renamed + ' [' + (item.target_table || '') + ']';
+            if (item.verified && item.verification) {
+              var v = item.verification;
+              detail += '\n   [Mine2NEMO баталгаажсан] Aad=' + (v.Aad || '-') +
+                        ', Mt_ar=' + (v.Mt_ar || '-') +
+                        ', By=' + (v.ModifiedBy || v.CreatedBy || '-');
+            } else if (!item.verified) {
+              detail += ' (БАТАЛГААЖААГҮЙ — verification select буцаасан null)';
+            }
+          } else {
+            detail = item.error || 'unknown';
+          }
+          msg += icon + ' ' + item.sample_code + ': ' + detail + '\n';
+        });
+        alert(msg);
+      })
+      .catch(function(err) {
+        console.error('Mine2NEMO request failed', err);
+        alert('Сүлжээний алдаа: ' + err.message);
+      });
   });
 });

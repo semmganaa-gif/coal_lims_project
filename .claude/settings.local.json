@@ -176,7 +176,10 @@
       "Bash(FLASK_APP=app:create_app python -m flask db current)",
       "Bash(FLASK_APP=app:create_app python -m flask db migrate -m \"iso17025_audit_user_id_set_null\")",
       "Bash(FLASK_APP=app:create_app python -m flask db upgrade)",
-      "Bash(FLASK_APP=app:create_app python -m flask db migrate -m \"iso17025_operational_user_fk_set_null\")"
+      "Bash(FLASK_APP=app:create_app python -m flask db migrate -m \"iso17025_operational_user_fk_set_null\")",
+      "Bash(awk '/private void btn_send_Click|button2_Click/,/^\t\t}$/' /e/Lab/Zobo_Source/Zobo_decompiled.cs)",
+      "Bash(awk 'NR>=13990 && NR<=14200' /e/Lab/Zobo_Source/Zobo_decompiled.cs)",
+      "PowerShell(Get-NetTCPConnection *)"
     ],
     "deny": [],
     "ask": []

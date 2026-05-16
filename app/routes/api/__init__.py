@@ -34,6 +34,7 @@ from . import instrument_api  # noqa: F401 — routes registered via decorators
 from . import workflow_api  # noqa: F401 — routes registered via decorators
 from . import report_builder_api  # noqa: F401 — routes registered via decorators
 from . import analytics_api
+from . import mine2nemo_api
 
 samples_api.register_routes(api_bp)
 analysis_api.register_routes(api_bp)
@@ -44,6 +45,7 @@ morning_api.register_routes(api_bp)
 simulator_api.register_routes(api_bp)
 sla_api.register_routes(api_bp)
 analytics_api.register_routes(api_bp)
+mine2nemo_api.register_routes(api_bp)
 
 
 class APIVersionMiddleware:
