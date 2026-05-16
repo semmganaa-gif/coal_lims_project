@@ -60,16 +60,29 @@ def calculate_all_conversions(
         final_results['fixed_carbon_ad'] = fc_ad_value
 
     # 3) ⚠️ TRD (Нягт) тусгай тохиолдол:
-    TRD_d_val = get_float_from_raw('relative_density') # Энэ нь үнэндээ TRD,d
+    # DB-д canonical key='relative_density' гэж хадгалагдсан ч хэмжсэн утга
+    # семантикээр TRD,d (dry basis) — химичийн шинжилгээний үр дүн.
+    # TRD,ad нь Mad-аас хамаарсан тооцооны (derived) утга.
+    # Тиймээс raw dict (id+status)-ыг ЗӨВХӨН TRD,d-руу шилжүүлнэ; TRD,ad
+    # нь Ad/Vdaf-той ижил derived bare float (Sample Summary дээр буцаах
+    # товчгүй) байна.
+    raw_TRD = raw_canonical_results.get('relative_density')
+    TRD_d_val = get_float_from_raw('relative_density')
     if TRD_d_val is not None:
-        final_results['relative_density_d'] = TRD_d_val
+        if isinstance(raw_TRD, dict):
+            final_results['relative_density_d'] = {
+                **raw_TRD,
+                'value': TRD_d_val,
+            }
+        else:
+            final_results['relative_density_d'] = TRD_d_val
         if M_ad is not None:
             denom_ad = 100.0 - M_ad
             if denom_ad > 0:
-                # TRD,ad = TRD,d * (100 - Mad) / 100
-                TRD_ad_val = TRD_d_val * denom_ad / 100.0
-                final_results['relative_density'] = TRD_ad_val
+                # TRD,ad = TRD,d * (100 - Mad) / 100 — derived bare float
+                final_results['relative_density'] = TRD_d_val * denom_ad / 100.0
             # denom_ad <= 0 нь Mad >= 100% гэсэн утгагүй тохиолдол — TRD тооцоохгүй
+            # (raw утга хэвээр final_results-д үлдэнэ)
 
         else:
             if 'relative_density' in final_results:

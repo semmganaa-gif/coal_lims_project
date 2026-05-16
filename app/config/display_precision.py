@@ -108,6 +108,7 @@ DECIMAL_PLACES: Dict[str, int] = {
     'Qgr,ad': 0,        # Gross calorific value air-dried - 25000
     'Qgr,d': 0,         # Gross calorific value dry - 26000
     'Qgr,daf': 0,       # Gross calorific value daf - 30000
+    'Qgr,ar': 0,        # Gross calorific value as-received - 24500
     'Qnet,ar': 0,       # Net calorific value as-received - 24000
 
     # ========================================================================
@@ -121,21 +122,21 @@ DECIMAL_PLACES: Dict[str, int] = {
     'CSR': 0,           # Coke Strength after Reaction - 65 (бүхэл)
 
     # ========================================================================
-    # ХАРЬЦАНГУЙ НЯГТ (Dilatation) - 2 орон
+    # ХАРЬЦАНГУЙ НЯГТ (True Relative Density) - 2 орон
     # ========================================================================
-    'TRD': 2,           # Total relative dilatation - 150 (бүхэл)
-    'TRD,ad': 2,        # TRD air-dried - 150
-    'TRD,d': 2,         # TRD dry - 158
+    'TRD': 2,           # Relative density - 1.45
+    'TRD,ad': 2,        # TRD air-dried - 1.42
+    'TRD,d': 2,         # TRD dry - 1.45
 
     # ========================================================================
-    # ЧӨЛӨӨТ ЧИЙГ (Free moisture) - 1 орон
+    # ЧӨЛӨӨТ ЧИЙГ (Free Moisture) - 1 орон
     # ========================================================================
-    'FM': 1,            # Fusion temperature - 1250°C (бүхэл)
+    'FM': 1,            # Free moisture - 8.5%
 
     # ========================================================================
     # ХАТУУГИЙН АГУУЛГА (Solid) - 1 орон
     # ========================================================================
-    'SOLID': 1,         # Solid residue - 85.50%
+    'Solid': 1,         # Solid residue - 85.5%
 
     }
 
@@ -233,7 +234,7 @@ PRECISION_GROUPS = {
     },
     '1_decimal': {
         'name': '1 орон',
-        'codes': ['MT', 'CSN', 'FM', 'SOLID'],
+        'codes': ['MT', 'CSN', 'FM', 'Solid'],
         'example': '5.5',
     },
     '2_decimals': {

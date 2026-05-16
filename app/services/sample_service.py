@@ -346,6 +346,7 @@ def _map_to_template_codes(calculated_data: dict) -> dict:
         "total_sulfur_daf": "St,daf",
         "calorific_value_d": "Qgr,d",
         "calorific_value_daf": "Qgr,daf",
+        "calorific_value_ar": "Qgr,ar",
         "qnet_ar": "Qnet,ar",
         "relative_density": "TRD,ad",
         "relative_density_d": "TRD,d",
