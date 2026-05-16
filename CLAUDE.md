@@ -68,6 +68,14 @@ standard_atomic`. Зорилго — StaleDataError/IntegrityError-ийг public
 ⚠️ **Нэр солилт:** `'water'` → `'water_chemistry'` бүрэн refactor хийгдсэн
 (commit `e206e63`). Шинэ кодод `'water_chemistry'`-г ашиглана.
 
+## Гадаад систем integration
+
+| Систем | Зам | Үүрэг |
+|--------|-----|-------|
+| **Mine2NEMO** (SQL Server, ProcessControl) | `app/services/mine2nemo_service.py` | CHPP/2-hourly approved үр дүнг Mine2NEMO-руу шууд бичих (Zobo frm_tolow-ын port). pymssql + TDS 7.0. Sample Summary "Mine2NEMO" товч → POST `/api/v1/mine2nemo/send`. SELECT-back verification + audit log. Mapping `app/constants/mine2nemo_mapping.py`. `.env`-д `MINE2NEMO_DATABASE_URL`. Commit `7c19215`. |
+| **CHPP Simulator** (REST) | `app/routes/api/simulator_api.py` | CHPP/WTL дээжийг Simulator REST API-руу илгээх (testing). `.env`-д `SIMULATOR_URL`. |
+| **ICPMS instrument** | `app/routes/api/instrument_api.py` | XRF/ICPMS өгөгдөл импорт. |
+
 ## Үндсэн фолдерууд
 
 ```
@@ -121,7 +129,21 @@ flask license clear-tamper                   # tampering flag арилгах
 flask license generate --company X --expiry YYYY-MM-DD
 ```
 
-## Архитектурын төлөв (2026-05-15 эцсийн байдлаар)
+## Архитектурын төлөв (2026-05-17 эцсийн байдлаар)
+
+### ✅ ДУУССАН — 2026-05-17 шинэ feature/optimization
+
+- **Sample Summary/Archive Hub server-side pagination** (`c641d17`) — 23 сек/24MB
+  → 200ms/<1MB. AG Grid infinite row model + `/api/v1/sample_summary/page` +
+  `/api/v1/archive_hub/page`. Customer scale (50k+ sample) tested with
+  `coal_lims_perftest` DB.
+- **Mine2NEMO ProcessControl integration** (`7c19215`) — Zobo frm_tolow port.
+  CHPP/2-hourly approved үр дүн → SQL Server `Mine2NEMO.ProcessControl.*`-руу
+  шууд бичих. PF→PlantFeed, CC→PrimaryProduct, TC→SecondaryProduct routing.
+  pymssql + TDS 7.0. SELECT-back verification + audit log. Detail:
+  `docs/dev-logs/MINE2NEMO_INTEGRATION_2026_05_17.md`.
+
+
 
 ### ✅ ДУУССАН — Sprint 1-5 + Phase 0-4 audit + Phase 5 polish + Theme A/C/G
 
