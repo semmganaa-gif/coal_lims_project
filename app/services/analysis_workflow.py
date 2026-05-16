@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
 from app import db, cache
-from app.constants import AnalysisResultStatus, DASHBOARD_RECENT_LIMIT
+from app.constants import AnalysisResultStatus, DASHBOARD_RECENT_LIMIT, UserRole
 from app.config.analysis_schema import get_analysis_schema
 from app.models import (
     AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType,
@@ -212,7 +212,11 @@ def build_dashboard_stats():
             func.sum(case((AnalysisResult.status == AnalysisResultStatus.REJECTED.value, 1), else_=0)).label("rejected"),
         )
         .join(AnalysisResult, AnalysisResult.user_id == User.id)
-        .filter(User.role.in_(["chemist", "senior", "preparer"]))
+        .filter(User.role.in_([
+            UserRole.CHEMIST.value,
+            UserRole.SENIOR.value,
+            UserRole.PREP.value,
+        ]))
         .filter(AnalysisResult.updated_at >= today_start)
         .filter(AnalysisResult.updated_at <= today_end)
         .group_by(User.id, User.username)
@@ -339,7 +343,17 @@ def build_dashboard_stats():
 # =========================================================================
 
 def _apply_status_fields(res, new_status, rejection_category=None, rejection_comment=None):
-    """Apply status-related field changes to an AnalysisResult."""
+    """Apply status-related field changes to an AnalysisResult.
+
+    Семантик:
+      - `rejection_category` нь ЗӨВХӨН Ахлахын буцаалтын ангилал (ISO 17025
+        trail) — approve/pending үед цэвэрлэгдэнэ.
+      - `error_reason` нь chemist эсвэл систем тавьдаг KPI таг
+        (qc_fail, customer_complaint, sample_prep гэх мэт) — senior-ийн
+        approve/reject statu update энэ утгыг хөдөлгөхгүй. Хэрэв
+        rejection-д error_reason previously хоосон бол, KPI-д signal үлдээх
+        зорилгоор rejection_category-ийг error_reason-руу copy хийнэ.
+    """
     res.status = new_status
     res.updated_at = now_local()
 
@@ -348,15 +362,17 @@ def _apply_status_fields(res, new_status, rejection_category=None, rejection_com
             res.rejection_category = rejection_category
         if hasattr(res, "rejection_comment"):
             res.rejection_comment = rejection_comment or str(_l("Ахлах буцаасан"))
-        if hasattr(res, "error_reason"):
+        # KPI signal — chemist-ийн тавьсан error_reason-ийг хадгална.
+        # Хоосон бол senior-ийн rejection_category-аар backfill.
+        if hasattr(res, "error_reason") and not res.error_reason:
             res.error_reason = rejection_category
     else:
         if hasattr(res, "rejection_category"):
             res.rejection_category = None
         if hasattr(res, "rejection_comment"):
             res.rejection_comment = None
-        if hasattr(res, "error_reason"):
-            res.error_reason = None
+        # error_reason (KPI tag) нь approve/pending үед НЭ цэвэрлэгдэнэ —
+        # chemist-ийн анхны таг (qc_fail г.м) хадгалагдана.
 
 
 @transactional()
@@ -382,13 +398,15 @@ def _update_result_status_atomic(result_id, new_status, rejection_category,
     try:
         engine = WorkflowEngine("analysis_result")
         from flask_login import current_user as _cu
-        user_role = _cu.role if hasattr(_cu, 'role') else "admin"
+        user_role = _cu.role if hasattr(_cu, 'role') else UserRole.ADMIN.value
         ctx = {"comment": rejection_comment_raw or ""}
         check = engine.can_transition(res.status, new_status, user_role, ctx)
         if not check.allowed:
             return None, check.reason, 403
-    except Exception:
-        pass  # Fallback: workflow engine unavailable → allow (backward compat)
+    except (ImportError, AttributeError, KeyError, RuntimeError) as exc:
+        # Workflow engine config олдсонгүй → legacy backward-compat зам
+        # (allow). Бусад exception нь bubble up хийж 500-аар буцана.
+        logger.warning("Workflow engine validation skipped: %s", exc)
 
     _apply_status_fields(res, new_status, rejection_category, safe_comment)
     db.session.flush()
@@ -407,7 +425,7 @@ def _update_result_status_atomic(result_id, new_status, rejection_category,
         raw_data_dict=res.raw_data,
         final_result=res.final_result,
         rejection_category=rejection_category,
-        error_reason=rejection_category,
+        error_reason=res.error_reason,
         reason=reason_text,
         sample_code_snapshot=sample.sample_code if sample else None,
         previous_value=res.final_result,
@@ -550,7 +568,7 @@ def _bulk_update_result_status_atomic(int_ids, new_status, rejection_category, s
                 raw_data_dict=res.raw_data,
                 final_result=res.final_result,
                 rejection_category=rejection_category if new_status == AnalysisResultStatus.REJECTED.value else None,
-                error_reason=rejection_category if new_status == AnalysisResultStatus.REJECTED.value else None,
+                error_reason=res.error_reason,
                 reason=safe_comment or (
                     _l("Бөөнөөр зөвшөөрөгдсөн") if new_status == AnalysisResultStatus.APPROVED.value
                     else _l("Бөөнөөр буцаагдсан")

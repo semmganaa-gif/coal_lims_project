@@ -11,6 +11,7 @@ from flask import request, render_template, jsonify
 from flask_login import login_required, current_user
 
 from app import cache
+from app.constants import UserRole
 from app.services.analysis_workflow import (
     build_dashboard_stats,
     build_pending_results,
@@ -23,6 +24,9 @@ from app.utils.decorators import analysis_role_required
 from app.utils.settings import get_error_reason_labels
 
 
+_SENIOR_ROLES = [UserRole.SENIOR.value, UserRole.ADMIN.value]
+
+
 def register_routes(bp):
     """Register routes on the given blueprint"""
 
@@ -31,7 +35,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/ahlah_dashboard", endpoint="ahlah_dashboard")
     @login_required
-    @analysis_role_required(["senior", "admin"])
+    @analysis_role_required(_SENIOR_ROLES)
     def ahlah_dashboard():
         schema_map = load_analysis_schemas()
 
@@ -48,7 +52,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/api/ahlah_data")
     @login_required
-    @analysis_role_required(["senior", "admin"])
+    @analysis_role_required(_SENIOR_ROLES)
     def api_ahlah_data():
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
@@ -66,10 +70,8 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/update_result_status/<int:result_id>/<new_status>", methods=["POST"])
     @login_required
+    @analysis_role_required(_SENIOR_ROLES)
     def update_result_status_route(result_id, new_status):
-        if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Эрх хүрэлцэхгүй байна"}), 403
-
         data = request.get_json(silent=True) or request.form.to_dict() or {}
         rejection_comment = data.get("rejection_comment")
         rejection_category = data.get("rejection_category")
@@ -90,11 +92,9 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/bulk_update_status", methods=["POST"])
     @login_required
+    @analysis_role_required(_SENIOR_ROLES)
     def bulk_update_status():
         """Bulk approve/reject multiple results"""
-        if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Эрх хүрэлцэхгүй байна"}), 403
-
         data = request.get_json(silent=True) or {}
         result_ids = data.get("result_ids", [])
         new_status = data.get("status")
@@ -118,7 +118,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/api/ahlah_stats")
     @login_required
-    @analysis_role_required(["senior", "admin"])
+    @analysis_role_required(_SENIOR_ROLES)
     @cache.cached(timeout=30, key_prefix='ahlah_stats')
     def api_ahlah_stats():
         """
@@ -135,7 +135,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/api/select_repeat_result/<int:result_id>", methods=["POST"])
     @login_required
-    @analysis_role_required(["senior", "admin"])
+    @analysis_role_required(_SENIOR_ROLES)
     def select_repeat_result_route(result_id):
         """
         Давтан шинжилгээтэй үр дүнд аль утгыг ашиглахаа сонгоно.
