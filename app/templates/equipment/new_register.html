@@ -52,7 +52,7 @@
  <div class="col-12"><label class="form-label fw-bold small">{{ _("Operational Status") }}</label>
  <div class="d-flex gap-3">
  <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_normal" name="status_normal" value="true"><label class="form-check-label small" for="ne_status_normal">{{ _("Normal") }}</label></div>
- <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_broken" name="status_broken" value="true"><label class="form-check-label small" for="ne_status_broken">{{ _("Out of Order") }}</label></div>
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_out_of_service" name="status_out_of_service" value="true"><label class="form-check-label small" for="ne_status_out_of_service">{{ _("Out of Service") }}</label></div>
  <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_spare" name="status_spare" value="true"><label class="form-check-label small" for="ne_status_spare">{{ _("Spare Parts Required") }}</label></div>
  </div>
  </div>
@@ -99,7 +99,7 @@
 document.addEventListener('DOMContentLoaded', function() {
  var rowData = {{ items | tojson }};
  rowData.forEach(function(r) {
- ['status_normal','status_broken','status_spare','chk_temp','chk_other'].forEach(function(f) {
+ ['status_normal','status_out_of_service','status_spare','chk_temp','chk_other'].forEach(function(f) {
  r[f] = r[f] === true || r[f] === 'true';
  });
  });
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
  {title:'{{ _("Location") }}', field:"location", width:100},
  {title:'{{ _("Operational Status") }}', columns:[
  {title:'{{ _("Normal") }}', field:"status_normal", width:90, formatter:"tickCross"},
- {title:'{{ _("Out of Order") }}', field:"status_broken", width:100, formatter:"tickCross"},
+ {title:'{{ _("Out of Service") }}', field:"status_out_of_service", width:110, formatter:"tickCross"},
  {title:'{{ _("Spare Parts Required") }}', field:"status_spare", width:140, formatter:"tickCross"},
  ]},
  {title:'{{ _("Receiving Condition") }}', field:"condition", width:150},
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
  if (sel.length !== 1) return;
  var d = sel[0];
  var fields = ['no','name','manufacturer','mark','lab_code','qty','manufactured_date','commissioned_date','location','condition','needs_setup','accessories','checked_by','approved_by','remark'];
- var chkFields = ['status_normal','status_broken','status_spare','chk_temp','chk_other'];
+ var chkFields = ['status_normal','status_out_of_service','status_spare','chk_temp','chk_other'];
  fields.forEach(function(f) {
  var el=document.getElementById('ne_'+f); if(!el) return;
  if(el.tagName==='SELECT'){for(var i=0;i<el.options.length;i++){if(el.options[i].value===(d[f]||'')){el.selectedIndex=i;break;}}} else el.value=d[f]||'';
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
  document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='new_equipment') }}";
  document.querySelector('#addNewEqModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add New Equipment") }}';
  ['no','name','manufacturer','mark','lab_code','qty','manufactured_date','commissioned_date','location','accessories','checked_by','approved_by','remark'].forEach(function(f) { var el=document.getElementById('ne_'+f); if(el) { if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }});
- ['status_normal','status_broken','status_spare','chk_temp','chk_other'].forEach(function(f) { document.getElementById('ne_'+f).checked=false; });
+ ['status_normal','status_out_of_service','status_spare','chk_temp','chk_other'].forEach(function(f) { document.getElementById('ne_'+f).checked=false; });
  });
 });
 </script>

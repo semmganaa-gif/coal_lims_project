@@ -114,10 +114,18 @@ class ChemicalStatus(_StrEnum):
 
 
 class EquipmentStatus(_StrEnum):
-    """Equipment.status CheckConstraint-тэй sync."""
+    """Equipment.status CheckConstraint-тэй sync.
+
+    Lifecycle:
+      normal → calibration/maintenance → normal
+             → needs_spare (degraded, can still operate, awaiting parts)
+             → out_of_service (cannot operate, requires major intervention)
+             → retired (terminal — permanently decommissioned)
+    """
     NORMAL = "normal"
     MAINTENANCE = "maintenance"
     CALIBRATION = "calibration"
+    NEEDS_SPARE = "needs_spare"
     OUT_OF_SERVICE = "out_of_service"
     RETIRED = "retired"
 

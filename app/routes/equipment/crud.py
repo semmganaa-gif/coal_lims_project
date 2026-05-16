@@ -18,7 +18,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import select
 
 from app import db
-from app.constants import UserRole
+from app.constants import EquipmentStatus, UserRole
 from app.models import Equipment, MaintenanceLog, UsageLog
 from app.repositories import EquipmentRepository, MaintenanceLogRepository
 from app.utils.audit import log_audit
@@ -182,18 +182,21 @@ def equipment_list():
     stmt = select(Equipment)
 
     if view == "retired":
-        stmt = stmt.where(Equipment.status == "retired")
+        stmt = stmt.where(Equipment.status == EquipmentStatus.RETIRED.value)
     elif view == "spares":
-        stmt = stmt.where(Equipment.status.in_(["needs_spare", "broken"]))
+        stmt = stmt.where(Equipment.status.in_([
+            EquipmentStatus.NEEDS_SPARE.value,
+            EquipmentStatus.OUT_OF_SERVICE.value,
+        ]))
     elif view == "coal":
         stmt = stmt.where(Equipment.category.in_(["furnace", "prep", "analysis", "other"]))
     elif view == "new":
-        stmt = stmt.where(Equipment.status == "normal").order_by(Equipment.id.desc())
+        stmt = stmt.where(Equipment.status == EquipmentStatus.NORMAL.value).order_by(Equipment.id.desc())
     elif view != "all":
         stmt = stmt.where(Equipment.category == view)
 
     if view != "retired":
-        stmt = stmt.where(Equipment.status != "retired")
+        stmt = stmt.where(Equipment.status != EquipmentStatus.RETIRED.value)
 
     pagination = db.paginate(
         stmt.order_by(Equipment.name.asc()),
@@ -251,7 +254,7 @@ def equipment_journal_page(id):
 @role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_equipment():
     """Шинэ төхөөрөмж нэмэх."""
-    new_eq = Equipment(status="normal")
+    new_eq = Equipment(status=EquipmentStatus.NORMAL.value)
     new_eq.created_by_id = current_user.id
     _populate_equipment(new_eq, request.form)
 
@@ -301,7 +304,7 @@ def delete_equipment(id):
     )
 
     if has_history:
-        eq.status = "retired"
+        eq.status = EquipmentStatus.RETIRED.value
         flash(f"'{eq_name}_l(' багаж түүхтэй тул ')Ашиглалтаас гарсан' төлөвт шилжүүллээ.", "warning")
     else:
         db.session.delete(eq)
@@ -339,7 +342,7 @@ def bulk_delete():
             ).first()
         )
         if has_history:
-            eq.status = "retired"
+            eq.status = EquipmentStatus.RETIRED.value
             retired_names.append(eq.name)
         else:
             deleted_names.append(eq.name)
@@ -429,10 +432,10 @@ def add_maintenance_log(id):
     if action_type == "Calibration":
         eq.calibration_date = action_date.date()
         eq.next_calibration_date = eq.calibration_date + timedelta(days=eq.calibration_cycle_days or 365)
-        if eq.status != "retired":
-            eq.status = "normal"
+        if eq.status != EquipmentStatus.RETIRED.value:
+            eq.status = EquipmentStatus.NORMAL.value
     elif action_type == "Repair":
-        eq.status = "maintenance"
+        eq.status = EquipmentStatus.MAINTENANCE.value
 
     db.session.add(log)
     if _commit_with_audit(

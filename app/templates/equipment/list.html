@@ -78,7 +78,7 @@
  <option value="normal">{{ _("Normal") }}</option>
  <option value="maintenance">{{ _("Under Maintenance") }}</option>
  <option value="needs_spare">{{ _("Spare Parts Required") }}</option>
- <option value="broken">{{ _("Out of Order") }}</option>
+ <option value="out_of_service">{{ _("Out of Service") }}</option>
  </select>
  </div>
  <div class="eq-toolbar-right">
@@ -417,9 +417,10 @@ document.addEventListener('DOMContentLoaded', function () {
  function statusFormatter(cell) {
  var s = cell.getValue() || 'normal';
  var m = {
- broken: ['eq-status-broken', 'bi-x-circle-fill', '{{ _("Out of Order") }}'],
+ out_of_service: ['eq-status-out_of_service', 'bi-x-circle-fill', '{{ _("Out of Service") }}'],
  needs_spare:['eq-status-spare', 'bi-exclamation-triangle-fill', '{{ _("Spare Parts") }}'],
  maintenance:['eq-status-maint', 'bi-wrench-adjustable', '{{ _("Maintenance") }}'],
+ calibration:['eq-status-calibration', 'bi-rulers', '{{ _("Calibration") }}'],
  retired: ['eq-status-retired', 'bi-archive', '{{ _("Retired") }}'],
  normal: ['eq-status-normal', 'bi-check-circle-fill', '{{ _("Normal") }}'],
  };
@@ -466,8 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
  return function(cell) {
  var s = cell.getRow().getData().status || 'normal';
  if (field === 'normal') return s === 'normal' ? '✔' : '';
- if (field === 'broken') return s === 'broken' ? '✔' : '';
- if (field === 'needs_spare') return (s === 'needs_spare' || s === 'broken') ? '✔' : '';
+ if (field === 'out_of_service') return s === 'out_of_service' ? '✔' : '';
+ if (field === 'needs_spare') return (s === 'needs_spare' || s === 'out_of_service') ? '✔' : '';
  return '';
  };
  }
@@ -506,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
  {title:'{{ _("Location") }}', field:'location', width:100},
  {title:'{{ _("Operational Status") }}', columns:[
  {title:'{{ _("Normal") }}', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
- {title:'{{ _("Out of Order") }}', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
+ {title:'{{ _("Out of Service") }}', field:'_chk_out_of_service', width:90, hozAlign:'center', formatter:statusCheckFormatter('out_of_service'), headerSort:false},
  {title:'{{ _("Spare Parts Required") }}', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
  ]},
  {title:'{{ _("Remarks") }}', field:'remark', minWidth:120},

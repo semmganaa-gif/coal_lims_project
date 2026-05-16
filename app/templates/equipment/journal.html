@@ -85,8 +85,10 @@
             </span>
             <div class="d-flex flex-wrap gap-1 ej-status-legend">
               <span class="badge bg-success-subtle text-success-emphasis small">{{ _("Normal") }}</span>
+              <span class="badge bg-info-subtle text-info-emphasis small">{{ _("Calibration") }}</span>
               <span class="badge bg-warning-subtle text-warning-emphasis small">{{ _("Under Maintenance") }}</span>
-              <span class="badge bg-danger-subtle text-danger-emphasis small">{{ _("Out of Order") }}</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis small">{{ _("Spare Parts Required") }}</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis small">{{ _("Out of Service") }}</span>
               <span class="badge bg-secondary-subtle text-secondary-emphasis small">{{ _("Decommissioned") }}</span>
             </div>
           </div>
@@ -242,8 +244,10 @@
           const s = p.value || 'normal';
           let cls = 'ej-status-normal';
           let text = '{{ _("Normal") }}';
-          if (s === 'broken')       { cls = 'ej-status-broken';   text = '{{ _("Out of Order") }}'; }
+          if (s === 'out_of_service') { cls = 'ej-status-out_of_service'; text = '{{ _("Out of Service") }}'; }
+          else if (s === 'needs_spare') { cls = 'ej-status-spare';   text = '{{ _("Spare Parts Required") }}'; }
           else if (s === 'maintenance') { cls = 'ej-status-maint';    text = '{{ _("Under Maintenance") }}'; }
+          else if (s === 'calibration') { cls = 'ej-status-calibration'; text = '{{ _("Calibration") }}'; }
           else if (s === 'retired') { cls = 'ej-status-retired';  text = '{{ _("Decommissioned") }}'; }
           return `<span class="ej-status-badge ${cls}">${text}</span>`;
         }

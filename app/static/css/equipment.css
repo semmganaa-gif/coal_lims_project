@@ -221,11 +221,12 @@
   font-weight: 700;
   letter-spacing: 0.02em;
 }
-.eq-status-normal   { background: #ecfdf5; color: #059669; }
-.eq-status-maint    { background: #f3f4f6; color: #4b5563; }
-.eq-status-spare    { background: #fef9c3; color: #854d0e; }
-.eq-status-broken   { background: #fee2e2; color: #dc2626; }
-.eq-status-retired  { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+.eq-status-normal         { background: #ecfdf5; color: #059669; }
+.eq-status-maint          { background: #f3f4f6; color: #4b5563; }
+.eq-status-calibration    { background: #e0f2fe; color: #0369a1; }
+.eq-status-spare          { background: #fef9c3; color: #854d0e; }
+.eq-status-out_of_service { background: #fee2e2; color: #dc2626; }
+.eq-status-retired        { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
 
 /* Badge pill variants (for detail page) */
 .eq-status-pill {
@@ -518,11 +519,12 @@
   align-items: center;
   gap: 0.35rem;
 }
-.status-normal { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
-.status-broken { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-.status-maintenance { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-.status-needs_spare { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
-.status-retired { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #475569; }
+.status-normal         { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+.status-out_of_service { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+.status-maintenance    { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+.status-calibration    { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; }
+.status-needs_spare    { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+.status-retired        { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #475569; }
 
 .eq-detail-page .eq-card {
   background: var(--glass-bg);
@@ -859,10 +861,12 @@
   font-weight: 600;
   letter-spacing: .02em;
 }
-.equipment-journal-page .ej-status-normal   { background:#dcfce7; color:#166534; }
-.equipment-journal-page .ej-status-maint    { background:#fef9c3; color:#854d0e; }
-.equipment-journal-page .ej-status-broken   { background:#fee2e2; color:#991b1b; }
-.equipment-journal-page .ej-status-retired  { background:#e5e7eb; color:#4b5563; text-decoration: line-through; }
+.equipment-journal-page .ej-status-normal         { background:#dcfce7; color:#166534; }
+.equipment-journal-page .ej-status-maint          { background:#fef9c3; color:#854d0e; }
+.equipment-journal-page .ej-status-calibration    { background:#dbeafe; color:#1e40af; }
+.equipment-journal-page .ej-status-spare          { background:#ffedd5; color:#9a3412; }
+.equipment-journal-page .ej-status-out_of_service { background:#fee2e2; color:#991b1b; }
+.equipment-journal-page .ej-status-retired        { background:#e5e7eb; color:#4b5563; text-decoration: line-through; }
 .equipment-journal-page .ej-date-overdue    { color:#b91c1c; font-weight:600; }
 .equipment-journal-page .ej-date-ok         { color:#15803d; }
 .equipment-journal-page .ej-lab-code {
@@ -918,10 +922,12 @@
   align-items: center;
   gap: 0.25rem;
 }
-.eqj-status-normal { background: #dcfce7; color: #15803d; }
-.eqj-status-broken { background: #fee2e2; color: #dc2626; }
-.eqj-status-maint  { background: #fef3c7; color: #b45309; }
-.eqj-status-retired { background: #e2e8f0; color: #475569; }
+.eqj-status-normal         { background: #dcfce7; color: #15803d; }
+.eqj-status-out_of_service { background: #fee2e2; color: #dc2626; }
+.eqj-status-maint          { background: #fef3c7; color: #b45309; }
+.eqj-status-calibration    { background: #dbeafe; color: #1e40af; }
+.eqj-status-spare          { background: #ffedd5; color: #9a3412; }
+.eqj-status-retired        { background: #e2e8f0; color: #475569; }
 .eqj-back-btn {
   width: 38px; height: 38px;
   border-radius: 10px;

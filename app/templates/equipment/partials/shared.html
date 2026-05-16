@@ -33,11 +33,12 @@
 
 {# ==================== STATUS OPTIONS ==================== #}
 {% macro status_options(selected='normal') %}
-<option value="normal"      {% if selected == 'normal' %}selected{% endif %}>{{ _("Normal") }}</option>
-<option value="broken"      {% if selected == 'broken' %}selected{% endif %}>{{ _("Out of Order") }}</option>
-<option value="needs_spare" {% if selected == 'needs_spare' %}selected{% endif %}>{{ _("Spare Parts Required") }}</option>
-<option value="maintenance" {% if selected == 'maintenance' %}selected{% endif %}>{{ _("Under Maintenance") }}</option>
-<option value="retired"     {% if selected == 'retired' %}selected{% endif %}>{{ _("Decommissioned") }}</option>
+<option value="normal"         {% if selected == 'normal' %}selected{% endif %}>{{ _("Normal") }}</option>
+<option value="maintenance"    {% if selected == 'maintenance' %}selected{% endif %}>{{ _("Under Maintenance") }}</option>
+<option value="calibration"    {% if selected == 'calibration' %}selected{% endif %}>{{ _("Calibration") }}</option>
+<option value="needs_spare"    {% if selected == 'needs_spare' %}selected{% endif %}>{{ _("Spare Parts Required") }}</option>
+<option value="out_of_service" {% if selected == 'out_of_service' %}selected{% endif %}>{{ _("Out of Service") }}</option>
+<option value="retired"        {% if selected == 'retired' %}selected{% endif %}>{{ _("Decommissioned") }}</option>
 {% endmacro %}
 
 {# ==================== MEASUREMENT GROUP OPTIONS ==================== #}
@@ -87,12 +88,14 @@
 
 {# ==================== STATUS BADGE MACRO ==================== #}
 {% macro status_badge(status) %}
-{% if status == 'broken' %}
-  <span class="badge rounded-pill eq-status-broken">{{ _("Out of Order") }}</span>
+{% if status == 'out_of_service' %}
+  <span class="badge rounded-pill eq-status-out_of_service">{{ _("Out of Service") }}</span>
 {% elif status == 'needs_spare' %}
   <span class="badge rounded-pill eq-status-spare">{{ _("Spare Parts Required") }}</span>
 {% elif status == 'maintenance' %}
   <span class="badge rounded-pill eq-status-maint">{{ _("Under Maintenance") }}</span>
+{% elif status == 'calibration' %}
+  <span class="badge rounded-pill eq-status-calibration">{{ _("Calibration") }}</span>
 {% elif status == 'retired' %}
   <span class="badge rounded-pill eq-status-retired">{{ _("Decommissioned") }}</span>
 {% else %}

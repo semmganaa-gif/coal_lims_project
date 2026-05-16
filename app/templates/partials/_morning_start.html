@@ -86,7 +86,7 @@
  }
  .equip-alert-item.overdue { background: rgba(239,68,68,0.1); color: #991b1b; }
  .equip-alert-item.due-soon { background: rgba(251,191,36,0.12); color: #92400e; }
- .equip-alert-item.broken { background: rgba(239,68,68,0.08); color: #b91c1c; }
+ .equip-alert-item.non-operational { background: rgba(239,68,68,0.08); color: #b91c1c; }
  .equip-alert-item .badge-sm {
  font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.4rem;
  border-radius: 4px; color: #fff; flex-shrink: 0;
@@ -242,7 +242,7 @@
  days: '{{ _("days") }}',
  overdue: '{{ _("overdue") }}',
  calibrationDueSoon: '{{ _("calibration due soon") }}',
- outOfOrder: '{{ _("Out of Order") }}',
+ outOfService: '{{ _("Out of Service") }}',
  underMaintenance: '{{ _("Under Maintenance") }}',
  sparePartsRequired: '{{ _("Spare Parts Required") }}',
  allEquipmentOk: '{{ _("All equipment is in normal condition") }}',
@@ -326,10 +326,14 @@
  </div>`;
  });
  }
- if (data.broken_equipment && data.broken_equipment.length) {
- const statusMap = { broken: I18N_MORNING.outOfOrder, maintenance: I18N_MORNING.underMaintenance, needs_spare: I18N_MORNING.sparePartsRequired };
- data.broken_equipment.forEach(e => {
- html += `<div class="equip-alert-item broken">
+ if (data.non_operational_equipment && data.non_operational_equipment.length) {
+ const statusMap = {
+   out_of_service: I18N_MORNING.outOfService,
+   maintenance: I18N_MORNING.underMaintenance,
+   needs_spare: I18N_MORNING.sparePartsRequired,
+ };
+ data.non_operational_equipment.forEach(e => {
+ html += `<div class="equip-alert-item non-operational">
  <span class="badge-sm bg-[#b91c1c]"><i class="bi bi-exclamation-triangle"></i></span>
  <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — ${_e(statusMap[e.status] || e.status)}
  </div>`;

@@ -88,7 +88,7 @@ class EquipmentRepository:
     @staticmethod
     def get_by_statuses(statuses: list[str],
                         categories: Optional[list[str]] = None) -> list[Equipment]:
-        """Статусаар шүүх (broken, maintenance гэх мэт)."""
+        """Статусаар шүүх (out_of_service, maintenance гэх мэт)."""
         stmt = select(Equipment).where(Equipment.status.in_(statuses))
         if categories:
             stmt = stmt.where(Equipment.category.in_(categories))

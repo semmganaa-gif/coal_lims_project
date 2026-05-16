@@ -11,7 +11,7 @@ from flask_login import login_required
 from sqlalchemy import func, select
 
 from app import db
-from app.constants import SampleStatus
+from app.constants import EquipmentStatus, SampleStatus
 from app.models import Equipment, Sample
 
 
@@ -81,10 +81,14 @@ def register_routes(bp):
         ).scalars().all())
 
         # 3. Эвдрэлтэй / засвартай
-        broken_equipment = list(db.session.execute(
+        non_operational_equipment = list(db.session.execute(
             select(Equipment).where(
                 Equipment.category.in_(equip_cats),
-                Equipment.status.in_(['broken', 'maintenance', 'needs_spare']),
+                Equipment.status.in_([
+                    EquipmentStatus.OUT_OF_SERVICE.value,
+                    EquipmentStatus.MAINTENANCE.value,
+                    EquipmentStatus.NEEDS_SPARE.value,
+                ]),
             )
         ).scalars().all())
 
@@ -122,12 +126,12 @@ def register_routes(bp):
                 'next_calibration': e.next_calibration_date.isoformat(),
                 'days_overdue': (today - e.next_calibration_date).days,
             } for e in calibration_overdue],
-            'broken_equipment': [{
+            'non_operational_equipment': [{
                 'id': e.id,
                 'lab_code': e.lab_code or '',
                 'name': e.name,
                 'status': e.status,
-            } for e in broken_equipment],
+            } for e in non_operational_equipment],
             'samples': {
                 'new': today_new,
                 'in_progress': today_in_progress,

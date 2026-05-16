@@ -28,10 +28,12 @@
  <div class="d-flex align-items-center gap-2 flex-wrap">
  {% if eq.status == 'normal' %}
  <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
- {% elif eq.status == 'broken' %}
- <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Order") }}</span>
+ {% elif eq.status == 'out_of_service' %}
+ <span class="status-pill status-out_of_service"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Service") }}</span>
  {% elif eq.status == 'maintenance' %}
  <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> {{ _("Under Maintenance") }}</span>
+ {% elif eq.status == 'calibration' %}
+ <span class="status-pill status-calibration"><i class="bi bi-rulers"></i> {{ _("Calibration") }}</span>
  {% elif eq.status == 'needs_spare' %}
  <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> {{ _("Spare Parts Required") }}</span>
  {% elif eq.status == 'retired' %}

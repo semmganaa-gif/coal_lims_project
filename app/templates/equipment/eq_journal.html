@@ -19,10 +19,14 @@
  {% endif %}
  {% if eq.status == 'normal' %}
  <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
- {% elif eq.status == 'broken' %}
- <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Broken") }}</span>
+ {% elif eq.status == 'out_of_service' %}
+ <span class="eqj-status eqj-status-out_of_service"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Service") }}</span>
  {% elif eq.status == 'maintenance' %}
  <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> {{ _("Maintenance") }}</span>
+ {% elif eq.status == 'calibration' %}
+ <span class="eqj-status eqj-status-calibration"><i class="bi bi-rulers"></i> {{ _("Calibration") }}</span>
+ {% elif eq.status == 'needs_spare' %}
+ <span class="eqj-status eqj-status-spare"><i class="bi bi-exclamation-triangle-fill"></i> {{ _("Spare Parts Required") }}</span>
  {% elif eq.status == 'retired' %}
  <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
  {% endif %}

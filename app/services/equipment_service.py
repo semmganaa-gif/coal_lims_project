@@ -317,6 +317,7 @@ def process_bulk_usage_items(items, user_id, username):
                     performed_by_id=user_id,
                     result=result,
                 )
+                mlog.set_hash()
                 db.session.add(mlog)
                 count += 1
 
@@ -396,6 +397,7 @@ def process_bulk_usage_items(items, user_id, username):
                 performed_by_id=user_id,
                 result="Pass",
             )
+            mlog.set_hash()
             db.session.add(mlog)
 
         if minutes > 0 or note:
@@ -414,6 +416,7 @@ def process_bulk_usage_items(items, user_id, username):
                 used_by_id=user_id,
                 purpose=purpose_text,
             )
+            new_usage.set_hash()
             db.session.add(new_usage)
             count += 1
         elif is_repair:

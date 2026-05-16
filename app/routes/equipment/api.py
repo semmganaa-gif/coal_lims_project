@@ -6,9 +6,11 @@ from datetime import datetime, timedelta
 
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
+from app.constants import EquipmentStatus
 from app.models import Equipment
 from app.routes.equipment import equipment_bp
 from app.routes.api.helpers import api_success, api_error
@@ -156,10 +158,12 @@ def api_equipment_monthly_stats():
 def api_equipment_list_json():
     """Төхөөрөмжийн жагсаалт JSON API (AG Grid-д)."""
     include_retired = request.args.get("include_retired", "false").lower() == "true"
-    query = Equipment.query
+    stmt = select(Equipment)
     if not include_retired:
-        query = query.filter(Equipment.status != "retired")
-    equipments = query.order_by(Equipment.name.asc()).limit(1000).all()
+        stmt = stmt.where(Equipment.status != EquipmentStatus.RETIRED.value)
+    equipments = list(db.session.execute(
+        stmt.order_by(Equipment.name.asc()).limit(1000)
+    ).scalars().all())
 
     data = []
     today = now_local().date()
