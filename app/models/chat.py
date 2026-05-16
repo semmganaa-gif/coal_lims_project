@@ -14,8 +14,8 @@ class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
 
     id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
-    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # null = broadcast
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True, index=True)  # null = broadcast
     message = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=now_mn, index=True)
     read_at = db.Column(db.DateTime, nullable=True)
@@ -46,8 +46,14 @@ class ChatMessage(db.Model):
     )
 
     # Relationships
-    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
-    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+    sender = db.relationship(
+        'User', foreign_keys=[sender_id],
+        backref=db.backref('sent_messages', passive_deletes=True),
+    )
+    receiver = db.relationship(
+        'User', foreign_keys=[receiver_id],
+        backref=db.backref('received_messages', passive_deletes=True),
+    )
     sample = db.relationship('Sample', backref='chat_messages')
 
     def __repr__(self):
@@ -99,13 +105,16 @@ class UserOnlineStatus(db.Model):
     """
     __tablename__ = "user_online_status"
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
     is_online = db.Column(db.Boolean, default=False)
     last_seen = db.Column(db.DateTime, default=now_mn)
     socket_id = db.Column(db.String(100), nullable=True)  # Current socket session ID
 
     # Relationship
-    user = db.relationship('User', backref=db.backref('online_status', uselist=False))
+    user = db.relationship(
+        'User',
+        backref=db.backref('online_status', uselist=False, passive_deletes=True),
+    )
 
     def __repr__(self):
         status = "online" if self.is_online else "offline"

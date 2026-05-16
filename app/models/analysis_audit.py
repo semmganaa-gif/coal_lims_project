@@ -69,7 +69,10 @@ class AnalysisResultLog(HashableMixin, db.Model):
         nullable=True,
         index=True,
     )
-    user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="select"))
+    user = db.relationship(
+        "User", foreign_keys=[user_id],
+        backref=db.backref("logs", lazy="select", passive_deletes=True),
+    )
 
     # SET NULL: Sample устахад log үлдэнэ
     sample_id = db.Column(

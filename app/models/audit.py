@@ -50,8 +50,12 @@ class AuditLog(HashableMixin, db.Model):
     # ISO 17025: Audit log integrity hash
     data_hash = db.Column(db.String(64), nullable=True)
 
-    # Relationship
-    user = db.relationship("User", backref="audit_logs")
+    # Relationship — passive_deletes тогтоосноор User устгахад
+    # ORM cascade SET NULL биш, DB-level ondelete='SET NULL' хүчинд орно.
+    # Append-only `before_update` listener-аас сэргийлнэ.
+    user = db.relationship(
+        "User", backref=db.backref("audit_logs", passive_deletes=True),
+    )
 
     def _get_hash_data(self) -> str:
         """HashableMixin: Return data string for hashing.

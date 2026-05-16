@@ -123,7 +123,9 @@ class ProficiencyTest(HashableMixin, db.Model):
 
     # Хэн шинжилсэн
     tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
-    tested_by = db.relationship('User', backref='pt_tests')
+    tested_by = db.relationship(
+        'User', backref=db.backref('pt_tests', passive_deletes=True),
+    )
 
     # ISO 17025: Audit log integrity hash
     data_hash = db.Column(db.String(64), nullable=True)
@@ -177,7 +179,9 @@ class EnvironmentalLog(HashableMixin, db.Model):
 
     # Бүртгэсэн хүн
     recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
-    recorded_by = db.relationship('User', backref='env_logs')
+    recorded_by = db.relationship(
+        'User', backref=db.backref('env_logs', passive_deletes=True),
+    )
 
     notes = db.Column(db.Text)
 
@@ -229,7 +233,9 @@ class QCControlChart(HashableMixin, db.Model):
 
     # Operator
     operator_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
-    operator = db.relationship('User', backref='qc_measurements')
+    operator = db.relationship(
+        'User', backref=db.backref('qc_measurements', passive_deletes=True),
+    )
 
     # Тэмдэглэл
     notes = db.Column(db.Text)

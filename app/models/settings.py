@@ -75,7 +75,7 @@ class SystemSetting(db.Model):
 
     created_at = db.Column(db.DateTime, nullable=False, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
-    updated_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
+    updated_by_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='SET NULL'), index=True)
 
     # Unique constraint: (category, key) хослол давхцахгүй
     __table_args__ = (

@@ -31,7 +31,7 @@ class WaterWorksheet(db.Model):
     # e.g. 'NH4', 'CL_W', 'TDS', 'SFT', 'MICRO_WATER'
 
     analysis_date = db.Column(db.Date, nullable=False, default=lambda: now_mn().date())
-    analyst_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    analyst_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
 
     status = db.Column(
         db.String(20),
@@ -52,13 +52,19 @@ class WaterWorksheet(db.Model):
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
     # Батлах хүн (ахлах химич)
-    reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     reviewed_at = db.Column(db.DateTime, nullable=True)
     review_comment = db.Column(db.String(500), nullable=True)
 
     # Relationships
-    analyst = db.relationship('User', foreign_keys=[analyst_id], backref='worksheets_created')
-    reviewer = db.relationship('User', foreign_keys=[reviewer_id], backref='worksheets_reviewed')
+    analyst = db.relationship(
+        'User', foreign_keys=[analyst_id],
+        backref=db.backref('worksheets_created', passive_deletes=True),
+    )
+    reviewer = db.relationship(
+        'User', foreign_keys=[reviewer_id],
+        backref=db.backref('worksheets_reviewed', passive_deletes=True),
+    )
     primary_reagent = db.relationship('Chemical', foreign_keys=[primary_reagent_lot_id])
     rows = db.relationship('WorksheetRow', back_populates='worksheet', cascade='all, delete-orphan',
                            order_by='WorksheetRow.position')
