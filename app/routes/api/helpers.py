@@ -174,11 +174,6 @@ def _has_m_task_sql():
     return func.lower(Sample.analyses_to_perform).like('%"m"%')
 
 
-def _can_delete_sample() -> bool:
-    """Админ эсвэл ахлах л бүрэн устгах эрхтэй."""
-    return getattr(current_user, "role", "") in {"admin", "senior"}
-
-
 # -----------------------------
 # 🧬 Дээжийн нэгтгэсэн ТӨЛӨВ
 # -----------------------------

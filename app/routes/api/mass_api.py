@@ -10,6 +10,7 @@ from flask import request, jsonify, url_for, redirect
 from flask_login import login_required, current_user
 
 from app import limiter
+from app.constants import UserRole
 from app.services.mass_service import (
     update_sample_status,
     get_eligible_samples,
@@ -18,7 +19,8 @@ from app.services.mass_service import (
     unready_samples,
     delete_sample,
 )
-from .helpers import _can_delete_sample, api_success, api_error
+from app.utils.decorators import role_required
+from .helpers import api_success, api_error
 
 
 def register_routes(bp):
@@ -104,11 +106,9 @@ def register_routes(bp):
 
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
+    @role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
     @limiter.limit("100 per minute")
     async def mass_delete():
-        if not _can_delete_sample():
-            return api_error("Access denied for this action.", status_code=403)
-
         data = request.get_json(silent=True) or {}
         sid = data.get("sample_id")
 
