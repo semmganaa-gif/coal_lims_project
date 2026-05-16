@@ -9,6 +9,20 @@
   <body class="bg-light">
     {% from 'macros/form_helpers.html' import render_field, render_checkbox, render_submit_button, render_card %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container mt-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'danger' else 'info-circle' }} me-1"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <div class="container">
       <div class="row justify-content-center align-items-center min-vh-100">
         <div class="col-md-4">
