@@ -290,12 +290,18 @@
   font-weight: 700;
 }
 .stats-list {
-  max-height: 200px;
+  max-height: 360px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
-.stats-list::-webkit-scrollbar { width: 6px; }
-.stats-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
-.stats-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.stats-list::-webkit-scrollbar { width: 10px; }
+.stats-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 5px; }
+.stats-list::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+.stats-list::-webkit-scrollbar-thumb:hover { background: #64748b; }
 .stats-item {
   display: flex;
   align-items: center;
